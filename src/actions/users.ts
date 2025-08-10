@@ -108,9 +108,11 @@ export async function updateUserStatus(userId: string, status: UserProfile['stat
     try {
         await adminDb.collection('users').doc(userId).update({ status });
         
-        // Optionally disable/enable user in Firebase Auth
+        // Disable/enable user in Firebase Auth and revoke sessions if necessary
         if (status === 'Suspended' || status === 'Resigned') {
             await adminAuth.updateUser(userId, { disabled: true });
+            // This is the critical step to force logout.
+            await adminAuth.revokeRefreshTokens(userId);
         } else if (status === 'Active') {
             await adminAuth.updateUser(userId, { disabled: false });
         }

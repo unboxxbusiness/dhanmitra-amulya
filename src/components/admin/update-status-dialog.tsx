@@ -30,7 +30,7 @@ export function UpdateStatusDialog({ isOpen, onClose, member }: UpdateStatusDial
         setLoading(false);
 
         if (result.success) {
-            toast({ title: "Status Updated", description: `Member status changed to ${selectedStatus}.` });
+            toast({ title: "Status Updated", description: `Member status changed to ${selectedStatus}. Their active sessions have been revoked.` });
             onClose(true);
         } else {
             toast({
@@ -54,7 +54,7 @@ export function UpdateStatusDialog({ isOpen, onClose, member }: UpdateStatusDial
                 <DialogHeader>
                     <DialogTitle>Update Member Status</DialogTitle>
                     <DialogDescription>
-                        Change the status for {member.name}. This may affect their login access.
+                        Changing status to 'Suspended' or 'Resigned' will also log the user out of all devices.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
