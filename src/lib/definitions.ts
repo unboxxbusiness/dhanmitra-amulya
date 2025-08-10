@@ -124,3 +124,17 @@ export type RepaymentWithLoanDetails = {
     loanId: string;
     repaymentIndex: number;
 }
+
+// --- Transaction Schemas ---
+export type Transaction = {
+    id: string;
+    accountId: string; // Savings account ID
+    accountNumber: string;
+    userName: string;
+    type: 'credit' | 'debit';
+    amount: number;
+    description: string;
+    date: string; // ISO string
+    tellerId: string;
+    tellerName: string;
+};
