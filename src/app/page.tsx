@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
-import { ArrowRight, Lock, Sparkles, Star, BadgeCheck, FileText, Zap } from "lucide-react";
+import { ArrowRight, Lock, Landmark, BadgePercent } from "lucide-react";
 import Link from "next/link";
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,29 +24,41 @@ export default async function Home() {
         विश्वास, सहयोग और समृद्धि का संगम
       </p>
 
-      <Card className="max-w-2xl mt-8 shadow-lg bg-background border-primary/20">
+      <Card className="max-w-3xl mt-8 shadow-lg bg-background border-primary/20 text-left">
         <CardHeader>
-          <CardTitle className="flex items-center justify-center gap-2 text-xl md:text-2xl font-bold text-primary">
-            <Sparkles className="h-6 w-6" /> विशेष ऑफ़र – सीमित समय के लिए!
+          <CardTitle className="text-xl md:text-2xl font-bold text-primary text-center">
+            💰 अमूल्य सोसायटी – विशेष बचत एवं वित्तीय सुविधा ऑफ़र (सीमित समय के लिए!)
           </CardTitle>
-          <CardDescription>अभी जुड़ें अमूल्य सोसायटी से और पाएं फ्री मेंबरशिप अकाउंट!</CardDescription>
+          <CardDescription className="text-center">
+            अपने सपनों को साकार करने का सुनहरा अवसर – आज ही शुरुआत करें! अमूल्य सोसायटी में नया मेंबरशिप अकाउंट खोलें और पाएं शानदार लाभ:
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <ul className="text-left space-y-3 text-muted-foreground">
-                <li className="flex items-start gap-3">
-                    <BadgeCheck className="h-5 w-5 text-green-500 mt-1 shrink-0" />
-                    <span><strong>कोई रजिस्ट्रेशन शुल्क नहीं:</strong> अपनी बचत यात्रा बिना किसी लागत के शुरू करें।</span>
-                </li>
-                 <li className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-blue-500 mt-1 shrink-0" />
-                    <span><strong>आसान ऑनलाइन आवेदन:</strong> घर बैठे आराम से, कुछ ही मिनटों में आवेदन करें।</span>
-                </li>
-                 <li className="flex items-start gap-3">
-                    <Zap className="h-5 w-5 text-amber-500 mt-1 shrink-0" />
-                    <span><strong>तुरंत अकाउंट एक्टिवेशन:</strong> अनुमोदन के तुरंत बाद अपना अकाउंट एक्सेस करें।</span>
-                </li>
-            </ul>
-             <p className="text-sm font-semibold pt-4">🕒 यह ऑफ़र केवल सीमित समय के लिए है! आज ही आवेदन करें और बनें हमारे विश्वसनीय समुदाय का हिस्सा।</p>
+        <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2"><Landmark className="h-5 w-5 text-blue-500"/>बचत सुविधाएं</h3>
+                    <ul className="text-sm space-y-2 text-muted-foreground list-disc list-inside">
+                        <li><strong>शून्य रजिस्ट्रेशन शुल्क:</strong> बिना किसी प्रारंभिक खर्च के खाता खोलें।</li>
+                        <li>पहले 3 महीने नि:शुल्क मेंटेनेंस।</li>
+                        <li>बचत राशि पर विशेष ब्याज दर।</li>
+                        <li>लचीले जमा विकल्प – मासिक या साप्ताहिक।</li>
+                        <li>24x7 ऑनलाइन पासबुक और ट्रांजैक्शन हिस्ट्री।</li>
+                    </ul>
+                </div>
+                 <div className="space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2"><BadgePercent className="h-5 w-5 text-green-500"/>लोन एवं अन्य सुविधाएं</h3>
+                    <ul className="text-sm space-y-2 text-muted-foreground list-disc list-inside">
+                        <li>व्यक्तिगत, व्यवसायिक और आपातकालीन लोन पर कम ब्याज दर।</li>
+                        <li>आसान EMI और लचीले रीपेमेंट विकल्प।</li>
+                        <li>पूर्व-स्वीकृत लोन सीमा (अकाउंट होल्डर्स के लिए)।</li>
+                        <li>बीमा एवं निवेश योजनाओं में प्राथमिक सुविधा।</li>
+                    </ul>
+                </div>
+            </div>
+            <div className="text-center bg-amber-100/50 text-amber-900 p-3 rounded-md">
+                 <p className="text-sm">📌 यह ऑफ़र केवल नए अकाउंट खोलने वाले सदस्यों के लिए मान्य है।</p>
+                 <p className="font-bold">⏳ जल्दी करें — ऑफ़र 20 अक्टूबर 2025 तक ही उपलब्ध!</p>
+            </div>
         </CardContent>
       </Card>
 
