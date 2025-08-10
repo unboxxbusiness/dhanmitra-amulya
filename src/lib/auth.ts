@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import { adminAuth } from '@/lib/firebase/server';
-import type { UserSession } from '@/lib/definitions';
+import type { UserSession, Role } from '@/lib/definitions';
 import { cache } from 'react';
+import { ROLES } from './definitions';
 
 export const getSession = cache(async (): Promise<UserSession | null> => {
   const sessionCookie = cookies().get('session')?.value;
@@ -10,18 +11,20 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
   }
   try {
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const adminUids = (process.env.ADMIN_UIDS || '').split(',');
-    const isAdmin = adminUids.includes(decodedClaims.uid);
+    
+    // Custom claims are used for roles. Default to 'member' if no role is assigned.
+    const userRole = (decodedClaims.role as Role) || 'member';
+    const role = ROLES.includes(userRole) ? userRole : 'member';
 
     return {
       uid: decodedClaims.uid,
       email: decodedClaims.email || null,
       name: decodedClaims.name || decodedClaims.email,
       picture: decodedClaims.picture || null,
-      isAdmin,
+      role: role,
     };
   } catch (error) {
-    // Session cookie is invalid. This can happen if the user's session was revoked, the cookie expired, etc.
+    // Session cookie is invalid.
     return null;
   }
 });

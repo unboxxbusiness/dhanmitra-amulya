@@ -16,10 +16,14 @@ import type { UserSession } from '@/lib/definitions';
 import { LogOut, LayoutDashboard, UserCog } from 'lucide-react';
 import Link from 'next/link';
 
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+
 export function UserNav({ session }: { session: UserSession }) {
   const getInitials = (name: string) => {
     return name.split(' ').map((n) => n[0]).join('');
   };
+  
+  const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 
   return (
     <DropdownMenu>
@@ -43,19 +47,11 @@ export function UserNav({ session }: { session: UserSession }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard">
+            <Link href={isPrivilegedUser ? "/admin" : "/dashboard"}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
-          {session.isAdmin && (
-            <DropdownMenuItem asChild>
-              <Link href="/admin">
-                <UserCog className="mr-2 h-4 w-4" />
-                <span>Admin</span>
-              </Link>
-            </DropdownMenuItem>
-          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>

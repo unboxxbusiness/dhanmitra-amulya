@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldCheck } from 'lucide-react';
 
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+
 export default async function AdminPage() {
   const session = await getSession();
 
-  if (!session || !session.isAdmin) {
+  if (!session || !ADMIN_ROLES.includes(session.role)) {
     redirect('/dashboard');
   }
 
@@ -19,20 +21,21 @@ export default async function AdminPage() {
       </header>
       <Card>
         <CardHeader>
-          <CardTitle>Admin-only Area</CardTitle>
-          <CardDescription>This page is only accessible to administrators.</CardDescription>
+          <CardTitle>Administrative Area</CardTitle>
+          <CardDescription>This page is only accessible to authorized personnel.</CardDescription>
         </CardHeader>
         <CardContent>
           <Alert className="bg-primary/5 border-primary/20">
             <ShieldCheck className="h-4 w-4 text-primary" />
-            <AlertTitle className="text-primary">You have admin privileges!</AlertTitle>
+            <AlertTitle className="text-primary capitalize">Welcome, {session.role.replace('_', ' ')}</AlertTitle>
             <AlertDescription>
-              Welcome, Admin {session.name || session.email}. You can perform administrative tasks here.
+              You are logged in as {session.name || session.email}. You can perform administrative tasks here.
             </AlertDescription>
           </Alert>
           <div className="mt-6 p-4 border rounded-lg">
             <h3 className="font-semibold">System Status</h3>
             <p className="text-sm text-muted-foreground mt-2">All systems are currently operational.</p>
+            <p className="text-sm text-muted-foreground mt-1">Role-based access is active.</p>
           </div>
         </CardContent>
       </Card>
