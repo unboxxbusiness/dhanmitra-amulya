@@ -25,9 +25,9 @@ export default async function DashboardPage() {
   
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
 
-  const upiPaymentLink = societyConfig.upiId 
-    ? `upi://pay?pa=${societyConfig.upiId}&pn=${encodeURIComponent(societyConfig.name)}` 
-    : '';
+  const upiPaymentLink = (amount: number) => societyConfig.upiId 
+    ? `upi://pay?pa=${societyConfig.upiId}&pn=${encodeURIComponent(societyConfig.name)}&am=${amount.toFixed(2)}&cu=INR` 
+    : '#';
   
   return (
     <div className="space-y-6">
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         </div>
       </header>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Button asChild className="w-full py-6 text-base">
             <Link href="/dashboard/apply-loan">
               <PlusCircle className="mr-2 h-5 w-5"/>
@@ -51,14 +51,6 @@ export default async function DashboardPage() {
                Make a Deposit
             </Link>
           </Button>
-          {upiPaymentLink && (
-            <Button asChild variant="outline" className="w-full py-6 text-base">
-              <a href={upiPaymentLink} target="_blank" rel="noopener noreferrer">
-                <LinkIcon className="mr-2 h-5 w-5"/>
-                Pay with UPI
-              </a>
-            </Button>
-          )}
         </div>
 
       <Tabs defaultValue="accounts" className="w-full">
@@ -162,7 +154,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Your Loans</CardTitle>
-              <CardDescription>Manage your loan accounts.</CardDescription>
+              <CardDescription>Manage your loan accounts and repayments.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -171,8 +163,8 @@ export default async function DashboardPage() {
                     <TableHead>Account No.</TableHead>
                     <TableHead>Principal</TableHead>
                     <TableHead>Outstanding</TableHead>
-                    <TableHead>EMI</TableHead>
-                    <TableHead>Interest Rate</TableHead>
+                    <TableHead>Next EMI</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -182,7 +174,14 @@ export default async function DashboardPage() {
                       <TableCell>₹{loan.principal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
                       <TableCell>₹{loan.outstandingBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
                       <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
-                      <TableCell>{loan.interestRate.toFixed(2)}%</TableCell>
+                      <TableCell>
+                        <Button asChild size="sm" disabled={!societyConfig.upiId}>
+                            <a href={upiPaymentLink(loan.emiAmount)} target="_blank" rel="noopener noreferrer">
+                                <LinkIcon className="mr-2 h-4 w-4" />
+                                Repay EMI
+                            </a>
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )) : <TableRow><TableCell colSpan={5} className="text-center h-24">No active loans found.</TableCell></TableRow>}
                 </TableBody>
