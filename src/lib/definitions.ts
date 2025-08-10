@@ -56,3 +56,71 @@ export type ActiveDeposit = {
     maturityDate: string; // ISO String
     status: 'active' | 'matured' | 'closed';
 }
+
+
+// --- Loan Schemas ---
+
+export const LoanProductSchema = z.object({
+    id: z.string().optional(),
+    name: z.string().min(3, "Product name is required."),
+    interestType: z.enum(['flat', 'reducing_balance']),
+    interestRate: z.number().positive("Interest rate must be positive."),
+    maxTermMonths: z.number().int().positive("Max term must be a positive number of months."),
+    collateralNotes: z.string().optional(),
+});
+export type LoanProduct = z.infer<typeof LoanProductSchema>;
+
+export const LoanApplicationSchema = z.object({
+    userId: z.string(),
+    productId: z.string(),
+    amountRequested: z.number().positive(),
+    termMonths: z.number().int().positive(),
+});
+export type LoanApplication = z.infer<typeof LoanApplicationSchema>;
+
+export type LoanApplicationDetails = {
+    id: string;
+    userId: string;
+    userName: string;
+    productName: string;
+    productId: string;
+    amountRequested: number;
+    termMonths: number;
+    status: 'pending' | 'verified' | 'approved' | 'rejected' | 'disbursed';
+    applicationDate: string; // ISO String
+    verifierName?: string;
+    approverName?: string;
+}
+
+export type Repayment = {
+    dueDate: string; // ISO String
+    amount: number;
+    status: 'pending' | 'paid' | 'overdue';
+    paymentDate?: string; // ISO String
+}
+
+export type ActiveLoan = {
+    id: string;
+    userId: string;
+    userName: string;
+    productName: string;
+    accountNumber: string;
+    principal: number;
+    interestRate: number;
+    termMonths: number;
+    emiAmount: number;
+    disbursalDate: string; // ISO String
+    outstandingBalance: number;
+    repaymentSchedule: Repayment[];
+}
+
+export type RepaymentWithLoanDetails = {
+    id: string;
+    userName: string;
+    accountNumber: string;
+    emiAmount: number;
+    dueDate: string;
+    status: Repayment['status'];
+    loanId: string;
+    repaymentIndex: number;
+}
