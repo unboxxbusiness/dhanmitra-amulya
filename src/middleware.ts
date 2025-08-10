@@ -12,17 +12,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await getSession();
 
-  // If the user is not logged in
+  // Handle users who are not logged in
   if (!session) {
-    // If they are trying to access a protected route, redirect to login
     if ([...PROTECTED_ROUTES, ...ADMIN_ROUTES].some(route => pathname.startsWith(route))) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    // Otherwise, allow them to proceed (e.g., to the login page)
     return NextResponse.next();
   }
 
-  // If the user is logged in
+  // Handle users who are logged in
   const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 
   // If a logged-in user is on an auth page, redirect them to their correct dashboard
