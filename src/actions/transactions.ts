@@ -9,6 +9,7 @@ import type { Transaction } from '@/lib/definitions';
 import { type SavingsAccount } from './savings';
 import Papa from 'papaparse';
 import { postJournalEntry } from './accounting';
+import type * as admin from 'firebase-admin';
 
 const TELLER_ROLES = ['admin', 'branch_manager', 'teller', 'accountant'];
 
@@ -182,6 +183,6 @@ export async function reconcileBankStatement(csvContent: string) {
         }
     }
     
-    revalidatePath('/admin/transactions');
+    revalidatePath('/admin/integrations');
     return { success: true, results };
 }
