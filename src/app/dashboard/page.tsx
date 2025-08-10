@@ -42,23 +42,23 @@ export default async function DashboardPage() {
         </div>
       </header>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Button asChild className="w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Button asChild className="w-full py-6 text-base">
             <Link href="/dashboard/apply-loan">
-              <PlusCircle className="mr-2 h-4 w-4"/>
+              <PlusCircle className="mr-2 h-5 w-5"/>
               Apply for Loan
             </Link>
           </Button>
-           <Button asChild variant="outline" className="w-full">
+           <Button asChild variant="secondary" className="w-full py-6 text-base">
             <Link href="/dashboard/apply-deposit">
-               <PlusCircle className="mr-2 h-4 w-4"/>
+               <PlusCircle className="mr-2 h-5 w-5"/>
                Make a Deposit
             </Link>
           </Button>
           {upiPaymentLink && (
-            <Button asChild variant="secondary" className="w-full">
+            <Button asChild variant="outline" className="w-full py-6 text-base">
               <a href={upiPaymentLink} target="_blank" rel="noopener noreferrer">
-                <LinkIcon className="mr-2 h-4 w-4"/>
+                <LinkIcon className="mr-2 h-5 w-5"/>
                 Pay with UPI
               </a>
             </Button>
@@ -66,58 +66,67 @@ export default async function DashboardPage() {
         </div>
 
       <Tabs defaultValue="accounts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="accounts"><Landmark className="mr-2 h-4 w-4" /> Savings Accounts</TabsTrigger>
-          <TabsTrigger value="deposits"><DollarSign className="mr-2 h-4 w-4" /> Fixed Deposits</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsTrigger value="accounts"><Landmark className="mr-2 h-4 w-4" /> Savings</TabsTrigger>
+          <TabsTrigger value="deposits"><DollarSign className="mr-2 h-4 w-4" /> Deposits</TabsTrigger>
           <TabsTrigger value="loans"><CreditCard className="mr-2 h-4 w-4" /> Loans</TabsTrigger>
+          <TabsTrigger value="transactions"><Receipt className="mr-2 h-4 w-4" /> Transactions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
           <Card>
             <CardHeader>
               <CardTitle>Savings Account Overview</CardTitle>
-              <CardDescription>Your savings accounts and recent transactions.</CardDescription>
+              <CardDescription>Your primary savings and transaction accounts.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                <div className="grid gap-4 md:grid-cols-2">
                 {savingsAccounts.length > 0 ? savingsAccounts.map(account => (
                   <Card key={account.id}>
                     <CardHeader>
-                      <CardTitle>{account.schemeName}</CardTitle>
+                      <CardTitle className="text-lg">{account.schemeName}</CardTitle>
                       <CardDescription>{account.accountNumber}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">₹{account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-                      <Badge className="mt-1">{account.status}</Badge>
+                      <div className="text-3xl font-bold">₹{account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                      <Badge className="mt-2">{account.status}</Badge>
                     </CardContent>
                   </Card>
-                )) : <p className="text-muted-foreground col-span-2">No savings accounts found.</p>}
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Recent Transactions</h3>
-                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.length > 0 ? recentTransactions.map(tx => (
-                      <TableRow key={tx.id}>
-                        <TableCell>{tx.date}</TableCell>
-                        <TableCell className="font-medium">{tx.description}</TableCell>
-                        <TableCell className={`text-right font-semibold ${tx.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                          {tx.type === 'credit' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    )) : <TableRow><TableCell colSpan={3} className="text-center">No recent transactions found.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
+                )) : <p className="text-muted-foreground col-span-2 p-4 text-center">No savings accounts found.</p>}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+         <TabsContent value="transactions">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Transactions</CardTitle>
+                    <CardDescription>Your last 10 transactions across all savings accounts.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentTransactions.length > 0 ? recentTransactions.map(tx => (
+                          <TableRow key={tx.id}>
+                            <TableCell className="text-xs">{tx.date}</TableCell>
+                            <TableCell className="font-medium">{tx.description}</TableCell>
+                            <TableCell className={`text-right font-semibold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                              {tx.type === 'credit' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </TableCell>
+                          </TableRow>
+                        )) : <TableRow><TableCell colSpan={3} className="text-center h-24">No recent transactions found.</TableCell></TableRow>}
+                      </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </TabsContent>
 
         <TabsContent value="deposits">
@@ -146,7 +155,7 @@ export default async function DashboardPage() {
                       <TableCell>{deposit.interestRate.toFixed(2)}%</TableCell>
                       <TableCell><Badge>{deposit.status}</Badge></TableCell>
                     </TableRow>
-                  )) : <TableRow><TableCell colSpan={5} className="text-center">No active deposits found.</TableCell></TableRow>}
+                  )) : <TableRow><TableCell colSpan={5} className="text-center h-24">No active deposits found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -179,7 +188,7 @@ export default async function DashboardPage() {
                       <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
                       <TableCell>{loan.interestRate.toFixed(2)}%</TableCell>
                     </TableRow>
-                  )) : <TableRow><TableCell colSpan={5} className="text-center">No active loans found.</TableCell></TableRow>}
+                  )) : <TableRow><TableCell colSpan={5} className="text-center h-24">No active loans found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
