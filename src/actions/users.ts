@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { ROLES, type Role, type UserProfile } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
@@ -218,4 +219,22 @@ export async function exportMembersToCsv(): Promise<string> {
     const members = await getAllMembers();
     const dataForCsv = members.map(({ id, fcmTokens, ...rest }) => rest);
     return Papa.unparse(dataForCsv);
+}
+
+export async function saveFcmToken(token: string) {
+    const session = await getSession();
+    if (!session) {
+        return { success: false, error: 'Not authenticated' };
+    }
+
+    try {
+        const userRef = adminDb.collection('users').doc(session.uid);
+        await userRef.update({
+            fcmTokens: FieldValue.arrayUnion(token)
+        });
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error saving FCM token:", error);
+        return { success: false, error: error.message };
+    }
 }

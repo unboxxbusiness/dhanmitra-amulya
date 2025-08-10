@@ -25,6 +25,7 @@ export default async function RootLayout({
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <div className="relative flex min-h-screen flex-col">
+          {/* Only show the generic header if the user is NOT logged in */}
           {!session && <Header />}
           <main className="flex-1">{children}</main>
         </div>
