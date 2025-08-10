@@ -11,27 +11,55 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAllMembers, type UserProfile } from '@/actions/users';
+import { AddMemberDialog } from './add-member-dialog';
+import { EditMemberDialog } from './edit-member-dialog';
+import { UpdateStatusDialog } from './update-status-dialog';
+import { useToast } from '@/hooks/use-toast';
+
+type DialogState = {
+  type: 'add' | 'edit' | 'status' | null;
+  data?: UserProfile;
+}
 
 export function AllMembersTab() {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogState, setDialogState] = useState<DialogState>({ type: null });
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      setLoading(true);
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
       const fetchedMembers = await getAllMembers();
       setMembers(fetchedMembers);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error fetching members',
+        description: 'Could not load member data. Please try again later.'
+      });
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchMembers();
   }, []);
+
+  const closeDialog = (refresh?: boolean) => {
+    setDialogState({ type: null });
+    if (refresh) {
+      fetchMembers();
+    }
+  };
 
   const filteredMembers = members.filter(member =>
     (member.name && member.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-  
+
   const getBadgeVariant = (status: UserProfile['status']) => {
     switch (status) {
       case 'Active':
@@ -47,93 +75,114 @@ export function AllMembersTab() {
 
   const getRoleBadgeVariant = (role: UserProfile['role']) => {
     if (role === 'admin' || role === 'branch_manager') {
-        return 'destructive'
+      return 'destructive'
     }
     if (role !== 'member') {
-        return 'secondary'
+      return 'secondary'
     }
     return 'outline'
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Members</CardTitle>
-        <CardDescription>A list of all members in the cooperative.</CardDescription>
-        <div className="flex items-center gap-4 pt-4">
-            <Input 
-                placeholder="Filter members by name or email..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Members</CardTitle>
+          <CardDescription>A list of all members in the cooperative.</CardDescription>
+          <div className="flex items-center gap-4 pt-4">
+            <Input
+              placeholder="Filter members by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
             />
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Member
+            <Button onClick={() => setDialogState({ type: 'add' })}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Member
             </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Join Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              filteredMembers.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">{member.name}</TableCell>
-                  <TableCell>{member.email}</TableCell>
-                   <TableCell>
-                     <Badge variant={getRoleBadgeVariant(member.role)} className="capitalize">
-                      {member.role.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{member.joinDate}</TableCell>
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(member.status)}>
-                      {member.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View/Edit Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Change Status</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Join Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead><span className="sr-only">Actions</span></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                filteredMembers.map((member) => (
+                  <TableRow key={member.id}>
+                    <TableCell className="font-medium">{member.name}</TableCell>
+                    <TableCell>{member.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(member.role)} className="capitalize">
+                        {member.role.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{member.joinDate}</TableCell>
+                    <TableCell>
+                      <Badge variant={getBadgeVariant(member.status)}>
+                        {member.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setDialogState({ type: 'edit', data: member })}>
+                            View/Edit Profile
+                          </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => setDialogState({ type: 'status', data: member })}>
+                            Change Status
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <AddMemberDialog
+        isOpen={dialogState.type === 'add'}
+        onClose={closeDialog}
+      />
+      <EditMemberDialog
+        isOpen={dialogState.type === 'edit'}
+        onClose={closeDialog}
+        member={dialogState.data}
+      />
+       <UpdateStatusDialog
+        isOpen={dialogState.type === 'status'}
+        onClose={closeDialog}
+        member={dialogState.data}
+      />
+    </>
   );
 }
