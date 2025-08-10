@@ -5,8 +5,8 @@ import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { getAllMembers } from './users';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 const SETTINGS_DOC_ID = 'globalSavingsSettings';
 
 async function verifyAdmin() {

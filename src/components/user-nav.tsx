@@ -19,8 +19,8 @@ import { LogOut, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { useEffect, useState } from 'react';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export function UserNav() {
   const [session, setSession] = useState<UserSession | null>(null);

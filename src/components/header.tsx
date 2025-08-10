@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { Button } from './ui/button';
-import { getSession } from '@/lib/auth';
 
 export function Header() {
   return (

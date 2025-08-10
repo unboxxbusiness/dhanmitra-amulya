@@ -5,8 +5,8 @@ import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import type { Branch, Holiday, SocietyConfig, ComplianceSettings } from '@/lib/definitions';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-const ADMIN_ROLES = ['admin', 'branch_manager'];
 const SETTINGS_DOC_ID = 'societyDetails';
 
 

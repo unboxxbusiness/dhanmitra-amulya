@@ -7,8 +7,8 @@ import { revalidatePath } from 'next/cache';
 import type { SupportTicket, TicketStatus, TicketReply } from '@/lib/definitions';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer'];
 const ALL_ROLES = [...ADMIN_ROLES, 'member'];
 
 async function verifyUser(roles: string[]) {

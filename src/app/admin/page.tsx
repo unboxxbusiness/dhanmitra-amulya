@@ -13,9 +13,8 @@ import { getTransactionHistory } from '@/actions/transactions';
 import type { Transaction } from '@/lib/definitions';
 import { FinancialOverviewChart } from '@/components/admin/dashboard/financial-overview-chart';
 import { RecentTransactionsList } from '@/components/admin/dashboard/recent-transactions-list';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 async function getDashboardStats() {
     try {

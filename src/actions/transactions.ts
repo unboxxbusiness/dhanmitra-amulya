@@ -10,8 +10,9 @@ import { type SavingsAccount } from './savings';
 import Papa from 'papaparse';
 import { postJournalEntry } from './accounting';
 import type * as admin from 'firebase-admin';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-const TELLER_ROLES = ['admin', 'branch_manager', 'teller', 'accountant'];
+const TELLER_ROLES = [...ADMIN_ROLES];
 const MEMBER_AND_TELLER_ROLES = [...TELLER_ROLES, 'member'];
 
 async function verifyUser(roles: string[]) {
@@ -222,4 +223,3 @@ export async function exportTransactionsToCsv(filters: { accountId?: string, sta
 
     return Papa.unparse(csvData);
 }
-

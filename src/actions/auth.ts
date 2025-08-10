@@ -4,8 +4,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
-import { ROLES, type Role, ADMIN_ROLES } from '@/lib/definitions';
-import { DecodedIdToken } from 'firebase-admin/auth';
+import { ROLES, type Role } from '@/lib/definitions';
 
 const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
@@ -17,7 +16,6 @@ export async function createSession(idToken: string) {
     const userDoc = await userRef.get();
 
     let role: Role = 'member'; // Default role
-    let customClaims = { role };
     let name = decodedClaims.name;
 
     if (userDoc.exists) {
@@ -42,7 +40,7 @@ export async function createSession(idToken: string) {
     // Set custom claims for role-based access
     // Only update if needed to avoid unnecessary writes
     if (decodedClaims.role !== role || decodedClaims.name !== name) {
-        customClaims = { ...customClaims, role, name };
+        const customClaims = { role, name };
         await adminAuth.setCustomUserClaims(decodedClaims.uid, customClaims);
     }
 
@@ -67,16 +65,4 @@ export async function createSession(idToken: string) {
 export async function signOut() {
   cookies().delete(SESSION_COOKIE_NAME);
   redirect('/login');
-}
-
-export async function checkRole(role: Role) {
-  const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) return false;
-
-  try {
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
-    return decodedClaims.role === role;
-  } catch (error) {
-    return false;
-  }
 }

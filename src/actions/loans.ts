@@ -5,13 +5,12 @@ import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails } from '@/lib/definitions';
-import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema } from '@/lib/definitions';
+import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema, ADMIN_ROLES } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import Papa from 'papaparse';
 
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 const LOAN_VERIFIER_ROLES = ['admin', 'branch_manager', 'auditor'];
 const LOAN_APPROVER_ROLES = ['admin', 'branch_manager'];
 const MEMBER_ROLES = ['member', ...ADMIN_ROLES];

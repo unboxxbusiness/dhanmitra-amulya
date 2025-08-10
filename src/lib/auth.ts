@@ -1,5 +1,6 @@
 
 'use server';
+
 import { cookies } from 'next/headers';
 import { adminAuth } from '@/lib/firebase/server';
 import type { UserSession, Role } from '@/lib/definitions';
@@ -7,12 +8,12 @@ import { ROLES } from './definitions';
 
 export const getSession = async (): Promise<UserSession | null> => {
   try {
-    const sessionCookieValue = cookies().get('session')?.value;
-    if (!sessionCookieValue) {
+    const sessionCookie = cookies().get('session');
+    if (!sessionCookie) {
       return null;
     }
   
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookieValue, true);
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie.value, true);
     
     // Get role from custom claims which were set during session creation.
     const userRole = (decodedClaims.role as Role) || 'member';

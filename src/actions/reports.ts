@@ -7,8 +7,7 @@ import type { SavingsAccount } from './savings';
 import type { ActiveLoan, ChartOfAccount } from '@/lib/definitions';
 import { differenceInDays } from 'date-fns';
 import Papa from 'papaparse';
-
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'auditor'];
+import { ADMIN_ROLES } from '@/lib/definitions';
 
 async function verifyAdmin() {
   const session = await getSession();

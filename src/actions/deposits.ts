@@ -6,11 +6,10 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { addDays } from 'date-fns';
 import type { DepositProduct, DepositApplication, ActiveDeposit } from '@/lib/definitions';
-import { DepositProductSchema, TermSchema } from '@/lib/definitions';
+import { DepositProductSchema, TermSchema, ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
 
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 const MEMBER_ROLES = ['member', ...ADMIN_ROLES];
 
 async function verifyUser(roles: string[]) {

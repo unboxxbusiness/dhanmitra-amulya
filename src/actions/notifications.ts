@@ -5,8 +5,7 @@ import { adminDb, admin } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import type { UserProfile } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
-
-const ADMIN_ROLES = ['admin', 'branch_manager'];
+import { ADMIN_ROLES } from '@/lib/definitions';
 
 async function verifyAdmin() {
   const session = await getSession();
