@@ -1,6 +1,8 @@
-import "dotenv/config";
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const serviceAccount = {
   project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
