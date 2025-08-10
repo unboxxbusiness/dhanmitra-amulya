@@ -8,7 +8,11 @@ import admin from 'firebase-admin';
 if (!admin.apps.length) {
   try {
     console.log('Initializing Firebase Admin SDK...');
-    admin.initializeApp();
+    // Explicitly set the projectId to match the client-side configuration
+    // This will solve the "aud" claim mismatch error.
+    admin.initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
     console.log('Firebase Admin SDK initialized successfully.');
   } catch (error: any) {
     console.error('CRITICAL: Error initializing Firebase Admin SDK:', error.message);
