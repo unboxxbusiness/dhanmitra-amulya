@@ -142,7 +142,8 @@ export async function deleteMember(userId: string) {
 
 
 export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
-    // This is a public action, no role check needed, just auth.
+    // This action is now public for self-registration.
+    // It no longer requires authentication.
     if (!data.name || !data.email) {
         return { success: false, error: 'Missing user data for application.' };
     }
@@ -157,7 +158,11 @@ export async function submitApplication(data: Omit<Application, 'id' | 'applyDat
         return { success: true };
     } catch (error: any) {
         console.error('Error submitting application:', error);
-        return { success: false, error: error.message };
+        // Provide a more user-friendly error message
+        if (error.code === 'already-exists') {
+             return { success: false, error: 'An application with this email already exists.' };
+        }
+        return { success: false, error: 'Could not submit your application. Please try again later.' };
     }
 }
 
@@ -223,9 +228,13 @@ export async function approveApplication(applicationId: string) {
         revalidatePath('/admin/members');
         return { success: true };
 
-    } catch (error: any) {
+    } catch (error: any)
+     {
         console.error("Error approving application:", error);
-        return { success: false, error: error.message };
+        if ((error as any).code === 'auth/email-already-exists') {
+            return { success: false, error: 'A user with this email already exists in the system.' };
+        }
+        return { success: false, error: "An unexpected error occurred while approving the application." };
     }
 }
 
@@ -364,10 +373,11 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         const recentTransactions = transSnap.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
-            date: new Date(doc.data().date).toLocaleDateString(),
+            date: new Date(doc.data().date).toISOString(),
         } as Transaction))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10);
+        .slice(0, 10)
+        .map(tx => ({ ...tx, date: new Date(tx.date).toLocaleDateString() }));
 
         return {
             savingsAccounts,

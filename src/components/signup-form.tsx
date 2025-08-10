@@ -6,21 +6,19 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase/client';
 import { submitApplication } from '@/actions/users';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  // Password is no longer needed here as the user is not created on signup
+  // password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   docId: z.string().url({ message: 'Please enter a valid URL for your ID document.' }),
   docPhoto: z.string().url({ message: 'Please enter a valid URL for your photo.' }),
   docAddress: z.string().url({ message: 'Please enter a valid URL for your address proof.' }),
@@ -39,7 +37,7 @@ export function SignupForm() {
     defaultValues: {
       name: '',
       email: '',
-      password: '',
+      // password: '',
       docId: 'https://placehold.co/800x500.png',
       docPhoto: 'https://placehold.co/400x400.png',
       docAddress: 'https://placehold.co/800x1100.png',
@@ -49,10 +47,8 @@ export function SignupForm() {
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
     try {
-      // Step 1: Create the user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      
-      // Step 2: Submit the application to Firestore via server action
+      // Step 1: Submit the application to Firestore via server action
+      // User is no longer created in Firebase Auth at this stage.
       const applicationData = {
         name: data.name,
         email: data.email,
@@ -117,19 +113,9 @@ export function SignupForm() {
                 <FormControl>
                     <Input type="email" placeholder="name@example.com" disabled={loading} {...field} />
                 </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                    <Input type="password" placeholder="••••••••" disabled={loading} {...field} />
-                </FormControl>
+                 <FormDescription>
+                    You will receive an email with a temporary password once your application is approved.
+                </FormDescription>
                 <FormMessage />
                 </FormItem>
             )}
@@ -187,7 +173,7 @@ export function SignupForm() {
 
         <Button disabled={loading} className="w-full" type="submit">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Account & Submit Application
+          Submit Application
         </Button>
       </form>
     </Form>
