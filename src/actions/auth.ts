@@ -20,7 +20,13 @@ export async function createSession(idToken: string) {
       path: '/',
     });
     
-    const userRole = (decodedClaims.role as Role) || 'member';
+    let userRole: Role = (decodedClaims.role as Role) || 'member';
+
+    // Temporary fix: Hardcode admin role for a specific user
+    if (decodedClaims.email === 'anujkumar7676@gmail.com') {
+      userRole = 'admin';
+    }
+
     const role = ROLES.includes(userRole) ? userRole : 'member';
 
     return { success: true, role };
