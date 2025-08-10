@@ -125,6 +125,28 @@ export async function updateUserStatus(userId: string, status: UserProfile['stat
     }
 }
 
+
+export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
+    // This is a public action, no role check needed, just auth.
+    if (!data.name || !data.email) {
+        return { success: false, error: 'Missing user data for application.' };
+    }
+
+    try {
+        const newApplication = {
+            ...data,
+            applyDate: new Date().toISOString(),
+            status: 'pending',
+        };
+        await adminDb.collection('applications').add(newApplication);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error submitting application:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+
 export async function getPendingApplications(): Promise<Application[]> {
     await verifyAdmin();
     try {

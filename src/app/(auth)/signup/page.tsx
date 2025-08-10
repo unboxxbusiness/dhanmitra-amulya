@@ -1,20 +1,20 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmailAuthForm } from '@/components/email-auth-form';
+import { SignupForm } from '@/components/signup-form';
 
 export default function SignupPage() {
   return (
-    <Card className="w-full max-w-md shadow-2xl shadow-primary/10">
+    <Card className="w-full max-w-lg shadow-2xl shadow-primary/10">
       <CardHeader className="text-center space-y-2">
         <CardTitle className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
-          Create an Account
+          Join Amulya Cooperative Society
         </CardTitle>
         <CardDescription>
-          Enter your email and password to get started
+          Create your account and upload your KYC documents to get started.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <EmailAuthForm mode="signup" />
+        <SignupForm />
       </CardContent>
       <CardFooter className="flex-col items-center space-y-2">
         <p className="px-8 text-center text-sm text-muted-foreground">
