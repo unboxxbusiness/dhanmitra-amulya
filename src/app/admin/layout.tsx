@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Home, Users, Settings, Banknote } from 'lucide-react';
+import { Home, Users, Settings, Banknote, PiggyBank } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,14 @@ export default function AdminLayout({
                 <Link href="/admin/savings">
                   <Banknote />
                   <span>Savings Management</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Deposit Management">
+                <Link href="/admin/deposits">
+                  <PiggyBank />
+                  <span>Deposit Management</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
