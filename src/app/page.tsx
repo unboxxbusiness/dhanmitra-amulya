@@ -14,13 +14,6 @@ interface Hero7Props {
     text: string;
     url: string;
   };
-  reviews?: {
-    count: number;
-    avatars: {
-      src: string;
-      alt: string;
-    }[];
-  };
 }
 
 const Hero7 = ({
@@ -29,31 +22,6 @@ const Hero7 = ({
   button = {
     text: "Get Started",
     url: "/signup",
-  },
-  reviews = {
-    count: 200,
-    avatars: [
-      {
-        src: "https://placehold.co/100x100.png",
-        alt: "Avatar 1",
-      },
-      {
-        src: "https://placehold.co/100x100.png",
-        alt: "Avatar 2",
-      },
-      {
-        src: "https://placehold.co/100x100.png",
-        alt: "Avatar 3",
-      },
-      {
-        src: "https://placehold.co/100x100.png",
-        alt: "Avatar 4",
-      },
-      {
-        src: "https://placehold.co/100x100.png",
-        alt: "Avatar 5",
-      },
-    ],
   },
 }: Hero7Props) => {
   return (
@@ -68,29 +36,6 @@ const Hero7 = ({
         <Button asChild size="lg" className="mt-10">
           <Link href={button.url}>{button.text}</Link>
         </Button>
-        <div className="mx-auto mt-10 flex w-fit flex-col items-center gap-4 sm:flex-row">
-          <span className="mx-4 inline-flex items-center -space-x-4">
-            {reviews.avatars.map((avatar, index) => (
-              <Avatar key={index} className="size-14 border">
-                <AvatarImage src={avatar.src} alt={avatar.alt} />
-                <AvatarFallback>{avatar.alt.slice(-2)}</AvatarFallback>
-              </Avatar>
-            ))}
-          </span>
-          <div>
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, index) => (
-                <Star
-                  key={index}
-                  className="size-5 fill-yellow-400 text-yellow-400"
-                />
-              ))}
-            </div>
-            <p className="text-left font-medium text-muted-foreground">
-              from {reviews.count}+ reviews
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );
