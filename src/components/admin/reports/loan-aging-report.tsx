@@ -100,8 +100,8 @@ export function LoanAgingReport() {
                                                 <Badge variant={getStatusVariant(loan.status)}>{loan.status}</Badge>
                                             </TableCell>
                                             <TableCell>{loan.daysOverdue}</TableCell>
-                                            <TableCell className="text-right font-mono">${loan.principal.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right font-mono">${loan.outstandingBalance.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-mono">₹{loan.principal.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-mono">₹{loan.outstandingBalance.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

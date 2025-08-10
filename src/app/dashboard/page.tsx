@@ -70,7 +70,7 @@ export default async function DashboardPage() {
                       <CardDescription>{account.accountNumber}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">${account.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                      <div className="text-2xl font-bold">₹{account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
                       <Badge className="mt-1">{account.status}</Badge>
                     </CardContent>
                   </Card>
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                         <TableCell>{tx.date}</TableCell>
                         <TableCell className="font-medium">{tx.description}</TableCell>
                         <TableCell className={`text-right font-semibold ${tx.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                          {tx.type === 'credit' ? '+' : '-'}${Math.abs(tx.amount).toFixed(2)}
+                          {tx.type === 'credit' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     )) : <TableRow><TableCell colSpan={3} className="text-center">No recent transactions found.</TableCell></TableRow>}
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
                   {activeDeposits.length > 0 ? activeDeposits.map(deposit => (
                     <TableRow key={deposit.id}>
                       <TableCell className="font-mono">{deposit.accountNumber}</TableCell>
-                      <TableCell>${deposit.principalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
+                      <TableCell>₹{deposit.principalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
                        <TableCell>{deposit.maturityDate}</TableCell>
                       <TableCell>{deposit.interestRate.toFixed(2)}%</TableCell>
                       <TableCell><Badge>{deposit.status}</Badge></TableCell>
@@ -157,9 +157,9 @@ export default async function DashboardPage() {
                   {activeLoans.length > 0 ? activeLoans.map(loan => (
                     <TableRow key={loan.id}>
                       <TableCell className="font-mono">{loan.accountNumber}</TableCell>
-                      <TableCell>${loan.principal.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
-                      <TableCell>${loan.outstandingBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
-                      <TableCell>${loan.emiAmount.toFixed(2)}</TableCell>
+                      <TableCell>₹{loan.principal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                      <TableCell>₹{loan.outstandingBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                      <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
                       <TableCell>{loan.interestRate.toFixed(2)}%</TableCell>
                     </TableRow>
                   )) : <TableRow><TableCell colSpan={5} className="text-center">No active loans found.</TableCell></TableRow>}

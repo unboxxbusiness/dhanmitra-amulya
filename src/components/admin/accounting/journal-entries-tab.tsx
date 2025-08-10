@@ -70,10 +70,10 @@ export function JournalEntriesTab() {
                                         <TableRow key={index}>
                                             <TableCell>{line.accountName} ({line.accountId})</TableCell>
                                             <TableCell className="text-right font-mono">
-                                                {line.debit > 0 ? `$${line.debit.toFixed(2)}` : '-'}
+                                                {line.debit > 0 ? `₹${line.debit.toFixed(2)}` : '-'}
                                             </TableCell>
                                             <TableCell className="text-right font-mono">
-                                                {line.credit > 0 ? `$${line.credit.toFixed(2)}` : '-'}
+                                                {line.credit > 0 ? `₹${line.credit.toFixed(2)}` : '-'}
                                             </TableCell>
                                         </TableRow>
                                     ))}

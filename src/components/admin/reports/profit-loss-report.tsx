@@ -70,14 +70,14 @@ export function ProfitLossReport() {
                                 {data.revenue.map(item => (
                                     <TableRow key={item.name}>
                                         <TableCell>{item.name}</TableCell>
-                                        <TableCell className="text-right font-mono">${item.balance.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-mono">₹{item.balance.toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                             <TableFooterComponent>
                                 <TableRow>
                                     <TableHead>Total Revenue</TableHead>
-                                    <TableHead className="text-right font-bold font-mono">${data.totalRevenue.toFixed(2)}</TableHead>
+                                    <TableHead className="text-right font-bold font-mono">₹{data.totalRevenue.toFixed(2)}</TableHead>
                                 </TableRow>
                             </TableFooterComponent>
                         </Table>
@@ -97,14 +97,14 @@ export function ProfitLossReport() {
                                 {data.expenses.map(item => (
                                     <TableRow key={item.name}>
                                         <TableCell>{item.name}</TableCell>
-                                        <TableCell className="text-right font-mono">${item.balance.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-mono">₹{item.balance.toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                              <TableFooterComponent>
                                 <TableRow>
                                     <TableHead>Total Expenses</TableHead>
-                                    <TableHead className="text-right font-bold font-mono">${data.totalExpenses.toFixed(2)}</TableHead>
+                                    <TableHead className="text-right font-bold font-mono">₹{data.totalExpenses.toFixed(2)}</TableHead>
                                 </TableRow>
                             </TableFooterComponent>
                         </Table>
@@ -115,7 +115,7 @@ export function ProfitLossReport() {
                         <div className={`flex justify-between items-center p-4 rounded-md ${data.netProfit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             <h3 className="text-lg font-bold">Net Profit / (Loss)</h3>
                             <p className="text-xl font-bold font-mono">
-                                {data.netProfit < 0 && '-'}${Math.abs(data.netProfit).toFixed(2)}
+                                {data.netProfit < 0 && '-'}₹{Math.abs(data.netProfit).toFixed(2)}
                             </p>
                         </div>
                     </div>

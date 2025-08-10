@@ -93,10 +93,10 @@ export function TrialBalanceReport() {
                                     <TableRow key={acc.id}>
                                         <TableCell className="font-medium">{acc.name} ({acc.id})</TableCell>
                                         <TableCell className="text-right font-mono">
-                                            {acc.debit > 0 ? `$${acc.debit.toFixed(2)}` : null}
+                                            {acc.debit > 0 ? `₹${acc.debit.toFixed(2)}` : null}
                                         </TableCell>
                                         <TableCell className="text-right font-mono">
-                                            {acc.credit > 0 ? `$${acc.credit.toFixed(2)}` : null}
+                                            {acc.credit > 0 ? `₹${acc.credit.toFixed(2)}` : null}
                                         </TableCell>
                                     </TableRow>
                                     ))}
@@ -104,8 +104,8 @@ export function TrialBalanceReport() {
                                 <TableFooterComponent>
                                     <TableRow className="bg-muted hover:bg-muted">
                                         <TableHead className="text-right">Totals</TableHead>
-                                        <TableHead className="text-right font-bold font-mono">${data.totalDebits.toFixed(2)}</TableHead>
-                                        <TableHead className="text-right font-bold font-mono">${data.totalCredits.toFixed(2)}</TableHead>
+                                        <TableHead className="text-right font-bold font-mono">₹{data.totalDebits.toFixed(2)}</TableHead>
+                                        <TableHead className="text-right font-bold font-mono">₹{data.totalCredits.toFixed(2)}</TableHead>
                                     </TableRow>
                                 </TableFooterComponent>
                             </Table>

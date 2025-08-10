@@ -77,9 +77,9 @@ export function ActiveLoansTab() {
                 <TableRow key={loan.id}>
                   <TableCell className="font-mono">{loan.accountNumber}</TableCell>
                   <TableCell className="font-medium">{loan.userName}</TableCell>
-                  <TableCell>${loan.principal.toFixed(2)}</TableCell>
-                  <TableCell>${loan.emiAmount.toFixed(2)}</TableCell>
-                  <TableCell>${loan.outstandingBalance.toFixed(2)}</TableCell>
+                  <TableCell>₹{loan.principal.toFixed(2)}</TableCell>
+                  <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
+                  <TableCell>₹{loan.outstandingBalance.toFixed(2)}</TableCell>
                   <TableCell>{loan.disbursalDate}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

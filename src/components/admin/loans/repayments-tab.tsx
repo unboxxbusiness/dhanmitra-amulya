@@ -83,7 +83,7 @@ export function RepaymentsTab() {
                   <TableCell className="font-medium">{r.userName}</TableCell>
                   <TableCell className="font-mono">{r.accountNumber}</TableCell>
                   <TableCell>{r.dueDate}</TableCell>
-                  <TableCell>${r.emiAmount.toFixed(2)}</TableCell>
+                  <TableCell>₹{r.emiAmount.toFixed(2)}</TableCell>
                   <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
                   <TableCell className="text-center">
                     {processingId === r.id ? (

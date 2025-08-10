@@ -72,8 +72,8 @@ export function ActiveDepositsTab() {
                 <TableRow key={deposit.id}>
                   <TableCell className="font-mono">{deposit.accountNumber}</TableCell>
                   <TableCell className="font-medium">{deposit.userName}</TableCell>
-                  <TableCell>${deposit.principalAmount.toFixed(2)}</TableCell>
-                  <TableCell>${deposit.maturityAmount.toFixed(2)}</TableCell>
+                  <TableCell>₹{deposit.principalAmount.toFixed(2)}</TableCell>
+                  <TableCell>₹{deposit.maturityAmount.toFixed(2)}</TableCell>
                   <TableCell>{deposit.startDate}</TableCell>
                   <TableCell>{deposit.maturityDate}</TableCell>
                   <TableCell>

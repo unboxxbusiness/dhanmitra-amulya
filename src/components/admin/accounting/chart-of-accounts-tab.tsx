@@ -99,7 +99,7 @@ export function ChartOfAccountsTab() {
                   <TableCell>
                     <Badge variant={getTypeBadgeVariant(acc.type)}>{acc.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-right font-mono">${acc.balance.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-mono">₹{acc.balance.toFixed(2)}</TableCell>
                 </TableRow>
               ))
             ) : (

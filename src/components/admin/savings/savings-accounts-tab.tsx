@@ -102,7 +102,7 @@ export function SavingsAccountsTab() {
                     <TableCell className="font-mono">{account.accountNumber}</TableCell>
                     <TableCell className="font-medium">{account.userName}</TableCell>
                     <TableCell>{account.schemeName}</TableCell>
-                    <TableCell className="text-right font-medium">${account.balance.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-medium">₹{account.balance.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(account.status)}>
                         {account.status}

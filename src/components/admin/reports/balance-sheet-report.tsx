@@ -80,14 +80,14 @@ export function BalanceSheetReport() {
                                         {data.assets.map(item => (
                                             <TableRow key={item.name}>
                                                 <TableCell>{item.name}</TableCell>
-                                                <TableCell className="text-right font-mono">${item.balance.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-mono">₹{item.balance.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                     <TableFooterComponent>
                                         <TableRow>
                                             <TableHead>Total Assets</TableHead>
-                                            <TableHead className="text-right font-bold font-mono">${data.totalAssets.toFixed(2)}</TableHead>
+                                            <TableHead className="text-right font-bold font-mono">₹{data.totalAssets.toFixed(2)}</TableHead>
                                         </TableRow>
                                     </TableFooterComponent>
                                 </Table>
@@ -107,7 +107,7 @@ export function BalanceSheetReport() {
                                         {data.liabilities.map(item => (
                                             <TableRow key={item.name}>
                                                 <TableCell>{item.name}</TableCell>
-                                                <TableCell className="text-right font-mono">${item.balance.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-mono">₹{item.balance.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -127,14 +127,14 @@ export function BalanceSheetReport() {
                                         {data.equity.map(item => (
                                             <TableRow key={item.name}>
                                                 <TableCell>{item.name}</TableCell>
-                                                <TableCell className="text-right font-mono">${item.balance.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-mono">₹{item.balance.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                     <TableFooterComponent>
                                          <TableRow>
                                             <TableHead>Total Liabilities & Equity</TableHead>
-                                            <TableHead className="text-right font-bold font-mono">${data.totalLiabilitiesAndEquity.toFixed(2)}</TableHead>
+                                            <TableHead className="text-right font-bold font-mono">₹{data.totalLiabilitiesAndEquity.toFixed(2)}</TableHead>
                                         </TableRow>
                                     </TableFooterComponent>
                                 </Table>

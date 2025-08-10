@@ -101,14 +101,14 @@ export function SavingsSettingsTab() {
                     <p className="text-sm text-muted-foreground">The penalty rate applied to overdue loan payments.</p>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="accountMaintenanceFee">Account Maintenance Fee ($)</Label>
+                    <Label htmlFor="accountMaintenanceFee">Account Maintenance Fee (₹)</Label>
                     <Input 
                         id="accountMaintenanceFee" 
                         name="accountMaintenanceFee" 
                         type="number" 
                         step="0.01"
                         defaultValue={settings?.accountMaintenanceFee}
-                        placeholder="e.g. 5.00"
+                        placeholder="e.g. 50.00"
                     />
                      <p className="text-sm text-muted-foreground">A flat fee charged periodically for account maintenance, if any.</p>
                 </div>

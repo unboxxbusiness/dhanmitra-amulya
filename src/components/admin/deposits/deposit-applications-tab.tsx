@@ -94,7 +94,7 @@ export function DepositApplicationsTab() {
                 <TableRow key={app.id}>
                   <TableCell className="font-medium">{app.userName}</TableCell>
                   <TableCell>{app.productName}</TableCell>
-                  <TableCell>${app.principalAmount.toFixed(2)}</TableCell>
+                  <TableCell>₹{app.principalAmount.toFixed(2)}</TableCell>
                   <TableCell>{app.term.durationMonths} months</TableCell>
                   <TableCell>{app.term.interestRate}%</TableCell>
                   <TableCell>{app.applicationDate}</TableCell>

@@ -120,7 +120,7 @@ export function NewTransactionTab() {
                          <div className="p-3 bg-muted rounded-md text-sm">
                             <p><b>Selected Account:</b> {selectedAccount.accountNumber}</p>
                             <p><b>Member:</b> {selectedAccount.userName}</p>
-                            <p><b>Current Balance:</b> <span className="font-mono">${selectedAccount.balance.toFixed(2)}</span></p>
+                            <p><b>Current Balance:</b> <span className="font-mono">₹{selectedAccount.balance.toFixed(2)}</span></p>
                         </div>
                     )}
                     

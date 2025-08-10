@@ -109,7 +109,7 @@ export default async function AdminPage() {
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalDeposits.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
+            <div className="text-2xl font-bold">₹{stats.totalDeposits.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
             <p className="text-xs text-muted-foreground">Total member savings & deposits</p>
           </CardContent>
         </Card>
@@ -119,7 +119,7 @@ export default async function AdminPage() {
             <Landmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.outstandingLoans.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
+            <div className="text-2xl font-bold">₹{stats.outstandingLoans.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
             <p className="text-xs text-muted-foreground">Total loan balance to be collected</p>
           </CardContent>
         </Card>
@@ -139,7 +139,7 @@ export default async function AdminPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.cashInHand.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
+            <div className="text-2xl font-bold">₹{stats.cashInHand.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
             <p className="text-xs text-muted-foreground">From General Ledger Account '1010'</p>
           </CardContent>
         </Card>

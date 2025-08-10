@@ -108,7 +108,7 @@ export function LoanApplicationsTab() {
                 <TableRow key={app.id}>
                   <TableCell className="font-medium">{app.userName}</TableCell>
                   <TableCell>{app.productName}</TableCell>
-                  <TableCell>${app.amountRequested.toFixed(2)}</TableCell>
+                  <TableCell>₹{app.amountRequested.toFixed(2)}</TableCell>
                   <TableCell>{app.termMonths} months</TableCell>
                   <TableCell>{getStatusBadge(app.status)}</TableCell>
                   <TableCell className="text-center space-x-1">

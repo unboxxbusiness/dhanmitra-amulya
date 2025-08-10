@@ -90,7 +90,7 @@ export function SavingsAccountReport() {
                                             <TableCell className="font-medium">{acc.userName}</TableCell>
                                             <TableCell>{acc.schemeName}</TableCell>
                                             <TableCell><Badge>{acc.status}</Badge></TableCell>
-                                            <TableCell className="text-right font-mono">${acc.balance.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-mono">₹{acc.balance.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

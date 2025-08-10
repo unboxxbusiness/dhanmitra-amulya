@@ -74,7 +74,7 @@ export function ReceiptDialog({ isOpen, onClose, transaction }: ReceiptDialogPro
                 </div>
                 <div className="flex justify-between font-semibold text-lg">
                     <span>Amount:</span>
-                    <span>${transaction.amount.toFixed(2)}</span>
+                    <span>₹{transaction.amount.toFixed(2)}</span>
                 </div>
             </div>
 
@@ -83,11 +83,11 @@ export function ReceiptDialog({ isOpen, onClose, transaction }: ReceiptDialogPro
              <div className="space-y-2 text-sm">
                  <div className="flex justify-between">
                     <span>Balance Before:</span>
-                    <span className="font-mono">${(transaction as any).balanceBefore.toFixed(2)}</span>
+                    <span className="font-mono">₹{(transaction as any).balanceBefore.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span>Balance After:</span>
-                    <span className="font-mono font-bold">${(transaction as any).balanceAfter.toFixed(2)}</span>
+                    <span className="font-mono font-bold">₹{(transaction as any).balanceAfter.toFixed(2)}</span>
                 </div>
             </div>
 
