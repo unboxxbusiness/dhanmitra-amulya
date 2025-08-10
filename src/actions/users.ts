@@ -542,3 +542,4 @@ export async function generateLoanClosureCertificate(loanId: string): Promise<Lo
     };
 }
 
+
