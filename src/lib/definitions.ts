@@ -53,7 +53,7 @@ export type Application = {
     phone: string;
     applyDate: string;
     status: 'pending' | 'approved' | 'rejected';
-    kycDocs: {
+    kycDocs?: {
         id: string;
         photo: string;
         addressProof: string;

@@ -18,9 +18,6 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   phone: z.string().min(10, { message: 'Please enter a valid 10-digit mobile number.' }),
-  docId: z.string().url({ message: 'Please enter a valid URL for your ID document.' }),
-  docPhoto: z.string().url({ message: 'Please enter a valid URL for your photo.' }),
-  docAddress: z.string().url({ message: 'Please enter a valid URL for your address proof.' }),
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
@@ -37,9 +34,6 @@ export function SignupForm() {
       name: '',
       email: '',
       phone: '',
-      docId: 'https://placehold.co/800x500.png',
-      docPhoto: 'https://placehold.co/400x400.png',
-      docAddress: 'https://placehold.co/800x1100.png',
     },
   });
 
@@ -51,10 +45,11 @@ export function SignupForm() {
         name: data.name,
         email: data.email,
         phone: data.phone,
+        // @ts-ignore
         kycDocs: {
-          id: data.docId,
-          photo: data.docPhoto,
-          addressProof: data.docAddress,
+          id: '',
+          photo: '',
+          addressProof: '',
         }
       };
       
@@ -133,55 +128,6 @@ export function SignupForm() {
                 )}
                 />
         </div>
-
-        <Separator />
-        
-        <div className="space-y-4">
-            <h3 className="text-lg font-medium">KYC Documents</h3>
-             <FormDescription>
-                Please provide links to your documents. In a real application, this would be a file upload.
-            </FormDescription>
-            <FormField
-                control={form.control}
-                name="docId"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>ID Document URL</FormLabel>
-                    <FormControl>
-                        <Input placeholder="https://example.com/id.png" disabled={loading} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            <FormField
-                control={form.control}
-                name="docPhoto"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Photo URL</FormLabel>
-                    <FormControl>
-                        <Input placeholder="https://example.com/photo.png" disabled={loading} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            <FormField
-                control={form.control}
-                name="docAddress"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Address Proof URL</FormLabel>
-                    <FormControl>
-                        <Input placeholder="https://example.com/address.png" disabled={loading} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-        </div>
-
 
         <Button disabled={loading} className="w-full" type="submit">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
