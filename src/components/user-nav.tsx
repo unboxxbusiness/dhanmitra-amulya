@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut } from '@/actions/auth';
 import type { UserSession } from '@/lib/definitions';
-import { LogOut, LayoutDashboard, UserCog } from 'lucide-react';
+import { LogOut, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { useEffect, useState } from 'react';

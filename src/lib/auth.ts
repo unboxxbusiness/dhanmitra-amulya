@@ -14,7 +14,7 @@ export const getSession = async (): Promise<UserSession | null> => {
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
     
     // Get role from custom claims which were set during session creation.
-    const userRole: Role = (decodedClaims.role as Role) || 'member';
+    const userRole = (decodedClaims.role as Role) || 'member';
 
     // Verify role is a valid one before returning.
     const role = ROLES.includes(userRole) ? userRole : 'member';
