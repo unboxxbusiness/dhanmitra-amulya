@@ -12,11 +12,6 @@ import { ADMIN_ROLES } from '@/lib/definitions';
 const ALL_ROLES = [...ADMIN_ROLES, 'member'];
 
 async function verifyUser(roles: string[]) {
-    // During build, there's no session, so we can bypass the check.
-    // The page will be dynamically rendered on request and protected by middleware.
-    if (process.env.npm_lifecycle_event === 'build') {
-        return;
-    }
     const session = await getSession();
     if (!session || !roles.includes(session.role)) {
         throw new Error('Not authorized for this action');
@@ -88,9 +83,6 @@ export async function getMemberTickets(): Promise<SupportTicket[]> {
 
 export async function getAllTickets(): Promise<SupportTicket[]> {
     await verifyUser(ADMIN_ROLES);
-     if (process.env.npm_lifecycle_event === 'build') {
-        return [];
-    }
     const snapshot = await adminDb.collection('supportTickets')
         .orderBy('updatedAt', 'desc')
         .get();
