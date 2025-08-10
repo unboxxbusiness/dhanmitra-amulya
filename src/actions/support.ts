@@ -65,6 +65,7 @@ export async function createSupportTicket(prevState: any, formData: FormData) {
 export async function getMemberTickets(): Promise<SupportTicket[]> {
     const session = await verifyUser(ALL_ROLES);
     if (!session) return [];
+    
     const snapshot = await adminDb.collection('supportTickets')
         .where('userId', '==', session.uid)
         .orderBy('updatedAt', 'desc')
