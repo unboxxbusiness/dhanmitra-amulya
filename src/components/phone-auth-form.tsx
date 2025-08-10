@@ -34,16 +34,17 @@ export function PhoneAuthForm() {
     defaultValues: { phone: '' },
   });
 
-  const otpForm = useForm<z.infer<typeof otpSchema>>({
+  const otpForm = a.useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: '' },
   });
 
   React.useEffect(() => {
-    // This is required for phone auth to work. It attaches a reCAPTCHA verifier.
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-    });
+    if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+        });
+    }
   }, []);
 
   const onPhoneSubmit = async (data: z.infer<typeof phoneSchema>) => {
@@ -70,8 +71,9 @@ export function PhoneAuthForm() {
       
       const sessionResult = await createSession(idToken);
       if (sessionResult.success) {
-        router.push('/dashboard');
         toast({ title: "Login Successful", description: "Welcome back!" });
+        // Refresh the page and let the middleware handle redirection.
+        router.refresh();
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
       }

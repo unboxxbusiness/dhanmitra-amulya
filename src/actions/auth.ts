@@ -10,7 +10,7 @@ const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
 async function getUserRole(decodedClaims: DecodedIdToken): Promise<Role> {
-  // Temporary hardcode for admin user to ensure access.
+  // Hardcoded override for the admin user. This is the most reliable way to ensure admin access.
   if (decodedClaims.email === 'anujkumar7676@gmail.com') {
     return 'admin';
   }
@@ -31,26 +31,29 @@ async function getUserRole(decodedClaims: DecodedIdToken): Promise<Role> {
   return 'member';
 }
 
-export async function createSession(idToken: string, isNewUser: boolean) {
+export async function createSession(idToken: string) {
   try {
     const decodedClaims = await adminAuth.verifyIdToken(idToken);
-    
-    // If it's a new user, create their document in Firestore
-    if (isNewUser) {
+    const userRef = adminDb.collection('users').doc(decodedClaims.uid);
+    const userDoc = await userRef.get();
+
+    // If it's a new user, create their document in Firestore.
+    if (!userDoc.exists) {
       try {
-        await adminDb.collection('users').doc(decodedClaims.uid).set({
+        await userRef.set({
           email: decodedClaims.email,
-          role: 'member' // Default role
+          role: 'member' // Default role for all new users.
         });
       } catch (dbError) {
         console.error("Failed to create user document in Firestore:", dbError);
-        // Continue, but the user won't have a role from DB until next login
+        // We can continue, but the user might not have a role from DB until next login.
+        // The hardcoded admin role will still work.
       }
     }
 
     const role = await getUserRole(decodedClaims);
 
-    // Set the role as a custom claim on the user's auth token.
+    // Set role as a custom claim on the user's auth token for security and server-side checks.
     await adminAuth.setCustomUserClaims(decodedClaims.uid, { role });
 
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });

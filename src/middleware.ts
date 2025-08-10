@@ -5,30 +5,27 @@ import { getSession } from './lib/auth';
 const AUTH_ROUTES = ['/login', '/signup'];
 const ADMIN_DASHBOARD = '/admin';
 const MEMBER_DASHBOARD = '/dashboard';
+const PUBLIC_ROUTES = ['/'];
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Cloned to avoid mutation during session retrieval
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-next-pathname', pathname);
-
   const session = await getSession();
 
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
-  
-  // If the user is logged in
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+
+  // If user is logged in
   if (session) {
     const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 
-    // If on an auth page, redirect to the correct dashboard
+    // If trying to access an auth route like /login, redirect to the correct dashboard
     if (isAuthRoute) {
       const destination = isPrivilegedUser ? ADMIN_DASHBOARD : MEMBER_DASHBOARD;
       return NextResponse.redirect(new URL(destination, request.url));
     }
 
-    // If a non-admin tries to access the admin dashboard, redirect them
+    // If a regular member tries to access the admin dashboard, redirect them
     if (pathname.startsWith(ADMIN_DASHBOARD) && !isPrivilegedUser) {
       return NextResponse.redirect(new URL(MEMBER_DASHBOARD, request.url));
     }
@@ -39,9 +36,10 @@ export async function middleware(request: NextRequest) {
     }
 
   } else {
-    // If user is not logged in and tries to access a protected route
-    if (pathname.startsWith(ADMIN_DASHBOARD) || pathname.startsWith(MEMBER_DASHBOARD)) {
-      return NextResponse.redirect(new URL('/login', request.url));
+    // If user is not logged in, and tries to access a protected route, redirect to login
+    const isProtectedRoute = pathname.startsWith(ADMIN_DASHBOARD) || pathname.startsWith(MEMBER_DASHBOARD);
+    if (isProtectedRoute) {
+        return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 

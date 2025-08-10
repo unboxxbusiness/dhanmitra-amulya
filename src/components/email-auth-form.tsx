@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ROLES, Role } from '@/lib/definitions';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -41,13 +40,11 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
     try {
-      const isNewUser = mode === 'signup';
-      const authFn = isNewUser ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
+      const authFn = mode === 'signup' ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
       const userCredential = await authFn(auth, data.email, data.password);
       const idToken = await userCredential.user.getIdToken();
       
-      // Pass isNewUser flag to the server action
-      const sessionResult = await createSession(idToken, isNewUser);
+      const sessionResult = await createSession(idToken);
       
       if (sessionResult.success) {
         toast({
@@ -55,7 +52,7 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
           description: "Redirecting...",
         });
         // Refresh the page and let the middleware handle redirection.
-        // This is a more robust approach than client-side redirection.
+        // This is the most robust approach to prevent client/server race conditions.
         router.refresh();
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
