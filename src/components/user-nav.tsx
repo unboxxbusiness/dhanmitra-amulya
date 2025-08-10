@@ -15,13 +15,29 @@ import { signOut } from '@/actions/auth';
 import type { UserSession } from '@/lib/definitions';
 import { LogOut, LayoutDashboard, UserCog } from 'lucide-react';
 import Link from 'next/link';
+import { getSession } from '@/lib/auth';
+import { useEffect, useState } from 'react';
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
-export function UserNav({ session }: { session: UserSession }) {
+export function UserNav() {
+  const [session, setSession] = useState<UserSession | null>(null);
+
+  useEffect(() => {
+    getSession().then(setSession);
+  }, []);
+
   const getInitials = (name: string) => {
     return name.split(' ').map((n) => n[0]).join('');
   };
+  
+  if (!session) {
+    return (
+      <Button asChild variant="ghost">
+        <Link href="/login">Login</Link>
+      </Button>
+    )
+  }
   
   const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 

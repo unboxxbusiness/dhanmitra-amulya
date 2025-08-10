@@ -1,10 +1,11 @@
+'use server';
 import { cookies } from 'next/headers';
-import { adminAuth } from '@/lib/firebase/server';
+import { adminAuth, adminDb } from '@/lib/firebase/server';
 import type { UserSession, Role } from '@/lib/definitions';
 import { cache } from 'react';
 import { ROLES } from './definitions';
 
-export const getSession = cache(async (): Promise<UserSession | null> => {
+export const getSession = async (): Promise<UserSession | null> => {
   const sessionCookie = cookies().get('session')?.value;
   if (!sessionCookie) {
     return null;
@@ -30,4 +31,4 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
     console.error("Error verifying session cookie:", error);
     return null;
   }
-});
+};

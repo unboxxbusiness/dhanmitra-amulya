@@ -1,25 +1,39 @@
 import * as admin from 'firebase-admin';
+import type { Auth, Firestore } from 'firebase-admin/lib';
 
-// Check if the app is already initialized to prevent errors.
+let adminAuth: Auth;
+let adminDb: Firestore;
+
 if (!admin.apps.length) {
-  // Construct the credential object from environment variables.
-  // This is a more reliable way to initialize, especially in serverless environments.
-  const serviceAccount = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    // The private key must have its escaped newlines replaced with actual newlines.
-    privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-  };
-
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    // When running locally, GOOGLE_APPLICATION_CREDENTIALS path is used.
+    // In a deployed environment, credentials will be automatically discovered.
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+       console.log('Initializing Firebase Admin SDK with service account credentials.');
+       const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+       admin.initializeApp({
+         credential: admin.credential.cert(serviceAccount),
+       });
+    } else {
+       console.log('Initializing Firebase Admin SDK with default credentials.');
+       admin.initializeApp();
+    }
     console.log('Firebase Admin SDK initialized successfully.');
-  } catch (error) {
-    console.error('Error initializing Firebase Admin SDK:', error);
+  } catch (error: any) {
+    console.error('Error initializing Firebase Admin SDK:', error.message);
+    // You might want to throw the error or handle it gracefully
+    // depending on your application's needs. For now, we log it.
   }
 }
 
-export const adminAuth = admin.auth();
-export const adminDb = admin.firestore();
+try {
+  adminAuth = admin.auth();
+  adminDb = admin.firestore();
+} catch (error: any) {
+    console.error('Failed to get Firebase services. Was initialization successful?', error.message);
+    // In a real app, you might want to have a fallback or throw an error here
+    // For now, this will help in debugging.
+}
+
+
+export { adminAuth, adminDb };

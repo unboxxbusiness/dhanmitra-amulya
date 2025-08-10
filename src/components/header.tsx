@@ -1,12 +1,10 @@
 import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
-import { getSession } from '@/lib/auth';
 import { UserNav } from './user-nav';
 import { Button } from './ui/button';
+import { getSession } from '@/lib/auth';
 
-export async function Header() {
-  const session = await getSession();
-
+export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -16,13 +14,7 @@ export async function Header() {
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-1">
-            {session ? (
-              <UserNav session={session} />
-            ) : (
-              <Button asChild variant="ghost">
-                <Link href="/login">Login</Link>
-              </Button>
-            )}
+            <UserNav />
           </nav>
         </div>
       </div>
