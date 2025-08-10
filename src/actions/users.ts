@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
@@ -553,6 +554,21 @@ export async function sendPasswordReset() {
 
     try {
         await adminAuth.generatePasswordResetLink(session.email);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function sendPasswordResetEmailForUser(userId: string) {
+    await verifyAdmin();
+    try {
+        const user = await adminAuth.getUser(userId);
+        if (!user.email) {
+            return { success: false, error: "User does not have an email address." };
+        }
+        await adminAuth.generatePasswordResetLink(user.email);
         return { success: true };
     } catch (error: any) {
         console.error("Error sending password reset email:", error);

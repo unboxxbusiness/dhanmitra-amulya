@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useActionState } from 'react';
+import { useEffect, useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { updateUserProfile, type UserProfile } from '@/actions/users';
+import { updateUserProfile, sendPasswordResetEmailForUser, type UserProfile } from '@/actions/users';
 import { ROLES } from '@/lib/definitions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, KeyRound } from 'lucide-react';
+import { Separator } from '../ui/separator';
 
 interface EditMemberDialogProps {
     isOpen: boolean;
@@ -36,6 +38,7 @@ function SubmitButton() {
 
 export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogProps) {
     const { toast } = useToast();
+    const [isSendingReset, setIsSendingReset] = useState(false);
     const updateUserWithId = updateUserProfile.bind(null, member?.id ?? '');
     const [state, formAction] = useActionState(updateUserWithId, initialState);
     
@@ -52,12 +55,24 @@ export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogPr
         }
     }, [state, toast, onClose]);
 
+    const handleSendResetEmail = async () => {
+        if (!member) return;
+        setIsSendingReset(true);
+        const result = await sendPasswordResetEmailForUser(member.id);
+        if (result.success) {
+            toast({ title: "Email Sent", description: `A password reset link has been sent to ${member.email}.` });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: result.error });
+        }
+        setIsSendingReset(false);
+    }
+
 
     if (!isOpen || !member) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-md">
                 <form action={formAction}>
                     <DialogHeader>
                         <DialogTitle>Edit Member Profile</DialogTitle>
@@ -97,6 +112,15 @@ export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogPr
                         <SubmitButton />
                     </DialogFooter>
                 </form>
+                <Separator className="my-4" />
+                 <div className="space-y-2">
+                    <p className="text-sm font-medium">Security Actions</p>
+                    <Button variant="outline" size="sm" onClick={handleSendResetEmail} disabled={isSendingReset}>
+                        {isSendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                        Send Reset Password
+                    </Button>
+                     <p className="text-xs text-muted-foreground">This will send a password reset link to the member's email address.</p>
+                </div>
             </DialogContent>
         </Dialog>
     )
