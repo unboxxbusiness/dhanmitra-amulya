@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SavingsAccountsTab } from "@/components/admin/savings/savings-accounts-tab";
 import { SavingsSchemesTab } from "@/components/admin/savings/savings-schemes-tab";
+import { SavingsSettingsTab } from "@/components/admin/savings/savings-settings-tab";
 
 export default function SavingsManagementPage() {
   return (
@@ -26,7 +27,7 @@ export default function SavingsManagementPage() {
           <SavingsSchemesTab />
         </TabsContent>
         <TabsContent value="settings">
-            <p className="p-4 text-muted-foreground">Global settings for interest calculation, penalties, and charges will be managed here.</p>
+          <SavingsSettingsTab />
         </TabsContent>
       </Tabs>
     </div>

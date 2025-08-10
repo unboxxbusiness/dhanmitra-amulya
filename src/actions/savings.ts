@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
+const SETTINGS_DOC_ID = 'globalSavingsSettings';
 
 async function verifyAdmin() {
   const session = await getSession();
@@ -32,6 +33,12 @@ export type SavingsAccount = {
     balance: number;
     status: 'Active' | 'Dormant' | 'Closed';
     createdAt: string; // ISO String
+}
+
+export type SavingsSettings = {
+    interestCalculationPeriod: 'daily' | 'monthly' | 'quarterly' | 'annually';
+    latePaymentPenaltyRate: number;
+    accountMaintenanceFee: number;
 }
 
 
@@ -80,8 +87,6 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
     try {
         const accountsSnapshot = await adminDb.collection('savingsAccounts').orderBy('createdAt', 'desc').get();
         
-        // This is inefficient in large scale, but works for smaller datasets.
-        // A better approach would be to denormalize userName and schemeName into the account document.
         const accounts = await Promise.all(accountsSnapshot.docs.map(async (doc) => {
             const data = doc.data();
             const userDoc = await adminDb.collection('users').doc(data.userId).get();
@@ -104,5 +109,48 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
     } catch (error) {
         console.error("Error fetching savings accounts:", error);
         return [];
+    }
+}
+
+// Settings Management
+export async function getSavingsSettings(): Promise<SavingsSettings> {
+    await verifyAdmin();
+    try {
+        const settingsDoc = await adminDb.collection('settings').doc(SETTINGS_DOC_ID).get();
+        if (settingsDoc.exists) {
+            return settingsDoc.data() as SavingsSettings;
+        } else {
+            // Return default settings if none are found
+            return {
+                interestCalculationPeriod: 'monthly',
+                latePaymentPenaltyRate: 1.5,
+                accountMaintenanceFee: 0,
+            };
+        }
+    } catch (error) {
+        console.error("Error fetching savings settings:", error);
+        throw new Error("Could not fetch settings.");
+    }
+}
+
+export async function updateSavingsSettings(formData: FormData) {
+    await verifyAdmin();
+
+    const settings: SavingsSettings = {
+        interestCalculationPeriod: formData.get('interestCalculationPeriod') as SavingsSettings['interestCalculationPeriod'],
+        latePaymentPenaltyRate: parseFloat(formData.get('latePaymentPenaltyRate') as string),
+        accountMaintenanceFee: parseFloat(formData.get('accountMaintenanceFee') as string),
+    };
+
+    if (isNaN(settings.latePaymentPenaltyRate) || isNaN(settings.accountMaintenanceFee)) {
+        return { success: false, error: 'Invalid number format for rates or fees.' };
+    }
+
+    try {
+        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set(settings, { merge: true });
+        revalidatePath('/admin/savings');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }
