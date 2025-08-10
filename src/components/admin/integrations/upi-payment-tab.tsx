@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Link } from "lucide-react";
-import { updateUpiLink } from '@/actions/settings';
+import { updateUpiId } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
 
 const initialState = { success: false, error: null, message: null };
@@ -19,7 +19,7 @@ function SubmitButton() {
     return (
         <Button type="submit" disabled={pending}>
             {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Link
+            Save UPI ID
         </Button>
     )
 }
@@ -27,7 +27,7 @@ function SubmitButton() {
 export function UpiPaymentTab({ config }: { config: SocietyConfig }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction] = useActionState(updateUpiLink, initialState);
+  const [state, formAction] = useActionState(updateUpiId, initialState);
 
   useEffect(() => {
     if (state.success) {
@@ -44,26 +44,26 @@ export function UpiPaymentTab({ config }: { config: SocietyConfig }) {
     <Card>
       <form ref={formRef} action={formAction}>
         <CardHeader>
-          <CardTitle>UPI Payment Link</CardTitle>
+          <CardTitle>UPI Payment Configuration</CardTitle>
           <CardDescription>
-            Provide a universal UPI link (e.g., upi://pay?pa=... or a URL to a QR code) for members to use.
+            Enter your society's UPI ID (VPA). A payment link will be automatically generated for members.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="upiLink">UPI Payment Link / URL</Label>
+            <Label htmlFor="upiId">Your UPI ID (VPA)</Label>
             <div className="flex items-center space-x-2">
                 <Link className="h-5 w-5 text-muted-foreground" />
                 <Input 
-                    id="upiLink" 
-                    name="upiLink" 
-                    defaultValue={config.upiPaymentLink} 
-                    placeholder="upi://pay?pa=your-vpa@okhdfcbank&pn=YourName"
+                    id="upiId" 
+                    name="upiId" 
+                    defaultValue={config.upiId} 
+                    placeholder="your-vpa@bank"
                 />
             </div>
           </div>
            <p className="text-sm text-muted-foreground">
-                This link will be shown to all members on their dashboard as a quick payment option.
+                This UPI ID will be shown to all members on their dashboard as a quick payment option.
             </p>
         </CardContent>
         <CardFooter className="border-t px-6 py-4">

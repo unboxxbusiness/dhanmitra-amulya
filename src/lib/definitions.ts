@@ -233,7 +233,7 @@ export type SocietyConfig = {
     registrationNumber: string;
     address: string;
     kycRetentionYears: number;
-    upiPaymentLink?: string;
+    upiId?: string;
 }
 
 export type ComplianceSettings = {

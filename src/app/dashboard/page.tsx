@@ -25,6 +25,10 @@ export default async function DashboardPage() {
   ]);
   
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
+
+  const upiPaymentLink = societyConfig.upiId 
+    ? `upi://pay?pa=${societyConfig.upiId}&pn=${encodeURIComponent(societyConfig.name)}` 
+    : '';
   
   return (
     <>
@@ -51,9 +55,9 @@ export default async function DashboardPage() {
                Make a Deposit
             </Link>
           </Button>
-          {societyConfig.upiPaymentLink && (
+          {upiPaymentLink && (
             <Button asChild variant="secondary" className="w-full">
-              <a href={societyConfig.upiPaymentLink} target="_blank" rel="noopener noreferrer">
+              <a href={upiPaymentLink} target="_blank" rel="noopener noreferrer">
                 <LinkIcon className="mr-2 h-4 w-4"/>
                 Pay with UPI
               </a>

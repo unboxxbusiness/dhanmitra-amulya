@@ -30,7 +30,7 @@ export async function getSocietyConfig(): Promise<SocietyConfig> {
             registrationNumber: 'Not Set',
             address: 'Not Set',
             kycRetentionYears: 7,
-            upiPaymentLink: '',
+            upiId: '',
         };
     }
     return doc.data() as SocietyConfig;
@@ -53,15 +53,20 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
     }
 }
 
-export async function updateUpiLink(prevState: any, formData: FormData) {
+export async function updateUpiId(prevState: any, formData: FormData) {
     await verifyAdmin();
-    const upiLink = formData.get('upiLink') as string;
+    const upiId = formData.get('upiId') as string;
+
+    // Simple validation for VPA format
+    if (upiId && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(upiId)) {
+        return { success: false, error: 'Please enter a valid UPI ID (e.g., yourname@bank).' };
+    }
 
     try {
-        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set({ upiPaymentLink: upiLink }, { merge: true });
+        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set({ upiId: upiId }, { merge: true });
         revalidatePath('/admin/integrations');
         revalidatePath('/dashboard');
-        return { success: true, message: 'UPI link updated successfully.' };
+        return { success: true, message: 'UPI ID updated successfully.' };
     } catch (error: any) {
         return { success: false, error: error.message };
     }
