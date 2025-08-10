@@ -1,5 +1,5 @@
 
-'./init';
+import './init';
 import admin from 'firebase-admin';
 
 // This initializes the Firebase Admin SDK.
