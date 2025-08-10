@@ -50,6 +50,7 @@ export type Application = {
     id: string;
     name: string;
     email: string;
+    phone: string;
     applyDate: string;
     status: 'pending' | 'approved' | 'rejected';
     kycDocs: {

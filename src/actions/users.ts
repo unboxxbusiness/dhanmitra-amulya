@@ -123,7 +123,7 @@ export async function deleteMember(userId: string) {
 export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
     // This action is now public for self-registration.
     // It no longer requires authentication.
-    if (!data.name || !data.email) {
+    if (!data.name || !data.email || !data.phone) {
         return { success: false, error: 'Missing user data for application.' };
     }
 
@@ -156,6 +156,7 @@ export async function getPendingApplications(): Promise<Application[]> {
                 id: doc.id,
                 name: data.name,
                 email: data.email,
+                phone: data.phone,
                 applyDate: new Date(data.applyDate).toLocaleDateString(),
                 status: data.status,
                 kycDocs: data.kycDocs
@@ -184,6 +185,7 @@ export async function approveApplication(applicationId: string) {
             email: appData.email,
             password: tempPassword,
             displayName: appData.name,
+            phoneNumber: appData.phone,
         });
 
         // 2. Set custom claims (default to 'member' role)
@@ -193,7 +195,7 @@ export async function approveApplication(applicationId: string) {
         await adminDb.collection('users').doc(userRecord.uid).set({
             name: appData.name,
             email: appData.email,
-            phone: '', // Initialize empty fields
+            phone: appData.phone,
             address: '',
             nominee: { name: '', relationship: '' },
             kycDocs: appData.kycDocs, // Copy KYC docs from application

@@ -95,9 +95,9 @@ export function PendingApplicationsTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Application ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Application Date</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
@@ -106,9 +106,9 @@ export function PendingApplicationsTab() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-[200px] mx-auto" /></TableCell>
                   </TableRow>
@@ -116,9 +116,9 @@ export function PendingApplicationsTab() {
               ) : applications.length > 0 ? (
                 applications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell className="font-mono text-xs">{app.id}</TableCell>
                     <TableCell>{app.name}</TableCell>
                     <TableCell>{app.email}</TableCell>
+                    <TableCell>{app.phone}</TableCell>
                     <TableCell>{app.applyDate}</TableCell>
                     <TableCell className="text-center space-x-2">
                        {processingId === app.id ? (
