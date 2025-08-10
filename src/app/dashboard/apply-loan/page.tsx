@@ -6,6 +6,7 @@ import { getAvailableLoanProducts } from "@/actions/loans";
 import { ApplyForLoanForm } from "@/components/dashboard/apply-loan-form";
 import type { LoanProduct } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 
 export default function ApplyForLoanPage() {
     const [products, setProducts] = useState<LoanProduct[]>([]);

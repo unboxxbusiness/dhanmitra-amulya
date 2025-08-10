@@ -4,7 +4,7 @@
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails, UserSession } from '@/lib/definitions';
+import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails } from '@/lib/definitions';
 import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
@@ -350,7 +350,12 @@ export async function recordRepayment(loanId: string, repaymentIndex: number) {
 
 
 // --- Member-facing Actions ---
-export async function getMemberLoanHistory(session: UserSession): Promise<RepaymentWithLoanDetails[]> {
+export async function getMemberLoanHistory(): Promise<RepaymentWithLoanDetails[]> {
+  const session = await getSession();
+  if (!session) {
+      throw new Error("Not authenticated. Please log in.");
+  }
+  
   const loansSnapshot = await adminDb.collection('activeLoans').where('userId', '==', session.uid).get();
 
   let allRepayments: RepaymentWithLoanDetails[] = [];
@@ -382,7 +387,7 @@ export async function getMemberLoanHistory(session: UserSession): Promise<Repaym
 
 export async function exportMemberLoanHistory(): Promise<string> {
     const session = await verifyUser(MEMBER_ROLES);
-    const history = await getMemberLoanHistory(session);
+    const history = await getMemberLoanHistory();
 
     const csvData = history.map(item => ({
         "Loan Account": item.accountNumber,
