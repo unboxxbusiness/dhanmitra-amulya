@@ -292,3 +292,31 @@ export type LoanClosureCertificateData = {
     isClosed: boolean;
     generatedDate: string;
 }
+
+// --- Support Ticket Schemas ---
+export const TICKET_CATEGORIES = ['General Inquiry', 'Transaction Dispute', 'Loan Question', 'Deposit Question', 'KYC Update', 'Other'] as const;
+export const TICKET_STATUSES = ['Open', 'In Progress', 'Resolved', 'Closed'] as const;
+
+export type TicketCategory = (typeof TICKET_CATEGORIES)[number];
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+
+export type TicketReply = {
+    replyId: string;
+    authorId: string;
+    authorName: string;
+    message: string;
+    createdAt: string; // ISO string
+};
+
+export type SupportTicket = {
+    id: string;
+    userId: string;
+    userName: string;
+    category: TicketCategory;
+    subject: string;
+    message: string;
+    status: TicketStatus;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+    replies: TicketReply[];
+};
