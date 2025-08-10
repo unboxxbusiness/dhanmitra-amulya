@@ -12,10 +12,13 @@ export default function AdminLayout({
 }) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarContent className="p-2">
-            <div className="p-2">
-                 <h2 className="font-bold text-lg text-sidebar-primary">Amulya Admin</h2>
+            <div className="p-2 flex items-center gap-2">
+                 <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
+                    <SidebarTrigger />
+                 </Button>
+                 <h2 className="font-bold text-lg text-sidebar-primary group-data-[collapsible=icon]:hidden">Amulya Admin</h2>
             </div>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -103,9 +106,11 @@ export default function AdminLayout({
       </Sidebar>
       <SidebarInset>
         <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
-            <SidebarTrigger className="md:hidden"/>
-            <div className="flex-1 text-center font-semibold">
-                Admin Panel
+            <div className="flex items-center gap-2">
+                <SidebarTrigger className="hidden md:flex" />
+                <div className="flex-1 font-semibold">
+                    Admin Panel
+                </div>
             </div>
              <UserNav />
         </header>
