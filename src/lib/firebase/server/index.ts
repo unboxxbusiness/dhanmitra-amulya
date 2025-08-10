@@ -1,42 +1,22 @@
-
-'use server';
-
+'./init';
 import admin from 'firebase-admin';
 
-/**
- * Ensures the Firebase Admin SDK is initialized, but only once.
- * This is the single source of truth for the admin SDK instance.
- */
-function getFirebaseAdmin() {
-  if (admin.apps.length > 0) {
-    return admin;
-  }
-
+// This initializes the Firebase Admin SDK.
+// It checks if the app is already initialized to prevent errors.
+// By default, initializeApp() will look for credentials in the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable. The init.ts file helps create this file from another env var if needed.
+if (!admin.apps.length) {
   try {
     console.log('Initializing Firebase Admin SDK...');
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!serviceAccountJson) {
-      throw new Error(
-        'FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set.'
-      );
-    }
-    const serviceAccount = JSON.parse(serviceAccountJson);
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    admin.initializeApp();
     console.log('Firebase Admin SDK initialized successfully.');
-    return admin;
   } catch (error: any) {
-    console.error(
-      'CRITICAL: Could not initialize Firebase Admin SDK.',
-      error.message
-    );
-    // This error is critical for server operation, so we re-throw it to prevent the server from starting in a broken state.
+    console.error('CRITICAL: Error initializing Firebase Admin SDK:', error.message);
+    // This error is critical for server operation, so we re-throw it to prevent 
+    // the server from starting in a broken state.
     throw new Error('Could not initialize Firebase Admin SDK. Server cannot start.');
   }
 }
 
-export const adminInstance = getFirebaseAdmin();
-export const adminAuth = adminInstance.auth();
-export const adminDb = adminInstance.firestore();
+export const adminAuth = admin.auth();
+export const adminDb = admin.firestore();

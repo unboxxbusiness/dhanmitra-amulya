@@ -1,9 +1,8 @@
 
 'use server';
 import { cookies } from 'next/headers';
-import { adminAuth, adminDb } from '@/lib/firebase/server';
+import { adminAuth } from '@/lib/firebase/server';
 import type { UserSession, Role } from '@/lib/definitions';
-import { cache } from 'react';
 import { ROLES } from './definitions';
 
 export const getSession = async (): Promise<UserSession | null> => {
