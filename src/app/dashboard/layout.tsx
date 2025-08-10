@@ -1,7 +1,7 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText } from 'lucide-react';
+import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, Bell } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -37,7 +37,14 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Notices">
+                <Link href="/dashboard/notices">
+                  <Bell />
+                  <span>Notices</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <Collapsible>
                 <>
                     <SidebarMenuItem>
