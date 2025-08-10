@@ -6,7 +6,7 @@ import { getSession } from './lib/auth';
 const AUTH_ROUTES = ['/login', '/signup'];
 const PROTECTED_ROUTES = ['/dashboard'];
 const ADMIN_ROUTES = ['/admin'];
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+export const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -7,8 +7,8 @@ import { ROLES, type Role, type UserProfile, type Application, type LoanApplicat
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
+import { ADMIN_ROLES } from '@/middleware';
 
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 // A helper function to verify if the current user is an admin
 async function verifyAdmin() {
