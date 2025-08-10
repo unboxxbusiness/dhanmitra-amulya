@@ -27,7 +27,7 @@ const ReplyForm = ({ ticketId }: { ticketId: string }) => {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const addReplyWithId = addTicketReply.bind(null, ticketId);
-    const [state, formAction] = useActionState(addReplyWithId, { success: false, error: null });
+    const [state, formAction] = useActionState(addReplyWithId, { success: false, error: null as string | null });
     const { pending } = useFormStatus();
 
     useEffect(() => {

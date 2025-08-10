@@ -12,6 +12,11 @@ const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer'];
 const ALL_ROLES = [...ADMIN_ROLES, 'member'];
 
 async function verifyUser(roles: string[]) {
+    // During build, there's no session, so we can bypass the check.
+    // The page will be dynamically rendered on request and protected by middleware.
+    if (process.env.npm_lifecycle_event === 'build') {
+        return;
+    }
     const session = await getSession();
     if (!session || !roles.includes(session.role)) {
         throw new Error('Not authorized for this action');
@@ -38,6 +43,9 @@ export async function createSupportTicket(prevState: any, formData: FormData) {
     if (!validatedFields.success) {
         return { success: false, error: validatedFields.error.flatten().fieldErrors };
     }
+    if (!session) {
+        return { success: false, error: { _form: ['Not authorized'] } };
+    }
 
     try {
         const newTicket: Omit<SupportTicket, 'id' | 'replies'> = {
@@ -61,6 +69,7 @@ export async function createSupportTicket(prevState: any, formData: FormData) {
 
 export async function getMemberTickets(): Promise<SupportTicket[]> {
     const session = await verifyUser(ALL_ROLES);
+    if (!session) return [];
     const snapshot = await adminDb.collection('supportTickets')
         .where('userId', '==', session.uid)
         .orderBy('updatedAt', 'desc')
@@ -79,6 +88,9 @@ export async function getMemberTickets(): Promise<SupportTicket[]> {
 
 export async function getAllTickets(): Promise<SupportTicket[]> {
     await verifyUser(ADMIN_ROLES);
+     if (process.env.npm_lifecycle_event === 'build') {
+        return [];
+    }
     const snapshot = await adminDb.collection('supportTickets')
         .orderBy('updatedAt', 'desc')
         .get();
@@ -103,7 +115,7 @@ export async function getTicketById(id: string): Promise<SupportTicket | null> {
     const ticket = { id: doc.id, ...doc.data() } as SupportTicket;
     
     // Security check: member can only access their own tickets
-    if (session.role === 'member' && ticket.userId !== session.uid) {
+    if (session && session.role === 'member' && ticket.userId !== session.uid) {
         throw new Error('You are not authorized to view this ticket.');
     }
     
@@ -121,6 +133,9 @@ const AddReplySchema = z.object({
 
 export async function addTicketReply(ticketId: string, formData: FormData) {
     const session = await verifyUser(ALL_ROLES);
+    if (!session) {
+      return { success: false, error: 'Not authorized.' };
+    }
     const validatedFields = AddReplySchema.safeParse({
         message: formData.get('message'),
     });
