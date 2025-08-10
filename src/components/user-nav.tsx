@@ -42,6 +42,7 @@ export function UserNav() {
   }
   
   const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
+  const dashboardUrl = isPrivilegedUser ? '/admin' : '/dashboard';
 
   return (
     <DropdownMenu>
@@ -65,7 +66,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={isPrivilegedUser ? "/admin" : "/dashboard"}>
+            <Link href={dashboardUrl}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>

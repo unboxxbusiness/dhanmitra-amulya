@@ -11,8 +11,6 @@ export function middleware(request: NextRequest) {
 
   // If user is logged in, redirect from auth pages to dashboard
   if (sessionCookie && AUTH_ROUTES.includes(pathname)) {
-    // The client-side logic will handle redirecting to the correct dashboard (/admin or /dashboard)
-    // Here, we just redirect to a default protected route to get them away from the login page.
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
