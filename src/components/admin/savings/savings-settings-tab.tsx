@@ -5,7 +5,7 @@ import { useState, useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,8 +43,10 @@ export function SavingsSettingsTab() {
   useEffect(() => {
     if (state.success) {
       toast({ title: "Settings Saved", description: "Global savings settings have been updated." });
+      state.success = false; // Reset for next action
     } else if (state.error) {
       toast({ variant: 'destructive', title: "Error", description: state.error });
+      state.error = null; // Reset for next action
     }
   }, [state, toast]);
 
@@ -63,13 +65,13 @@ export function SavingsSettingsTab() {
 
   return (
     <Card>
-        <CardHeader>
-            <CardTitle>Global Savings Settings</CardTitle>
-            <CardDescription>
-                These settings apply to all savings accounts unless overridden by a specific scheme.
-            </CardDescription>
-        </CardHeader>
         <form action={formAction}>
+            <CardHeader>
+                <CardTitle>Global Savings Settings</CardTitle>
+                <CardDescription>
+                    These settings apply to all savings accounts unless overridden by a specific scheme.
+                </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-6">
                 <div className="space-y-2">
                     <Label htmlFor="interestCalculationPeriod">Interest Calculation Period</Label>

@@ -65,16 +65,18 @@ export function SavingsSchemesTab() {
   }, []);
 
   useEffect(() => {
-    if (state.success) {
-      toast({ title: "Scheme Added", description: "The new savings scheme has been created." });
-      fetchSchemes();
-      setIsDialogOpen(false);
+    if(state.success === true) {
+        toast({ title: "Scheme Added", description: "The new savings scheme has been created." });
+        fetchSchemes();
+        setIsDialogOpen(false); // Close dialog on success
+        state.success = false; // Reset state
     } else if (state.error) {
-      toast({
-        variant: 'destructive',
-        title: "Error",
-        description: state.error || "An unknown error occurred.",
-      });
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: state.error
+        });
+        state.error = null; // Reset state
     }
   }, [state, toast]);
 

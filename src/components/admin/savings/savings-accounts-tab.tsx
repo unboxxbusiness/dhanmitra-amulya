@@ -10,11 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { useToast } from '@/hooks/use-toast';
+import { CreateAccountDialog } from './create-account-dialog';
 
 export function SavingsAccountsTab() {
   const { toast } = useToast();
   const [accounts, setAccounts] = useState<SavingsAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
 
   const fetchAccounts = async () => {
     setLoading(true);
@@ -36,6 +38,13 @@ export function SavingsAccountsTab() {
     fetchAccounts();
   }, []);
   
+  const handleDialogClose = (refresh?: boolean) => {
+    setCreateDialogOpen(false);
+    if (refresh) {
+        fetchAccounts();
+    }
+  }
+
   const getStatusBadgeVariant = (status: SavingsAccount['status']) => {
     switch (status) {
       case 'Active':
@@ -57,7 +66,7 @@ export function SavingsAccountsTab() {
           <CardTitle>Member Savings Accounts</CardTitle>
           <CardDescription>A list of all savings accounts.</CardDescription>
            <div className="flex items-center gap-4 pt-4">
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Account
             </Button>
@@ -70,7 +79,7 @@ export function SavingsAccountsTab() {
                 <TableHead>Account Number</TableHead>
                 <TableHead>Member Name</TableHead>
                 <TableHead>Scheme</TableHead>
-                <TableHead>Balance</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created At</TableHead>
               </TableRow>
@@ -82,7 +91,7 @@ export function SavingsAccountsTab() {
                     <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[100px] ml-auto" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-[80px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                   </TableRow>
@@ -114,6 +123,10 @@ export function SavingsAccountsTab() {
           </Table>
         </CardContent>
       </Card>
+      <CreateAccountDialog 
+        isOpen={isCreateDialogOpen}
+        onClose={handleDialogClose}
+      />
     </>
   );
 }

@@ -4,6 +4,7 @@
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { getAllMembers } from './users';
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 const SETTINGS_DOC_ID = 'globalSavingsSettings';
@@ -44,9 +45,9 @@ export type SavingsSettings = {
 
 // Schemes Management
 export async function getSavingsSchemes(): Promise<SavingsScheme[]> {
-    await verifyAdmin();
+    // No auth check needed for reading schemes, can be public
     try {
-        const schemesSnapshot = await adminDb.collection('savingsSchemes').get();
+        const schemesSnapshot = await adminDb.collection('savingsSchemes').orderBy('name').get();
         return schemesSnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -57,7 +58,7 @@ export async function getSavingsSchemes(): Promise<SavingsScheme[]> {
     }
 }
 
-export async function addSavingsScheme(formData: FormData) {
+export async function addSavingsScheme(prevState: any, formData: FormData) {
     await verifyAdmin();
     const name = formData.get('name') as string;
     const interestRate = parseFloat(formData.get('interestRate') as string);
@@ -89,18 +90,19 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
         
         const accounts = await Promise.all(accountsSnapshot.docs.map(async (doc) => {
             const data = doc.data();
+            
+            // Batch fetches for user and scheme if they don't exist in a cache
             const userDoc = await adminDb.collection('users').doc(data.userId).get();
             const schemeDoc = await adminDb.collection('savingsSchemes').doc(data.schemeId).get();
             
+            const userName = userDoc.exists ? userDoc.data()?.name : 'User Not Found';
+            const schemeName = schemeDoc.exists ? schemeDoc.data()?.name : 'Scheme Not Found';
+
             return {
                 id: doc.id,
-                userId: data.userId,
-                userName: userDoc.data()?.name || 'N/A',
-                schemeId: data.schemeId,
-                schemeName: schemeDoc.data()?.name || 'N/A',
-                accountNumber: data.accountNumber,
-                balance: data.balance,
-                status: data.status,
+                ...data,
+                userName,
+                schemeName,
                 createdAt: new Date(data.createdAt).toLocaleDateString(),
             } as SavingsAccount;
         }));
@@ -112,9 +114,59 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
     }
 }
 
+
+function generateAccountNumber(): string {
+    const prefix = 'ACC';
+    const timestamp = Date.now().toString().slice(-8);
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
+    return `${prefix}${timestamp}${randomSuffix}`;
+}
+
+export async function createSavingsAccount(prevState: any, formData: FormData) {
+    const session = await verifyAdmin();
+    const userId = formData.get('userId') as string;
+    const schemeId = formData.get('schemeId') as string;
+    const initialDeposit = parseFloat(formData.get('initialDeposit') as string) || 0;
+
+    if (!userId || !schemeId) {
+        return { success: false, error: 'Member and scheme are required.' };
+    }
+
+    try {
+        // Fetch user and scheme details to ensure they exist
+        const userDoc = await adminDb.collection('users').doc(userId).get();
+        const schemeDoc = await adminDb.collection('savingsSchemes').doc(schemeId).get();
+
+        if (!userDoc.exists) {
+            return { success: false, error: 'Selected member does not exist.' };
+        }
+        if (!schemeDoc.exists) {
+            return { success: false, error: 'Selected scheme does not exist.' };
+        }
+        
+        const newAccount = {
+            userId,
+            schemeId,
+            accountNumber: generateAccountNumber(),
+            balance: initialDeposit,
+            status: 'Active' as const,
+            createdAt: new Date().toISOString(),
+            createdBy: session.uid,
+        };
+
+        await adminDb.collection('savingsAccounts').add(newAccount);
+
+        revalidatePath('/admin/savings');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+
 // Settings Management
 export async function getSavingsSettings(): Promise<SavingsSettings> {
-    await verifyAdmin();
+    // No auth check needed for reading settings, can be public
     try {
         const settingsDoc = await adminDb.collection('settings').doc(SETTINGS_DOC_ID).get();
         if (settingsDoc.exists) {
@@ -133,7 +185,7 @@ export async function getSavingsSettings(): Promise<SavingsSettings> {
     }
 }
 
-export async function updateSavingsSettings(formData: FormData) {
+export async function updateSavingsSettings(prevState: any, formData: FormData) {
     await verifyAdmin();
 
     const settings: SavingsSettings = {
