@@ -11,6 +11,18 @@ export type UserSession = {
   role: Role;
 };
 
+// --- User Profile ---
+export type UserProfile = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  joinDate: string; // ISO string
+  status: 'Active' | 'Suspended' | 'Resigned' | 'Pending';
+  role: Role;
+  fcmTokens?: string[]; // For Push Notifications
+};
+
+
 // --- Deposit Schemas ---
 
 export const TermSchema = z.object({

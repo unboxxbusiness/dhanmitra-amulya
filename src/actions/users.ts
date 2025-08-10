@@ -3,7 +3,7 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
-import { ROLES, type Role } from '@/lib/definitions';
+import { ROLES, type Role, type UserProfile } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 
@@ -18,15 +18,6 @@ async function verifyAdmin() {
   return session;
 }
 
-export type UserProfile = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  joinDate: string; // ISO string
-  status: 'Active' | 'Suspended' | 'Resigned' | 'Pending';
-  role: Role;
-};
-
 export async function getAllMembers(): Promise<UserProfile[]> {
   await verifyAdmin();
   try {
@@ -40,6 +31,7 @@ export async function getAllMembers(): Promise<UserProfile[]> {
         joinDate: data.createdAt ? new Date(data.createdAt).toISOString().split('T')[0] : 'N/A',
         status: data.status || 'Active',
         role: data.role || 'member',
+        fcmTokens: data.fcmTokens || [],
       };
     });
     return users;
@@ -224,6 +216,6 @@ export async function bulkImportMembers(csvContent: string) {
 export async function exportMembersToCsv(): Promise<string> {
     await verifyAdmin();
     const members = await getAllMembers();
-    const dataForCsv = members.map(({ id, ...rest }) => rest);
+    const dataForCsv = members.map(({ id, fcmTokens, ...rest }) => rest);
     return Papa.unparse(dataForCsv);
 }

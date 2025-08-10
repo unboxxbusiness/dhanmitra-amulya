@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Home, Users, Settings, Banknote, PiggyBank, Landmark, ArrowLeftRight, BookCopy, FileSpreadsheet } from 'lucide-react';
+import { Home, Users, Settings, Banknote, PiggyBank, Landmark, ArrowLeftRight, BookCopy, FileSpreadsheet, MessageSquare } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,14 @@ export default function AdminLayout({
                 <Link href="/admin/reports">
                   <FileSpreadsheet />
                   <span>Reports</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Notifications">
+                <Link href="/admin/notifications">
+                  <MessageSquare />
+                  <span>Notifications</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
