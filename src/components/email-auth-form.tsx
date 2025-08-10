@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ROLES } from '@/lib/definitions';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -27,8 +26,6 @@ type UserFormValue = z.infer<typeof formSchema>;
 interface EmailAuthFormProps {
   mode: 'login' | 'signup';
 }
-
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const router = useRouter();
@@ -56,12 +53,8 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
           description: "Redirecting...",
         });
 
-        // Explicitly redirect based on the role returned from the server
-        const isAdmin = ADMIN_ROLES.includes(sessionResult.role);
-        const redirectPath = isAdmin ? '/admin' : '/dashboard';
-        router.push(redirectPath);
-        
-        // We still call refresh to ensure server components re-render with the new session.
+        // The middleware will now handle the redirection.
+        // We just need to refresh the page to re-trigger the middleware with the new session cookie.
         router.refresh();
 
       } else {
