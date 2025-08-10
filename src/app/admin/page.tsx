@@ -1,16 +1,19 @@
 
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, Users, Clock, Landmark, PiggyBank, BadgePercent, Wallet, ArrowLeftRight } from 'lucide-react';
+import { ShieldCheck, Users, Landmark, PiggyBank, BadgePercent, Wallet, ArrowLeftRight } from 'lucide-react';
 import { getAllMembers } from '@/actions/users';
 import { getActiveDeposits } from '@/actions/deposits';
 import { getActiveLoans } from '@/actions/loans';
 import { getLoanAgingReport } from '@/actions/reports';
 import { getChartOfAccounts } from '@/actions/accounting';
 import { getTransactionHistory } from '@/actions/transactions';
-import { differenceInHours } from 'date-fns';
+import type { Transaction } from '@/lib/definitions';
+import { FinancialOverviewChart } from '@/components/admin/dashboard/financial-overview-chart';
+import { RecentTransactionsList } from '@/components/admin/dashboard/recent-transactions-list';
+
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
@@ -29,7 +32,7 @@ async function getDashboardStats() {
             getActiveLoans(),
             getLoanAgingReport(),
             getChartOfAccounts(),
-            getTransactionHistory({ limit: 100 }) // Fetch recent transactions
+            getTransactionHistory({ limit: 5 }) // Fetch recent transactions for the list
         ]);
 
         const totalMembers = members.length;
@@ -42,8 +45,8 @@ async function getDashboardStats() {
         const cashAccount = chartOfAccounts.find(acc => acc.id === '1010'); // 'Cash on Hand'
         const cashInHand = cashAccount?.balance || 0;
 
-        const now = new Date();
-        const dailyTransactions = transactions.filter(t => differenceInHours(now, new Date(t.date)) <= 24).length;
+        const dailyTransactions = (await getTransactionHistory({ limit: 100 })).length;
+
 
         return {
             totalMembers,
@@ -52,6 +55,7 @@ async function getDashboardStats() {
             delinquencyRate,
             cashInHand,
             dailyTransactions,
+            recentTransactions: transactions,
         };
     } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -63,6 +67,7 @@ async function getDashboardStats() {
             delinquencyRate: 0,
             cashInHand: 0,
             dailyTransactions: 0,
+            recentTransactions: [] as Transaction[],
         };
     }
 }
@@ -76,6 +81,12 @@ export default async function AdminPage() {
   }
 
   const stats = await getDashboardStats();
+
+  const chartData = [
+    { name: 'Total Deposits', value: stats.totalDeposits },
+    { name: 'Outstanding Loans', value: stats.outstandingLoans },
+    { name: 'Cash In Hand', value: stats.cashInHand },
+  ];
 
   return (
     <div className="space-y-8">
@@ -152,6 +163,26 @@ export default async function AdminPage() {
             <div className="text-2xl font-bold">+{stats.dailyTransactions}</div>
             <p className="text-xs text-muted-foreground">Transactions recorded in the last 24 hours</p>
           </CardContent>
+        </Card>
+      </div>
+
+       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="lg:col-span-4">
+          <CardHeader>
+            <CardTitle>Financial Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <FinancialOverviewChart data={chartData} />
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-3">
+            <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+                <p className="text-sm text-muted-foreground">The last 5 transactions recorded.</p>
+            </CardHeader>
+            <CardContent>
+                <RecentTransactionsList transactions={stats.recentTransactions} />
+            </CardContent>
         </Card>
       </div>
       
