@@ -35,10 +35,10 @@ export async function getAvailableDepositProducts(): Promise<DepositProduct[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DepositProduct));
 }
 
-export async function addDepositProduct(product: DepositProduct) {
+export async function addDepositProduct(product: Omit<DepositProduct, 'id'>) {
     await verifyUser(ADMIN_ROLES);
     try {
-        const validation = DepositProductSchema.safeParse(product);
+        const validation = DepositProductSchema.omit({id: true}).safeParse(product);
         if (!validation.success) {
             throw new Error(validation.error.errors.map(e => e.message).join(', '));
         }
@@ -56,7 +56,7 @@ export async function addDepositProduct(product: DepositProduct) {
 
 const MemberDepositApplicationSchema = z.object({
   productId: z.string().min(1, 'Please select a product.'),
-  principalAmount: z.number().positive('Deposit amount must be positive.'),
+  principalAmount: z.coerce.number().positive('Deposit amount must be positive.'),
   term: TermSchema,
 });
 
@@ -173,7 +173,8 @@ export async function approveDepositApplication(applicationId: string) {
             };
 
             // Create active deposit
-            transaction.set(adminDb.collection('activeDeposits').doc(), newActiveDeposit);
+            const newDepositRef = adminDb.collection('activeDeposits').doc();
+            transaction.set(newDepositRef, newActiveDeposit);
             
             // Update application status
             transaction.update(appRef, { status: 'approved', approvedBy: session.uid, approvalDate: new Date().toISOString() });

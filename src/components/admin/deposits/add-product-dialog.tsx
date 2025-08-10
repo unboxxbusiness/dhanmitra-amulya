@@ -21,12 +21,14 @@ interface AddProductDialogProps {
     onClose: (refresh?: boolean) => void;
 }
 
+type FormValues = Omit<DepositProduct, 'id'>;
+
 export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
-    const form = useForm<DepositProduct>({
-        resolver: zodResolver(DepositProductSchema),
+    const form = useForm<FormValues>({
+        resolver: zodResolver(DepositProductSchema.omit({id: true})),
         defaultValues: {
             name: '',
             type: 'FD',
@@ -42,7 +44,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
         name: "terms",
     });
 
-    const handleSubmit = async (data: DepositProduct) => {
+    const handleSubmit = async (data: FormValues) => {
         setLoading(true);
         const result = await addDepositProduct(data);
         if (result.success) {
@@ -61,7 +63,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
     if (!isOpen) return null;
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={isOpen} onOpenChange={(open) => {if (!open) {form.reset(); onClose();}}}>
             <DialogContent className="sm:max-w-2xl">
                  <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -128,7 +130,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
                                         <FormItem>
                                             <FormLabel>Minimum Deposit</FormLabel>
                                             <FormControl>
-                                                <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                                <Input type="number" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -141,7 +143,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
                                         <FormItem>
                                             <FormLabel>Maximum Deposit</FormLabel>
                                             <FormControl>
-                                                <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                                                <Input type="number" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -160,7 +162,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
                                             render={({ field: termField }) => (
                                                 <FormItem className="flex-1">
                                                     <FormControl>
-                                                        <Input type="number" placeholder="Months" {...termField} onChange={e => termField.onChange(parseInt(e.target.value))} />
+                                                        <Input type="number" placeholder="Months" {...termField} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -172,7 +174,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
                                             render={({ field: termField }) => (
                                                 <FormItem className="flex-1">
                                                     <FormControl>
-                                                        <Input type="number" step="0.01" placeholder="Interest Rate (%)" {...termField} onChange={e => termField.onChange(parseFloat(e.target.value))} />
+                                                        <Input type="number" step="0.01" placeholder="Interest Rate (%)" {...termField} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -198,7 +200,7 @@ export function AddProductDialog({ isOpen, onClose }: AddProductDialogProps) {
                         </div>
                         <DialogFooter className="mt-4">
                             <DialogClose asChild>
-                                <Button type="button" variant="secondary" onClick={() => onClose()}>Cancel</Button>
+                                <Button type="button" variant="secondary">Cancel</Button>
                             </DialogClose>
                             <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

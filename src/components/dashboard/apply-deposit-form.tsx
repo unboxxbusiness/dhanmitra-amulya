@@ -52,7 +52,7 @@ export function ApplyForDepositForm({ products }: { products: DepositProduct[] }
     const product = products.find(p => p.id === productId) || null;
     setSelectedProduct(product);
     form.setValue('productId', productId);
-    form.setValue('term', { durationMonths: 0, interestRate: 0 }); // Reset term
+    form.resetField('term'); // Reset term when product changes
   };
 
   const handleTermChange = (termString: string) => {
@@ -96,10 +96,11 @@ export function ApplyForDepositForm({ products }: { products: DepositProduct[] }
               </SelectTrigger>
               <SelectContent>
                 {products.map(p => (
-                  <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
+                  <SelectItem key={p.id!} value={p.id!}>{p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+             {form.formState.errors.productId && <p className="text-red-500 text-sm">{form.formState.errors.productId.message}</p>}
           </div>
 
           {selectedProduct && (
@@ -122,11 +123,11 @@ export function ApplyForDepositForm({ products }: { products: DepositProduct[] }
 
               <div className="space-y-2">
                 <Label>Select Term</Label>
-                <RadioGroup onValueChange={handleTermChange}>
+                <RadioGroup onValueChange={handleTermChange} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedProduct.terms.map(term => (
-                     <div className="flex items-center space-x-2" key={term.durationMonths}>
+                     <div className="flex items-center space-x-2 rounded-md border p-4" key={`${term.durationMonths}-${term.interestRate}`}>
                         <RadioGroupItem value={JSON.stringify(term)} id={`term-${term.durationMonths}`} />
-                        <Label htmlFor={`term-${term.durationMonths}`}>
+                        <Label htmlFor={`term-${term.durationMonths}`} className="font-normal w-full">
                             {term.durationMonths} months at {term.interestRate.toFixed(2)}% interest
                         </Label>
                     </div>

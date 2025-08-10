@@ -60,8 +60,8 @@ export type Application = {
 // --- Deposit Schemas ---
 
 export const TermSchema = z.object({
-  durationMonths: z.number().int().positive(),
-  interestRate: z.number().positive(),
+  durationMonths: z.coerce.number().int().positive(),
+  interestRate: z.coerce.number().positive(),
 });
 export type Term = z.infer<typeof TermSchema>;
 
@@ -71,8 +71,8 @@ export const DepositProductSchema = z.object({
   type: z.enum(['FD', 'RD']),
   description: z.string().min(10),
   terms: z.array(TermSchema).min(1),
-  minDeposit: z.number().positive(),
-  maxDeposit: z.number().positive(),
+  minDeposit: z.coerce.number().positive(),
+  maxDeposit: z.coerce.number().positive(),
 });
 export type DepositProduct = z.infer<typeof DepositProductSchema>;
 
@@ -92,7 +92,7 @@ export type ActiveDeposit = {
     id: string;
     userId: string;
     userName: string;
-    productName: string;
+    productName?: string;
     accountNumber: string;
     principalAmount: number;
     maturityAmount: number;
@@ -110,16 +110,16 @@ export const LoanProductSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(3, "Product name is required."),
     interestType: z.enum(['flat', 'reducing_balance']),
-    interestRate: z.number().positive("Interest rate must be positive."),
-    maxTermMonths: z.number().int().positive("Max term must be a positive number of months."),
+    interestRate: z.coerce.number().positive("Interest rate must be positive."),
+    maxTermMonths: z.coerce.number().int().positive("Max term must be a positive number of months."),
     collateralNotes: z.string().optional(),
 });
 export type LoanProduct = z.infer<typeof LoanProductSchema>;
 
 export const LoanApplicationSchema = z.object({
     productId: z.string().min(1),
-    amountRequested: z.number().positive(),
-    termMonths: z.number().int().positive(),
+    amountRequested: z.coerce.number().positive(),
+    termMonths: z.coerce.number().int().positive(),
 });
 export type LoanApplication = z.infer<typeof LoanApplicationSchema>;
 
@@ -147,8 +147,8 @@ export type Repayment = {
 export type ActiveLoan = {
     id: string;
     userId: string;
-    userName: string;
-    productName: string;
+    userName?: string;
+    productName?: string;
     accountNumber: string;
     principal: number;
     interestRate: number;
@@ -181,9 +181,9 @@ export type SavingsScheme = {
 export type SavingsAccount = {
     id: string;
     userId: string;
-    userName: string;
+    userName?: string;
     schemeId: string;
-    schemeName: string;
+    schemeName?: string;
     accountNumber: string;
     balance: number;
     status: 'Active' | 'Dormant' | 'Closed';
@@ -193,14 +193,15 @@ export type SavingsAccount = {
 export type Transaction = {
     id: string;
     accountId: string; // Savings account ID
-    accountNumber: string;
-    userName: string;
+    accountNumber?: string;
+    userId: string;
+    userName?: string;
     type: 'credit' | 'debit';
     amount: number;
     description: string;
     date: string; // ISO string
     tellerId: string;
-    tellerName: string;
+    tellerName?: string;
     status: 'completed' | 'pending' | 'failed';
     balanceBefore: number;
     balanceAfter: number;

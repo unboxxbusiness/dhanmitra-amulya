@@ -14,7 +14,7 @@ export default function DepositManagementPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="products" className="w-full">
+      <Tabs defaultValue="applications" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
