@@ -195,6 +195,17 @@ export type SavingsAccount = {
     createdAt: string; // ISO String
 }
 
+export type SavingsApplication = {
+    id: string;
+    userId: string;
+    userName: string;
+    schemeId: string;
+    schemeName: string;
+    initialDeposit: number;
+    status: 'pending' | 'approved' | 'rejected';
+    applicationDate: string; // ISO String
+}
+
 export type Transaction = {
     id: string;
     accountId: string; // Savings account ID

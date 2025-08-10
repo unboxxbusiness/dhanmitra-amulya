@@ -1,7 +1,7 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, LifeBuoy, Settings, PlusCircle, Landmark, PiggyBank } from 'lucide-react';
+import { Home, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, LifeBuoy, Settings, PlusCircle, Landmark, PiggyBank, Banknote as SavingsIcon } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -78,6 +78,11 @@ export default function DashboardLayout({
                 </SidebarMenuItem>
                 <CollapsibleContent asChild>
                     <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                            <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/apply-savings">Apply for Savings</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                              <SidebarMenuSubButton asChild>
                                 <Link href="/dashboard/apply-loan">Apply for Loan</Link>

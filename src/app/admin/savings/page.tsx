@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SavingsAccountsTab } from "@/components/admin/savings/savings-accounts-tab";
 import { SavingsSchemesTab } from "@/components/admin/savings/savings-schemes-tab";
 import { SavingsSettingsTab } from "@/components/admin/savings/savings-settings-tab";
+import { SavingsApplicationsTab } from "@/components/admin/savings/savings-applications-tab";
 
 export default function SavingsManagementPage() {
   return (
@@ -15,13 +16,17 @@ export default function SavingsManagementPage() {
       </div>
 
       <Tabs defaultValue="accounts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="schemes">Schemes</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="accounts">
           <SavingsAccountsTab />
+        </TabsContent>
+         <TabsContent value="applications">
+          <SavingsApplicationsTab />
         </TabsContent>
         <TabsContent value="schemes">
           <SavingsSchemesTab />
