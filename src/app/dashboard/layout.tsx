@@ -1,7 +1,7 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, Bell, LifeBuoy, Settings } from 'lucide-react';
+import { Home, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, LifeBuoy, Settings, PlusCircle, Landmark, PiggyBank } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -29,22 +29,7 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Profile">
-                <Link href="/dashboard/profile">
-                  <UserCircle />
-                  <span>Profile</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Notices">
-                <Link href="/dashboard/notices">
-                  <Bell />
-                  <span>Notices</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            
             <Collapsible>
                 <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
@@ -72,52 +57,50 @@ export default function DashboardLayout({
                                 <Link href="/dashboard#deposits">Deposit Accounts</Link>
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
+                         <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/payment-history">Payment History</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                     </SidebarMenuSub>
                 </CollapsibleContent>
             </Collapsible>
             
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Transactions">
-                <Link href="/dashboard#transactions">
-                  <ArrowLeftRight />
-                  <span>Transactions</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+             <Collapsible>
+                <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                         <Button variant="ghost" className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                            <PlusCircle />
+                            <span className="group-data-[collapsible=icon]:hidden flex-1 text-left ml-2">Services</span>
+                            <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        </Button>
+                    </CollapsibleTrigger>
+                </SidebarMenuItem>
+                <CollapsibleContent asChild>
+                    <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/apply-loan">Apply for Loan</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                         <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/apply-deposit">Apply for Deposit</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </Collapsible>
 
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Payment History">
-                <Link href="/dashboard/payment-history">
-                  <History />
-                  <span>Payment History</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Documents & Statements">
                 <Link href="/dashboard/documents">
                   <FileText />
-                  <span>Documents & Statements</span>
+                  <span>Documents</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Apply for Loan">
-                <Link href="/dashboard/apply-loan">
-                  <Landmark />
-                  <span>Apply for Loan</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Apply for Deposit">
-                <Link href="/dashboard/apply-deposit">
-                  <PiggyBank />
-                  <span>Apply for Deposit</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Support">
                 <Link href="/dashboard/support">
@@ -139,6 +122,11 @@ export default function DashboardLayout({
                 </SidebarMenuItem>
                 <CollapsibleContent asChild>
                     <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/profile">Profile</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                              <SidebarMenuSubButton asChild>
                                 <Link href="/dashboard/security">Security</Link>
