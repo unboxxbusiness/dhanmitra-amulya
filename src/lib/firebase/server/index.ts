@@ -2,34 +2,31 @@
 
 import * as admin from 'firebase-admin';
 
-let adminAuth: admin.auth.Auth;
-let adminDb: admin.firestore.Firestore;
+// This function ensures that the Firebase Admin SDK is initialized only once.
+function initializeFirebaseAdmin() {
+  if (admin.apps.length > 0) {
+    console.log('Firebase Admin SDK already initialized.');
+    return;
+  }
 
-if (!admin.apps.length) {
   try {
-    const serviceAccount = {
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // The private key must have newlines replaced to be stored in an env var.
-      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    };
-
-    if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
-      throw new Error('Firebase Admin SDK service account credentials are not set in environment variables.');
-    }
-
+    // When deployed to Firebase, environment variables are automatically set.
+    // initializeApp() with no arguments will use these variables.
     console.log('Initializing Firebase Admin SDK...');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    admin.initializeApp();
     console.log('Firebase Admin SDK initialized successfully.');
+
   } catch (error: any) {
-    console.error('CRITICAL: Error initializing Firebase Admin SDK:', error.message);
-    throw new Error('Could not initialize Firebase Admin SDK. Server cannot start.');
+    console.error('CRITICAL: Error initializing Firebase Admin SDK:', error);
+    // This error is critical and should prevent the server from starting.
+    throw new Error('Could not initialize Firebase Admin SDK. Please check server logs and environment variables.');
   }
 }
 
-adminAuth = admin.auth();
-adminDb = admin.firestore();
+// Initialize the app
+initializeFirebaseAdmin();
+
+const adminAuth = admin.auth();
+const adminDb = admin.firestore();
 
 export { adminAuth, adminDb };
