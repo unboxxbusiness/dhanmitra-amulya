@@ -4,8 +4,11 @@ import { GeneralSettingsTab } from "@/components/admin/settings/general-settings
 import { ComplianceTab } from "@/components/admin/settings/compliance-tab"
 import { BranchesTab } from "@/components/admin/settings/branches-tab";
 import { HolidaysTab } from "@/components/admin/settings/holidays-tab";
+import { getSocietyConfig } from "@/actions/settings";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const config = await getSocietyConfig();
+
   return (
     <div className="space-y-6">
       <div>
@@ -23,7 +26,7 @@ export default function SettingsPage() {
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
-          <GeneralSettingsTab />
+          <GeneralSettingsTab config={config} />
         </TabsContent>
          <TabsContent value="branches">
           <BranchesTab />
@@ -32,7 +35,7 @@ export default function SettingsPage() {
           <HolidaysTab />
         </TabsContent>
         <TabsContent value="compliance">
-          <ComplianceTab />
+          <ComplianceTab config={config} />
         </TabsContent>
       </Tabs>
     </div>

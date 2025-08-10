@@ -4,7 +4,7 @@
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import type { SavingsAccount } from './savings';
-import type { ActiveLoan } from '@/lib/definitions';
+import type { ActiveLoan, ChartOfAccount } from '@/lib/definitions';
 import { differenceInDays } from 'date-fns';
 import Papa from 'papaparse';
 
@@ -110,4 +110,64 @@ export async function getLoanAgingReport(): Promise<LoanAgingReportData[]> {
 export async function exportLoanAgingReport(): Promise<string> {
     const data = await getLoanAgingReport();
     return Papa.unparse(data);
+}
+
+
+// --- Financial Statements ---
+
+export type PandLReport = {
+    revenue: { name: string; balance: number }[];
+    expenses: { name: string; balance: number }[];
+    totalRevenue: number;
+    totalExpenses: number;
+    netProfit: number;
+}
+
+export async function getProfitAndLossReport(): Promise<PandLReport> {
+    await verifyAdmin();
+    const coaSnapshot = await adminDb.collection('chartOfAccounts').get();
+    const accounts = coaSnapshot.docs.map(d => d.data() as ChartOfAccount);
+
+    const revenue = accounts.filter(a => a.type === 'Revenue').map(a => ({ name: a.name, balance: a.balance }));
+    const expenses = accounts.filter(a => a.type === 'Expense').map(a => ({ name: a.name, balance: a.balance }));
+
+    const totalRevenue = revenue.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalExpenses = expenses.reduce((sum, acc) => sum + acc.balance, 0);
+    const netProfit = totalRevenue - totalExpenses;
+
+    return { revenue, expenses, totalRevenue, totalExpenses, netProfit };
+}
+
+
+export type BalanceSheetReport = {
+    assets: { name: string; balance: number }[];
+    liabilities: { name: string; balance: number }[];
+    equity: { name: string; balance: number }[];
+    totalAssets: number;
+    totalLiabilitiesAndEquity: number;
+    isBalanced: boolean;
+}
+
+export async function getBalanceSheetReport(): Promise<BalanceSheetReport> {
+    await verifyAdmin();
+    const coaSnapshot = await adminDb.collection('chartOfAccounts').get();
+    const accounts = coaSnapshot.docs.map(d => d.data() as ChartOfAccount);
+
+    const assets = accounts.filter(a => a.type === 'Asset').map(a => ({ name: a.name, balance: a.balance }));
+    const liabilities = accounts.filter(a => a.type === 'Liability').map(a => ({ name: a.name, balance: a.balance }));
+    const equity = accounts.filter(a => a.type === 'Equity').map(a => ({ name: a.name, balance: a.balance }));
+
+    const totalAssets = assets.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalLiabilities = liabilities.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalEquity = equity.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
+
+    return {
+        assets,
+        liabilities,
+        equity,
+        totalAssets: parseFloat(totalAssets.toFixed(2)),
+        totalLiabilitiesAndEquity: parseFloat(totalLiabilitiesAndEquity.toFixed(2)),
+        isBalanced: totalAssets.toFixed(2) === totalLiabilitiesAndEquity.toFixed(2),
+    };
 }

@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor', 'member'] as const;
@@ -11,7 +12,7 @@ export type UserSession = {
   role: Role;
 };
 
-// --- User Profile ---
+// --- User Profile & Applications ---
 export type UserProfile = {
   id: string;
   name: string | null;
@@ -21,6 +22,19 @@ export type UserProfile = {
   role: Role;
   fcmTokens?: string[]; // For Push Notifications
 };
+
+export type Application = {
+    id: string;
+    name: string;
+    email: string;
+    applyDate: string;
+    status: 'pending' | 'approved' | 'rejected';
+    kycDocs: {
+        id: string;
+        photo: string;
+        addressProof: string;
+    }
+}
 
 
 // --- Deposit Schemas ---
@@ -137,7 +151,26 @@ export type RepaymentWithLoanDetails = {
     repaymentIndex: number;
 }
 
-// --- Transaction Schemas ---
+// --- Savings & Transaction Schemas ---
+export type SavingsScheme = {
+    id: string;
+    name: string;
+    interestRate: number;
+    description: string;
+}
+
+export type SavingsAccount = {
+    id: string;
+    userId: string;
+    userName: string;
+    schemeId: string;
+    schemeName: string;
+    accountNumber: string;
+    balance: number;
+    status: 'Active' | 'Dormant' | 'Closed';
+    createdAt: string; // ISO String
+}
+
 export type Transaction = {
     id: string;
     accountId: string; // Savings account ID
@@ -193,4 +226,15 @@ export type Holiday = {
     date: string; // YYYY-MM-DD
     name: string;
     type: 'National' | 'Regional' | 'Cooperative';
+}
+
+export type SocietyConfig = {
+    name: string;
+    registrationNumber: string;
+    address: string;
+    kycRetentionYears: number;
+}
+
+export type ComplianceSettings = {
+    kycRetentionYears: number;
 }

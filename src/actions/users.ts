@@ -3,7 +3,7 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
-import { ROLES, type Role, type UserProfile } from '@/lib/definitions';
+import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -125,20 +125,6 @@ export async function updateUserStatus(userId: string, status: UserProfile['stat
     }
 }
 
-
-export type Application = {
-    id: string;
-    name: string;
-    email: string;
-    applyDate: string;
-    status: 'pending' | 'approved' | 'rejected';
-    kycDocs: {
-        id: string;
-        photo: string;
-        addressProof: string;
-    }
-}
-
 export async function getPendingApplications(): Promise<Application[]> {
     await verifyAdmin();
     try {
@@ -149,7 +135,7 @@ export async function getPendingApplications(): Promise<Application[]> {
                 id: doc.id,
                 name: data.name,
                 email: data.email,
-                applyDate: data.applyDate,
+                applyDate: new Date(data.applyDate).toLocaleDateString(),
                 status: data.status,
                 kycDocs: data.kycDocs
             } as Application;
@@ -158,6 +144,62 @@ export async function getPendingApplications(): Promise<Application[]> {
     } catch (error) {
         console.error('Error fetching pending applications:', error);
         return [];
+    }
+}
+
+export async function approveApplication(applicationId: string) {
+    await verifyAdmin();
+    const appRef = adminDb.collection('applications').doc(applicationId);
+    try {
+        const appDoc = await appRef.get();
+        if (!appDoc.exists) {
+            throw new Error('Application not found.');
+        }
+        const appData = appDoc.data() as Application;
+
+        // 1. Create user in Firebase Auth
+        const tempPassword = Math.random().toString(36).slice(-8); // Generate temporary password
+        const userRecord = await adminAuth.createUser({
+            email: appData.email,
+            password: tempPassword,
+            displayName: appData.name,
+        });
+
+        // 2. Set custom claims (default to 'member' role)
+        await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member' });
+
+        // 3. Create user profile in Firestore 'users' collection
+        await adminDb.collection('users').doc(userRecord.uid).set({
+            name: appData.name,
+            email: appData.email,
+            role: 'member',
+            status: 'Active',
+            createdAt: new Date().toISOString(),
+        });
+        
+        // 4. Update the application status
+        await appRef.update({ status: 'approved' });
+
+        // TODO: In a real app, you would email the user their temporary password.
+        console.log(`User ${appData.email} approved. Temp password: ${tempPassword}`);
+        
+        revalidatePath('/admin/members');
+        return { success: true };
+
+    } catch (error: any) {
+        console.error("Error approving application:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function rejectApplication(applicationId: string) {
+    await verifyAdmin();
+    try {
+        await adminDb.collection('applications').doc(applicationId).update({ status: 'rejected' });
+        revalidatePath('/admin/members');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }
 
@@ -238,5 +280,64 @@ export async function saveFcmToken(token: string) {
     } catch (error: any) {
         console.error("Error saving FCM token:", error);
         return { success: false, error: error.message };
+    }
+}
+
+export type MemberFinancials = {
+    savingsAccounts: SavingsAccount[],
+    activeLoans: ActiveLoan[],
+    activeDeposits: ActiveDeposit[],
+    recentTransactions: Transaction[],
+}
+
+export async function getMemberFinancials(): Promise<MemberFinancials> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("Not authenticated");
+    }
+    const userId = session.uid;
+
+    try {
+        const savingsPromise = adminDb.collection('savingsAccounts').where('userId', '==', userId).get();
+        const loansPromise = adminDb.collection('activeLoans').where('userId', '==', userId).get();
+        const depositsPromise = adminDb.collection('activeDeposits').where('userId', '==', userId).get();
+        const transactionsPromise = adminDb.collection('transactions').where('userId', '==', userId).orderBy('date', 'desc').limit(10).get();
+
+        const [savingsSnap, loansSnap, depositsSnap, transSnap] = await Promise.all([savingsPromise, loansPromise, depositsPromise, transactionsPromise]);
+
+        const savingsAccounts = savingsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: new Date(doc.data().createdAt).toLocaleDateString(),
+        } as SavingsAccount));
+
+        const activeLoans = loansSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            disbursalDate: new Date(doc.data().disbursalDate).toLocaleDateString(),
+        } as ActiveLoan));
+
+        const activeDeposits = depositsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            startDate: new Date(doc.data().startDate).toLocaleDateString(),
+            maturityDate: new Date(doc.data().maturityDate).toLocaleDateString(),
+        } as ActiveDeposit));
+        
+        const recentTransactions = transSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: new Date(doc.data().date).toLocaleDateString(),
+        } as Transaction));
+
+        return {
+            savingsAccounts,
+            activeLoans,
+            activeDeposits,
+            recentTransactions
+        }
+    } catch (error: any) {
+        console.error("Error fetching member financials:", error);
+        throw new Error("Could not load financial data.");
     }
 }
