@@ -183,7 +183,7 @@ export async function getPendingApplications(): Promise<Application[]> {
             } as Application;
         });
         return applications;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching pending applications:', error);
         return [];
     }
@@ -345,7 +345,7 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         const savingsPromise = adminDb.collection('savingsAccounts').where('userId', '==', userId).get();
         const loansPromise = adminDb.collection('activeLoans').where('userId', '==', userId).get();
         const depositsPromise = adminDb.collection('activeDeposits').where('userId', '==', userId).get();
-        const transPromise = adminDb.collection('transactions').where('userId', '==', userId).get();
+        const transPromise = adminDb.collection('transactions').where('userId', '==', userId).orderBy('date', 'desc').limit(10).get();
 
         const [savingsSnap, loansSnap, depositsSnap, transSnap] = await Promise.all([savingsPromise, loansPromise, depositsPromise, transPromise]);
 
@@ -371,11 +371,8 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         const recentTransactions = transSnap.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
-            date: new Date(doc.data().date).toISOString(),
-        } as Transaction))
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10)
-        .map(tx => ({ ...tx, date: new Date(tx.date).toLocaleDateString() }));
+            date: new Date(doc.data().date).toLocaleDateString(),
+        } as Transaction));
 
         return {
             savingsAccounts,
