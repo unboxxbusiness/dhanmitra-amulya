@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">user dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's your personalized space.</p>
       </header>
       <Card>

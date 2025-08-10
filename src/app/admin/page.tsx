@@ -14,7 +14,7 @@ export default async function AdminPage() {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
+        <h1 className="text-3xl font-bold tracking-tight">admin</h1>
         <p className="text-muted-foreground">Manage your application from this secure control center.</p>
       </header>
       <Card>
