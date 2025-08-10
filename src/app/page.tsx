@@ -28,7 +28,7 @@ export default async function Home() {
              <Lock className="w-8 h-8 text-primary" />
           </div>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-amber-300 [text-shadow:0_0_8px_rgba(252,211,77,0.5)]">
           अमूल्य सोसायटी
         </h1>
         <p className="max-w-xl mt-4 text-lg text-slate-400">
