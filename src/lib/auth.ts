@@ -26,9 +26,9 @@ export const getSession = async (): Promise<UserSession | null> => {
       picture: decodedClaims.picture || null,
       role: role,
     };
-  } catch (error) {
+  } catch (error: any) {
     // Session cookie is invalid or expired.
-    console.error("Error verifying session cookie:", error);
+    console.error("Error verifying session cookie:", error.message);
     return null;
   }
 };
