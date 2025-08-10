@@ -3,38 +3,59 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isOwner(userId) {
-      return request.auth.uid == userId;
+    // Helper function to check if the signed-in user has one of the specified roles.
+    function hasOneOfRoles(roles) {
+      // Assumes user's role is stored in their user document.
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return userRole in roles;
     }
 
-    function isAdmin() {
-      // Role is checked from the custom claim on the auth token
-      return request.auth.token.role == 'admin';
+    // Helper function to check if user is any type of privileged admin/staff.
+    function isStaff() {
+      return hasOneOfRoles(['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor']);
     }
 
-    // Rules for the 'users' collection
+    // --- User Profiles & Applications ---
     match /users/{userId} {
-      // Admins can read any user document.
-      // A user can read their own document.
-      allow read: if isAdmin() || isOwner(userId);
-
-      // A user can create their own document.
-      allow create: if isOwner(userId);
-
-      // Admins can update any field.
-      // A user can update their own document, but cannot change their 'role'.
-      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
-
-      // Nobody can delete user documents for now to prevent accidental data loss.
-      // You can change this rule based on your application's needs.
-      allow delete: if false;
+      // A user can read their own profile. Staff can read any profile.
+      allow read: if request.auth.uid == userId || isStaff();
+      // A user can update their own FCM tokens. Staff can update any profile.
+      allow write: if (request.auth.uid == userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmTokens'])) || isStaff();
     }
 
-    // You would add rules for other collections like accounts, loans, etc. here.
-    // For example:
-    // match /accounts/{accountId} {
-    //   allow read, write: if isOwner(get(/databases/$(database)/documents/accounts/$(accountId)).data.userId);
-    // }
+    // Any authenticated user can submit a new application for themself.
+    match /applications/{appId} {
+       allow create: if request.auth.uid != null;
+       // Only staff can read or update applications.
+       allow read, update: if isStaff();
+    }
+    
+    match /loanApplications/{appId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if isStaff();
+    }
+    match /depositApplications/{appId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if isStaff();
+    }
+
+    // --- PUBLIC READ, SERVER WRITE ---
+    // These collections can be read by any authenticated user but only written to by the server.
+    match /depositProducts/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+    match /loanProducts/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+    match /savingsSchemes/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+    match /holidays/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+    match /settings/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+    match /branches/{docId} { allow read: if request.auth.uid != null; allow write: if false; }
+
+    // --- SERVER-ONLY ACCESS (MOST COLLECTIONS) ---
+    // The core financial collections are locked down. ALL client access is blocked.
+    // Interactions MUST go through your secure server actions.
+    match /savingsAccounts/{docId} { allow read, write: if false; }
+    match /activeDeposits/{docId} { allow read, write: if false; }
+    match /activeLoans/{docId} { allow read, write: if false; }
+    match /transactions/{docId} { allow read, write: if false; }
+    match /chartOfAccounts/{docId} { allow read, write: if false; }
+    match /journalEntries/{docId} { allow read, write: if false; }
   }
 }
