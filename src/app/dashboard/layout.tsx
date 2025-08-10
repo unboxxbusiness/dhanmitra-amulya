@@ -1,9 +1,11 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, Landmark, PiggyBank, UserCircle } from 'lucide-react';
+import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardLayout({
   children,
@@ -27,7 +29,7 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Profile">
                 <Link href="/dashboard/profile">
                   <UserCircle />
@@ -35,6 +37,49 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            <Collapsible asChild>
+                <>
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                             <Button variant="ghost" className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                                <Wallet />
+                                <span className="group-data-[collapsible=icon]:hidden flex-1 text-left ml-2">My Accounts</span>
+                                <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                            </Button>
+                        </CollapsibleTrigger>
+                    </SidebarMenuItem>
+                    <CollapsibleContent asChild>
+                        <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                                 <SidebarMenuSubButton asChild>
+                                    <Link href="/dashboard#accounts">Savings Accounts</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                             <SidebarMenuSubItem>
+                                 <SidebarMenuSubButton asChild>
+                                    <Link href="/dashboard#loans">Loan Accounts</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                 <SidebarMenuSubButton asChild>
+                                    <Link href="/dashboard#deposits">Deposit Accounts</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                    </CollapsibleContent>
+                </>
+            </Collapsible>
+            
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Transactions">
+                <Link href="/dashboard#transactions">
+                  <ArrowLeftRight />
+                  <span>Transactions</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Apply for Loan">
                 <Link href="/dashboard/apply-loan">
