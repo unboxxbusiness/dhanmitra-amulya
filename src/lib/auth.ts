@@ -12,17 +12,6 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
   try {
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
     
-    // Hardcoded override for the admin user to ensure access during debugging.
-    if (decodedClaims.email === 'anujkumar7676@gmail.com') {
-      return {
-        uid: decodedClaims.uid,
-        email: decodedClaims.email || null,
-        name: decodedClaims.name || decodedClaims.email,
-        picture: decodedClaims.picture || null,
-        role: 'admin',
-      };
-    }
-    
     // Get role from custom claims which were set during session creation.
     const userRole: Role = (decodedClaims.role as Role) || 'member';
 
