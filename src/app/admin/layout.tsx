@@ -92,7 +92,7 @@ export default function AdminLayout({
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Settings">
-                <Link href="#">
+                <Link href="/admin/settings">
                   <Settings />
                   <span>Settings</span>
                 </Link>
