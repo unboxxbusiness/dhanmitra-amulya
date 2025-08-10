@@ -20,8 +20,7 @@ export default async function Home() {
         अमूल्य सोसायटी
       </h1>
       <p className="max-w-xl mt-4 text-lg text-muted-foreground">
-        A robust and secure authentication platform.
-        Sign up or log in to get started.
+        विश्वास, सहयोग और समृद्धि का संगम
       </p>
       <div className="mt-8 flex flex-col sm:flex-row gap-4">
         <Button asChild size="lg">
