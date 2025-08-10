@@ -9,11 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { createTransaction, type Transaction } from '@/actions/transactions';
 import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { ReceiptDialog } from './receipt-dialog';
+import { Combobox } from '@/components/ui/combobox';
 
 const initialState = {
   success: false,
@@ -38,7 +38,7 @@ export function NewTransactionTab() {
     
     const [accounts, setAccounts] = useState<SavingsAccount[]>([]);
     const [loadingAccounts, setLoadingAccounts] = useState(true);
-    const [selectedAccount, setSelectedAccount] = useState<SavingsAccount | null>(null);
+    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
     const [isReceiptOpen, setReceiptOpen] = useState(false);
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
@@ -64,7 +64,7 @@ export function NewTransactionTab() {
             setReceiptData(state.transaction);
             setReceiptOpen(true);
             formRef.current?.reset();
-            setSelectedAccount(null);
+            setSelectedAccountId('');
             // Reset state
             state.success = false; 
             state.transaction = null;
@@ -78,15 +78,19 @@ export function NewTransactionTab() {
         }
     }, [state, toast]);
 
-    const handleAccountChange = (accountId: string) => {
-        const account = accounts.find(acc => acc.id === accountId) || null;
-        setSelectedAccount(account);
-    };
+    const accountOptions = accounts.map(account => ({
+        value: account.id,
+        label: `${account.userName} - ${account.accountNumber}`
+    }));
+
+    const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
 
     return (
       <>
         <Card className="max-w-2xl mx-auto">
             <form ref={formRef} action={formAction}>
+                {/* Hidden input to carry accountId in the form */}
+                <input type="hidden" name="accountId" value={selectedAccountId} />
                 <CardHeader>
                     <CardTitle>New Manual Transaction</CardTitle>
                     <CardDescription>
@@ -102,18 +106,13 @@ export function NewTransactionTab() {
                                 <span>Loading accounts...</span>
                             </div>
                         ) : (
-                            <Select name="accountId" required onValueChange={handleAccountChange}>
-                                <SelectTrigger id="accountId">
-                                    <SelectValue placeholder="Search by name or account number..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {accounts.map(account => (
-                                        <SelectItem key={account.id} value={account.id}>
-                                            {account.userName} - {account.accountNumber} (Balance: ${account.balance.toFixed(2)})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Combobox
+                                options={accountOptions}
+                                value={selectedAccountId}
+                                onChange={setSelectedAccountId}
+                                placeholder="Search by name or account number..."
+                                emptyPlaceholder="No account found."
+                            />
                         )}
                     </div>
 
