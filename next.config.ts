@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -28,7 +29,7 @@ const nextConfig: NextConfig = {
             new webpack.NormalModuleReplacementPlugin(
                 /public\/firebase-messaging-sw\.js/,
                 (resource: any) => {
-                    const- swPath = resource.request;
+                    const swPath = resource.request;
                     resource.request = `${swPath}?${new URLSearchParams({
                         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
                         authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
