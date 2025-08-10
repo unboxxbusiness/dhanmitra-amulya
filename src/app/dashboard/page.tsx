@@ -1,29 +1,60 @@
 
+"use client";
+
+import { useState, useEffect } from 'react';
 import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon, Wallet, PiggyBank } from 'lucide-react';
 import Link from 'next/link';
-import { getMemberFinancials } from '@/actions/users';
-import { getSocietyConfig } from '@/actions/settings';
+import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
+import { getSocietyConfig, type SocietyConfig } from '@/actions/settings';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
+import type { UserSession } from '@/lib/definitions';
+import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
 
-export default async function DashboardPage() {
-  const session = await getSession();
+export default function DashboardPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<UserSession | null>(null);
+  const [financialData, setFinancialData] = useState<MemberFinancials | null>(null);
+  const [societyConfig, setSocietyConfig] = useState<SocietyConfig | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!session) {
-    redirect('/login');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userSession = await getSession();
+        if (!userSession) {
+          router.push('/login');
+          return;
+        }
+        setSession(userSession);
+
+        const [finData, configData] = await Promise.all([
+          getMemberFinancials(),
+          getSocietyConfig(),
+        ]);
+        setFinancialData(finData);
+        setSocietyConfig(configData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+        // Optionally, show a toast notification
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
+
+  if (loading || !session || !financialData || !societyConfig) {
+    return <DashboardLoadingSkeleton />;
   }
 
-  const [financialData, societyConfig] = await Promise.all([
-    getMemberFinancials(),
-    getSocietyConfig(),
-  ]);
-  
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
 
   const upiPaymentLink = (amount: number) => societyConfig.upiId 
