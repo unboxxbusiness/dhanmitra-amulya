@@ -137,4 +137,33 @@ export type Transaction = {
     date: string; // ISO string
     tellerId: string;
     tellerName: string;
+    status: 'completed' | 'pending' | 'failed';
+    balanceBefore: number;
+    balanceAfter: number;
 };
+
+
+// --- Accounting Schemas ---
+export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
+
+export type ChartOfAccount = {
+    id: string; // Document ID from Firestore
+    name: string;
+    type: AccountType;
+    balance: number;
+}
+
+export type JournalEntryDetail = {
+    accountId: string; // Corresponds to ChartOfAccount ID
+    accountName?: string; // For display purposes
+    debit: number;
+    credit: number;
+}
+
+export type JournalEntry = {
+    id: string; // Document ID from Firestore
+    date: string; // ISO string
+    description: string;
+    entries: JournalEntryDetail[];
+    relatedTransactionId?: string; // e.g., link back to a teller transaction
+}

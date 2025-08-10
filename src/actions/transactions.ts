@@ -8,6 +8,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import type { Transaction } from '@/lib/definitions';
 import { type SavingsAccount } from './savings';
 import Papa from 'papaparse';
+import { postJournalEntry } from './accounting';
 
 const TELLER_ROLES = ['admin', 'branch_manager', 'teller', 'accountant'];
 
@@ -32,9 +33,10 @@ export async function createTransaction(prevState: any, formData: FormData) {
     }
 
     const accountRef = adminDb.collection('savingsAccounts').doc(accountId);
+    const transactionId = adminDb.collection('transactions').doc().id;
 
     try {
-        const newTransaction = await adminDb.runTransaction(async (t) => {
+        const newTransactionData = await adminDb.runTransaction(async (t) => {
             const accountDoc = await t.get(accountRef);
             if (!accountDoc.exists) {
                 throw new Error('Savings account not found.');
@@ -45,14 +47,14 @@ export async function createTransaction(prevState: any, formData: FormData) {
             if (type === 'debit' && accountData.balance < amount) {
                 throw new Error('Insufficient balance for this withdrawal.');
             }
-
+            
             const newBalance = type === 'credit' 
-                ? FieldValue.increment(amount) 
-                : FieldValue.increment(-amount);
+                ? accountData.balance + amount
+                : accountData.balance - amount;
 
             t.update(accountRef, { balance: newBalance });
 
-            const transactionData = {
+            const transactionData: Omit<Transaction, 'id'|'accountNumber'|'userName'|'tellerName'> = {
                 accountId,
                 userId: accountData.userId,
                 type,
@@ -62,27 +64,49 @@ export async function createTransaction(prevState: any, formData: FormData) {
                 tellerId: session.uid,
                 status: 'completed',
                 balanceBefore: accountData.balance,
-                balanceAfter: accountData.balance + (type === 'credit' ? amount : -amount)
+                balanceAfter: newBalance
             };
             
-            const transactionRef = adminDb.collection('transactions').doc();
+            const transactionRef = adminDb.collection('transactions').doc(transactionId);
             t.set(transactionRef, transactionData);
 
+            // --- Auto-post to General Ledger ---
+            const ledgerEntries = type === 'credit' 
+                ? [ // Member deposits cash
+                    { accountId: '1010', debit: amount, credit: 0 }, // Debit Cash
+                    { accountId: '2010', debit: 0, credit: amount }, // Credit Member Savings
+                ]
+                : [ // Member withdraws cash
+                    { accountId: '2010', debit: amount, credit: 0 }, // Debit Member Savings
+                    { accountId: '1010', debit: 0, credit: amount }, // Credit Cash
+                ];
+
+            await postJournalEntry(t, {
+                date: new Date(),
+                description: `Teller transaction: ${description}`,
+                entries: ledgerEntries,
+                relatedTransactionId: transactionId
+            });
+            // --- End GL Posting ---
+
             return {
-                id: transactionRef.id,
+                id: transactionId,
                 ...transactionData,
                 accountNumber: accountData.accountNumber,
                 userName: accountData.userName,
+                tellerName: session.name, // Add teller name from session
             };
         });
 
         revalidatePath('/admin/transactions');
-        return { success: true, transaction: newTransaction };
+        revalidatePath('/admin/accounting'); // Revalidate accounting page as well
+        return { success: true, transaction: newTransactionData };
 
     } catch (error: any) {
         return { success: false, error: error.message };
     }
 }
+
 
 export async function getTransactionHistory(filters: { accountId?: string; type?: string; limit?: number }): Promise<Transaction[]> {
     await verifyTeller();
@@ -161,4 +185,3 @@ export async function reconcileBankStatement(csvContent: string) {
     revalidatePath('/admin/transactions');
     return { success: true, results };
 }
-
