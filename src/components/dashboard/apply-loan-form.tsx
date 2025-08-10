@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { applyForLoan } from '@/actions/loans';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 
 const LoanApplicationSchema = z.object({
   productId: z.string().min(1, 'Please select a loan product.'),
@@ -49,6 +50,8 @@ export function ApplyForLoanForm({ products }: { products: LoanProduct[] }) {
     resolver: zodResolver(LoanApplicationSchema),
     defaultValues: {
       termMonths: 12,
+      productId: '',
+      amountRequested: 0,
     },
   });
 
@@ -86,67 +89,92 @@ export function ApplyForLoanForm({ products }: { products: LoanProduct[] }) {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Loan Application Form</CardTitle>
-          <CardDescription>All applications are subject to review and approval.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label>Select Loan Product</Label>
-            <Select onValueChange={handleProductChange} {...form.register('productId')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a loan product..." />
-              </SelectTrigger>
-              <SelectContent>
-                {products.map(p => (
-                  <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.productId && <p className="text-red-500 text-sm">{form.formState.errors.productId.message}</p>}
-          </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>Loan Application Form</CardTitle>
+            <CardDescription>All applications are subject to review and approval.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+             <FormField
+              control={form.control}
+              name="productId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Loan Product</FormLabel>
+                   <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      handleProductChange(value);
+                   }} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a loan product..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {products.map(p => (
+                        <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {selectedProduct && (
-            <>
-              <p className="text-sm text-muted-foreground">{selectedProduct.collateralNotes}</p>
-              <div className="space-y-2">
-                <Label htmlFor="amountRequested">Loan Amount (₹)</Label>
-                <Input
-                  id="amountRequested"
-                  type="number"
-                  {...form.register('amountRequested')}
+            {selectedProduct && (
+              <>
+                <p className="text-sm text-muted-foreground">{selectedProduct.collateralNotes}</p>
+                <FormField
+                  control={form.control}
+                  name="amountRequested"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loan Amount (₹)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {form.formState.errors.amountRequested && <p className="text-red-500 text-sm">{form.formState.errors.amountRequested.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                 <Label htmlFor="termMonths">Loan Term (Months)</Label>
-                 <div className="flex items-center gap-4">
-                    <Slider
-                        id="termMonths"
-                        min={1}
-                        max={selectedProduct.maxTermMonths}
-                        step={1}
-                        value={[term]}
-                        onValueChange={handleTermChange}
-                        className="flex-1"
-                    />
-                    <span className="font-bold w-12 text-center">{term}</span>
-                 </div>
-                {form.formState.errors.termMonths && <p className="text-red-500 text-sm">{form.formState.errors.termMonths.message}</p>}
-              </div>
-            </>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" disabled={!selectedProduct || loading}>
-             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Submit Application
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+                
+                <FormField
+                  control={form.control}
+                  name="termMonths"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loan Term (Months)</FormLabel>
+                       <div className="flex items-center gap-4">
+                          <FormControl>
+                             <Slider
+                                id="termMonths"
+                                min={1}
+                                max={selectedProduct.maxTermMonths}
+                                step={1}
+                                value={[term]}
+                                onValueChange={handleTermChange}
+                                className="flex-1"
+                            />
+                          </FormControl>
+                          <span className="font-bold w-12 text-center">{term}</span>
+                       </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={!selectedProduct || loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit Application
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+    </Form>
   );
 }
