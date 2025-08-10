@@ -117,8 +117,7 @@ export const LoanProductSchema = z.object({
 export type LoanProduct = z.infer<typeof LoanProductSchema>;
 
 export const LoanApplicationSchema = z.object({
-    userId: z.string(),
-    productId: z.string(),
+    productId: z.string().min(1),
     amountRequested: z.number().positive(),
     termMonths: z.number().int().positive(),
 });

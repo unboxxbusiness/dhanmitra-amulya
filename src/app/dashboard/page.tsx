@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
-import { UserNav } from '@/components/user-nav';
 import { getSocietyConfig } from '@/actions/settings';
 
 export default async function DashboardPage() {
@@ -115,7 +114,7 @@ export default async function DashboardPage() {
                           <TableRow key={tx.id}>
                             <TableCell className="text-xs">{tx.date}</TableCell>
                             <TableCell className="font-medium">{tx.description}</TableCell>
-                            <TableCell className={`text-right font-semibold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                            <TableCell className={`text-right font-semibold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
                               {tx.type === 'credit' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                             </TableCell>
                           </TableRow>
