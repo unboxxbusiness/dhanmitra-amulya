@@ -30,12 +30,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // If a non-admin tries to access an admin route, redirect to member dashboard
-  if (pathname.startsWith('/admin') && !isPrivilegedUser) {
+  if (ADMIN_ROUTES.some(route => pathname.startsWith(route)) && !isPrivilegedUser) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
   // If an admin is on the member dashboard, redirect to admin dashboard
-  if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
+  if (PROTECTED_ROUTES.some(route => pathname.startsWith(route)) && isPrivilegedUser) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
