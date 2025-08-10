@@ -18,11 +18,18 @@ export async function createSession(idToken: string) {
     const userDoc = await userRef.get();
 
     let role: Role = 'member'; // Default role
+    let customClaims = { role };
+    let name = decodedClaims.name;
 
     if (userDoc.exists) {
-      const userRole = userDoc.data()?.role as Role;
+      const userData = userDoc.data();
+      const userRole = userData?.role as Role;
       if (ROLES.includes(userRole)) {
         role = userRole;
+      }
+      // If the display name is missing from the auth token, get it from Firestore
+      if (!name && userData?.name) {
+        name = userData.name;
       }
     } else {
       // Create user document if it doesn't exist
@@ -33,8 +40,12 @@ export async function createSession(idToken: string) {
       });
     }
     
-    // Set custom claim for role-based access
-    await adminAuth.setCustomUserClaims(decodedClaims.uid, { role });
+    // Set custom claims for role-based access
+    // Only update if needed to avoid unnecessary writes
+    if (decodedClaims.role !== role || decodedClaims.name !== name) {
+        customClaims = { ...customClaims, role, name };
+        await adminAuth.setCustomUserClaims(decodedClaims.uid, customClaims);
+    }
 
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
     cookies().set(SESSION_COOKIE_NAME, sessionCookie, {
