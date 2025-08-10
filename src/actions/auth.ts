@@ -9,6 +9,7 @@ import { DecodedIdToken } from 'firebase-admin/auth';
 
 const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function createSession(idToken: string) {
   try {

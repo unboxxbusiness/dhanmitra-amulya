@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ROLES } from '@/lib/definitions';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -25,6 +27,8 @@ type UserFormValue = z.infer<typeof formSchema>;
 interface EmailAuthFormProps {
   mode: 'login' | 'signup';
 }
+
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const router = useRouter();
@@ -51,9 +55,15 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
           title: mode === 'login' ? "Login Successful" : "Account Created",
           description: "Redirecting...",
         });
-        // Refresh the page and let the middleware handle redirection.
-        // This is the most robust approach to prevent client/server race conditions.
+
+        // Explicitly redirect based on the role returned from the server
+        const isAdmin = ADMIN_ROLES.includes(sessionResult.role);
+        const redirectPath = isAdmin ? '/admin' : '/dashboard';
+        router.push(redirectPath);
+        
+        // We still call refresh to ensure server components re-render with the new session.
         router.refresh();
+
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
       }
