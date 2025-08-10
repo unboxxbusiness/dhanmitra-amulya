@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useState, useEffect } from "react";
 import { getMemberNotifications } from "@/actions/notifications";
 import {
   Card,
@@ -6,11 +9,36 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Bell } from "lucide-react";
+} from "@/components/ui/card";
+import { Bell, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function NoticesPage() {
-    const notices = await getMemberNotifications();
+
+export default function NoticesPage() {
+    const { toast } = useToast();
+    const [notices, setNotices] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNotices = async () => {
+            setLoading(true);
+            try {
+                const data = await getMemberNotifications();
+                setNotices(data);
+            } catch (error: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Error loading notices",
+                    description: error.message
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchNotices();
+    }, [toast]);
+
 
     return (
         <div className="space-y-6">
@@ -25,7 +53,19 @@ export default async function NoticesPage() {
                     <CardDescription>Messages are sorted with the most recent first.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {notices.length > 0 ? (
+                    {loading ? (
+                         <div className="space-y-4">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className="flex items-start gap-4 p-4 border rounded-lg">
+                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                    <div className="flex-1 space-y-2">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-4 w-1/2" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : notices.length > 0 ? (
                         <div className="space-y-4">
                             {notices.map((notice: any) => (
                                 <div key={notice.id} className="flex items-start gap-4 p-4 border rounded-lg">
