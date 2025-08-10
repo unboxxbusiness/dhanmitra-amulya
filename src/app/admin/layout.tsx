@@ -15,9 +15,7 @@ export default function AdminLayout({
       <Sidebar collapsible="icon">
         <SidebarContent className="p-2">
             <div className="p-2 flex items-center gap-2">
-                 <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
-                    <SidebarTrigger />
-                 </Button>
+                 <SidebarTrigger className="shrink-0 md:hidden" />
                  <h2 className="font-bold text-lg text-sidebar-primary group-data-[collapsible=icon]:hidden">Amulya Admin</h2>
             </div>
           <SidebarMenu>
