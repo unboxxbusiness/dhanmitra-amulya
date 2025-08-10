@@ -44,7 +44,11 @@ export function PendingApplicationsTab() {
     setProcessingId(id);
     const result = await approveApplication(id);
     if (result.success) {
-      toast({ title: 'Success', description: 'Application approved and member created.' });
+      toast({ 
+        title: 'Application Approved', 
+        description: `Member created. Please provide them this temporary password: ${result.tempPassword}`,
+        duration: 10000,
+      });
       fetchApplications();
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.error });

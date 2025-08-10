@@ -17,8 +17,6 @@ import { Separator } from './ui/separator';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  // Password is no longer needed here as the user is not created on signup
-  // password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   docId: z.string().url({ message: 'Please enter a valid URL for your ID document.' }),
   docPhoto: z.string().url({ message: 'Please enter a valid URL for your photo.' }),
   docAddress: z.string().url({ message: 'Please enter a valid URL for your address proof.' }),
@@ -37,7 +35,6 @@ export function SignupForm() {
     defaultValues: {
       name: '',
       email: '',
-      // password: '',
       docId: 'https://placehold.co/800x500.png',
       docPhoto: 'https://placehold.co/400x400.png',
       docAddress: 'https://placehold.co/800x1100.png',
@@ -48,7 +45,6 @@ export function SignupForm() {
     setLoading(true);
     try {
       // Step 1: Submit the application to Firestore via server action
-      // User is no longer created in Firebase Auth at this stage.
       const applicationData = {
         name: data.name,
         email: data.email,

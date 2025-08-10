@@ -222,17 +222,15 @@ export async function approveApplication(applicationId: string) {
         // 4. Update the application status
         await appRef.update({ status: 'approved' });
 
-        // TODO: In a real app, you would email the user their temporary password.
-        console.log(`User ${appData.email} approved. Temp password: ${tempPassword}`);
-        
         revalidatePath('/admin/members');
-        return { success: true };
+        return { success: true, tempPassword };
 
     } catch (error: any)
      {
         console.error("Error approving application:", error);
         if ((error as any).code === 'auth/email-already-exists') {
-            return { success: false, error: 'A user with this email already exists in the system.' };
+            await appRef.update({ status: 'rejected' });
+            return { success: false, error: 'A user with this email already exists in the system. The application has been rejected.' };
         }
         return { success: false, error: "An unexpected error occurred while approving the application." };
     }
@@ -347,9 +345,9 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         const savingsPromise = adminDb.collection('savingsAccounts').where('userId', '==', userId).get();
         const loansPromise = adminDb.collection('activeLoans').where('userId', '==', userId).get();
         const depositsPromise = adminDb.collection('activeDeposits').where('userId', '==', userId).get();
-        const transactionsPromise = adminDb.collection('transactions').where('userId', '==', userId).get();
+        const transPromise = adminDb.collection('transactions').where('userId', '==', userId).get();
 
-        const [savingsSnap, loansSnap, depositsSnap, transSnap] = await Promise.all([savingsPromise, loansPromise, depositsPromise, transactionsPromise]);
+        const [savingsSnap, loansSnap, depositsSnap, transSnap] = await Promise.all([savingsPromise, loansPromise, depositsPromise, transPromise]);
 
         const savingsAccounts = savingsSnap.docs.map(doc => ({
             id: doc.id,
