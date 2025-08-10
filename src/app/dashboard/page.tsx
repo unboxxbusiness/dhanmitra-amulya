@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { adminDb } from '@/lib/firebase/server';
+import { UserNav } from '@/components/user-nav';
 
 type Account = {
   id: string;
@@ -104,12 +105,17 @@ export default async function DashboardPage() {
   
   return (
     <>
-      <header className="mb-8 flex items-center justify-between">
+      <header className="flex items-center justify-between py-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Member Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {session.name || 'member'}!</p>
         </div>
          <div className="flex items-center gap-4">
+            <UserNav />
+        </div>
+      </header>
+      
+      <div className="flex items-center gap-4 mb-8">
           <Button asChild>
             <Link href="#">
               <PlusCircle className="mr-2 h-4 w-4"/>
@@ -123,8 +129,7 @@ export default async function DashboardPage() {
             </Link>
           </Button>
         </div>
-      </header>
-      
+
       <Tabs defaultValue="accounts" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="accounts"><Landmark className="mr-2 h-4 w-4" /> Accounts</TabsTrigger>
