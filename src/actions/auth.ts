@@ -1,3 +1,4 @@
+
 'use server';
 
 import { cookies } from 'next/headers';
@@ -23,6 +24,7 @@ export async function createSession(idToken: string) {
         role = userRole;
       }
     } else {
+      // Create user document if it doesn't exist
       await userRef.set({
         email: decodedClaims.email,
         role: 'member',
@@ -30,6 +32,7 @@ export async function createSession(idToken: string) {
       });
     }
     
+    // Set custom claim for role-based access
     await adminAuth.setCustomUserClaims(decodedClaims.uid, { role });
 
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });

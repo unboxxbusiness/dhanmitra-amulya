@@ -1,32 +1,29 @@
-'use server';
 
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
+import { getApps } from 'firebase-admin/app';
 
-// This function ensures that the Firebase Admin SDK is initialized only once.
-function initializeFirebaseAdmin() {
-  if (admin.apps.length > 0) {
-    console.log('Firebase Admin SDK already initialized.');
-    return;
-  }
-
+if (getApps().length === 0) {
+  console.log("Firebase Admin SDK: Attempting to initialize a new app...");
   try {
-    // When deployed to Firebase, environment variables are automatically set.
-    // initializeApp() with no arguments will use these variables.
-    console.log('Initializing Firebase Admin SDK...');
-    admin.initializeApp();
-    console.log('Firebase Admin SDK initialized successfully.');
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set.");
+    }
+    
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log('Firebase Admin SDK initialized successfully.');
   } catch (error: any) {
-    console.error('CRITICAL: Error initializing Firebase Admin SDK:', error);
-    // This error is critical and should prevent the server from starting.
-    throw new Error('Could not initialize Firebase Admin SDK. Please check server logs and environment variables.');
+    console.error('CRITICAL: Could not initialize Firebase Admin SDK.', error.message);
+    // This error is critical for server operation, so we re-throw it to prevent the server from starting in a broken state.
+    throw new Error('Could not initialize Firebase Admin SDK. Server cannot start.');
   }
 }
 
-// Initialize the app
-initializeFirebaseAdmin();
-
+// Export the initialized services.
 const adminAuth = admin.auth();
 const adminDb = admin.firestore();
 
-export { adminAuth, adminDb };
+export { admin, adminAuth, adminDb };
