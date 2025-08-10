@@ -16,7 +16,7 @@ export default async function Home() {
       <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
         <Lock className="w-8 h-8 text-primary" />
       </div>
-      <h1 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-600">
+      <h1 className="text-3xl md:text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-600">
         अमूल्य सोसायटी
       </h1>
       <p className="max-w-xl mt-4 text-lg text-muted-foreground">
