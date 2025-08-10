@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Header } from '@/components/header';
 import { Toaster } from "@/components/ui/toaster"
-import { getSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Amulya - Secure Authentication Platform',
@@ -14,7 +12,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -25,8 +22,6 @@ export default async function RootLayout({
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <div className="relative flex min-h-screen flex-col bg-background">
-          {/* Only show the generic header if the user is NOT logged in */}
-          {!session && <Header />}
           <main className="flex-1">{children}</main>
         </div>
         <Toaster />
