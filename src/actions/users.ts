@@ -3,11 +3,10 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
-import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit, UserProfileSchema, type InterestCertificateData, type LoanClosureCertificateData } from '@/lib/definitions';
+import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit, UserProfileSchema, type InterestCertificateData, type LoanClosureCertificateData, ADMIN_ROLES } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
-import { ADMIN_ROLES } from '@/middleware';
 import { z } from 'zod';
 import { getSocietyConfig } from './settings';
 

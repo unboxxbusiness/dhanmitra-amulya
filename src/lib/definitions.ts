@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 export const ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor', 'member'] as const;
 export type Role = (typeof ROLES)[number];
+export const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+
 
 export type UserSession = {
   uid: string;

@@ -1,42 +1,22 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSession } from './lib/auth';
 
 const AUTH_ROUTES = ['/login', '/signup'];
-const PROTECTED_ROUTES = ['/dashboard'];
-const ADMIN_ROUTES = ['/admin'];
-export const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+const PROTECTED_ROUTES = ['/dashboard', '/admin'];
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = await getSession();
+  const sessionCookie = request.cookies.get('session');
 
-  // Handle users who are not logged in
-  if (!session) {
-    if ([...PROTECTED_ROUTES, ...ADMIN_ROUTES].some(route => pathname.startsWith(route))) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return NextResponse.next();
-  }
-
-  // Handle users who are logged in
-  const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
-
-  // If a logged-in user is on an auth page, redirect them to their correct dashboard
-  if (AUTH_ROUTES.includes(pathname)) {
-    const url = isPrivilegedUser ? '/admin' : '/dashboard';
-    return NextResponse.redirect(new URL(url, request.url));
-  }
-
-  // If a non-admin tries to access an admin route, redirect to member dashboard
-  if (ADMIN_ROUTES.some(route => pathname.startsWith(route)) && !isPrivilegedUser) {
+  // If user is logged in, redirect from auth pages to dashboard
+  if (sessionCookie && AUTH_ROUTES.includes(pathname)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
-  // If an admin is on the member dashboard, redirect to admin dashboard
-  if (PROTECTED_ROUTES.some(route => pathname.startsWith(route)) && isPrivilegedUser) {
-    return NextResponse.redirect(new URL('/admin', request.url));
+
+  // If user is not logged in, redirect from protected pages to login
+  if (!sessionCookie && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();

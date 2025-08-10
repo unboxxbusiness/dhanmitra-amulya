@@ -4,12 +4,20 @@ import { Home, Users, Settings, Banknote, PiggyBank, Landmark, ArrowLeftRight, B
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Button } from '@/components/ui/button';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getSession();
+  if (!session || !ADMIN_ROLES.includes(session.role)) {
+    redirect('/dashboard');
+  }
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">

@@ -4,12 +4,11 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
-import { ROLES, type Role } from '@/lib/definitions';
+import { ROLES, type Role, ADMIN_ROLES } from '@/lib/definitions';
 import { DecodedIdToken } from 'firebase-admin/auth';
 
 const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
-const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function createSession(idToken: string) {
   try {
@@ -68,4 +67,16 @@ export async function createSession(idToken: string) {
 export async function signOut() {
   cookies().delete(SESSION_COOKIE_NAME);
   redirect('/login');
+}
+
+export async function checkRole(role: Role) {
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) return false;
+
+  try {
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
+    return decodedClaims.role === role;
+  } catch (error) {
+    return false;
+  }
 }
