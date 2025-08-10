@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, Users, Landmark, PiggyBank, BadgePercent, Wallet, ArrowLeftRight } from 'lucide-react';
+import { ShieldCheck, Users, Landmark, PiggyBank, BadgePercent, Wallet, ArrowLeftRight, Banknote } from 'lucide-react';
 import { getAllMembers } from '@/actions/users';
 import { getActiveDeposits } from '@/actions/deposits';
 import { getActiveLoans } from '@/actions/loans';
@@ -14,12 +14,14 @@ import type { Transaction } from '@/lib/definitions';
 import { FinancialOverviewChart } from '@/components/admin/dashboard/financial-overview-chart';
 import { RecentTransactionsList } from '@/components/admin/dashboard/recent-transactions-list';
 import { ADMIN_ROLES } from '@/lib/definitions';
+import { getSavingsAccounts } from '@/actions/savings';
 
 
 async function getDashboardStats() {
     try {
         const [
-            members, 
+            members,
+            savings,
             deposits, 
             loans, 
             loanAging,
@@ -27,6 +29,7 @@ async function getDashboardStats() {
             transactions
         ] = await Promise.all([
             getAllMembers(),
+            getSavingsAccounts(),
             getActiveDeposits(),
             getActiveLoans(),
             getLoanAgingReport(),
@@ -35,6 +38,7 @@ async function getDashboardStats() {
         ]);
 
         const totalMembers = members.length;
+        const totalSavings = savings.reduce((sum, s) => sum + s.balance, 0);
         const totalDeposits = deposits.reduce((sum, d) => sum + d.principalAmount, 0);
         const outstandingLoans = loans.reduce((sum, l) => sum + l.outstandingBalance, 0);
         
@@ -49,6 +53,7 @@ async function getDashboardStats() {
 
         return {
             totalMembers,
+            totalSavings,
             totalDeposits,
             outstandingLoans,
             delinquencyRate,
@@ -61,6 +66,7 @@ async function getDashboardStats() {
         // Return zeroed-out stats on error
         return {
             totalMembers: 0,
+            totalSavings: 0,
             totalDeposits: 0,
             outstandingLoans: 0,
             delinquencyRate: 0,
@@ -102,7 +108,7 @@ export default async function AdminPage() {
         </AlertDescription>
       </Alert>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
@@ -113,14 +119,24 @@ export default async function AdminPage() {
             <p className="text-xs text-muted-foreground">All registered members</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Savings Balance</CardTitle>
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{stats.totalSavings.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
+            <p className="text-xs text-muted-foreground">Across all member savings accounts</p>
+          </CardContent>
+        </Card>
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Term Deposits</CardTitle>
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{stats.totalDeposits.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
-            <p className="text-xs text-muted-foreground">Total member savings & deposits</p>
+            <p className="text-xs text-muted-foreground">Total principal in FDs & RDs</p>
           </CardContent>
         </Card>
         <Card>
