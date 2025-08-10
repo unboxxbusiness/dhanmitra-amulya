@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -6,6 +7,7 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import type { Branch, Holiday, SocietyConfig, ComplianceSettings } from '@/lib/definitions';
 import { ADMIN_ROLES } from '@/lib/definitions';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const SETTINGS_DOC_ID = 'societyDetails';
 
@@ -21,16 +23,21 @@ async function verifyAdmin() {
 
 // --- Society Config Management ---
 export async function getSocietyConfig(): Promise<SocietyConfig> {
-    // This is read by admin and non-admin pages, so no specific role check here.
-    // Security rules will enforce who can see what.
     const doc = await adminDb.collection('settings').doc(SETTINGS_DOC_ID).get();
     if (!doc.exists) {
+        // Return a default config if one doesn't exist
         return {
             name: 'Amulya Cooperative Society',
             registrationNumber: 'Not Set',
             address: 'Not Set',
             kycRetentionYears: 7,
             upiId: '',
+            savingsPrefix: 'SAV',
+            savingsNextNumber: 1001,
+            loanPrefix: 'LOAN',
+            loanNextNumber: 1001,
+            depositPrefix: 'DEP',
+            depositNextNumber: 1001,
         };
     }
     return doc.data() as SocietyConfig;
@@ -52,6 +59,31 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
         return { success: false, error: error.message };
     }
 }
+
+export async function updateAccountNumberSeries(prevState: any, formData: FormData) {
+    await verifyAdmin();
+    const seriesData: Partial<SocietyConfig> = {
+        savingsPrefix: formData.get('savingsPrefix') as string,
+        savingsNextNumber: parseInt(formData.get('savingsNextNumber') as string, 10),
+        loanPrefix: formData.get('loanPrefix') as string,
+        loanNextNumber: parseInt(formData.get('loanNextNumber') as string, 10),
+        depositPrefix: formData.get('depositPrefix') as string,
+        depositNextNumber: parseInt(formData.get('depositNextNumber') as string, 10),
+    };
+
+    if (isNaN(seriesData.savingsNextNumber!) || isNaN(seriesData.loanNextNumber!) || isNaN(seriesData.depositNextNumber!)) {
+        return { success: false, error: 'Next number must be a valid integer.' };
+    }
+
+    try {
+        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set(seriesData, { merge: true });
+        revalidatePath('/admin/settings');
+        return { success: true, message: 'Account number series updated successfully.' };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 
 export async function updateUpiId(prevState: any, formData: FormData) {
     await verifyAdmin();
@@ -173,4 +205,24 @@ export async function deleteHoliday(holidayId: string) {
     } catch (error: any) {
         return { success: false, error: error.message };
     }
+}
+
+// This is an internal function to be used by other server actions within a Firestore transaction
+export async function getNextAccountNumber(
+    t: FirebaseFirestore.Transaction,
+    type: 'savings' | 'loan' | 'deposit'
+): Promise<string> {
+    const settingsRef = adminDb.collection('settings').doc(SETTINGS_DOC_ID);
+    const settingsDoc = await t.get(settingsRef);
+    const settings = settingsDoc.data() as SocietyConfig;
+
+    const prefix = settings[`${type}Prefix`] || type.toUpperCase().slice(0,3);
+    const nextNumber = settings[`${type}NextNumber`] || 1001;
+    const fieldToUpdate = `${type}NextNumber`;
+
+    // Increment the number for the next time
+    t.update(settingsRef, { [fieldToUpdate]: FieldValue.increment(1) });
+    
+    // Return the formatted number (e.g., SAV-1001)
+    return `${prefix}-${nextNumber}`;
 }

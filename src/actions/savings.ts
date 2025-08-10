@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -8,6 +9,8 @@ import { getAllMembers } from './users';
 import { ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
 import type { SavingsApplication } from '@/lib/definitions';
+import { getNextAccountNumber } from './settings';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const MEMBER_ROLES = [...ADMIN_ROLES, 'member'];
 const SETTINGS_DOC_ID = 'globalSavingsSettings';
@@ -132,13 +135,6 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
 }
 
 
-function generateAccountNumber(): string {
-    const prefix = 'ACC';
-    const timestamp = Date.now().toString().slice(-8);
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
-    return `${prefix}${timestamp}${randomSuffix}`;
-}
-
 export async function createSavingsAccount(prevState: any, formData: FormData) {
     const session = await verifyUser(ADMIN_ROLES);
     const userId = formData.get('userId') as string;
@@ -150,27 +146,32 @@ export async function createSavingsAccount(prevState: any, formData: FormData) {
     }
 
     try {
-        const userDoc = await adminDb.collection('users').doc(userId).get();
-        const schemeDoc = await adminDb.collection('savingsSchemes').doc(schemeId).get();
+        await adminDb.runTransaction(async (t) => {
+            const userDoc = await t.get(adminDb.collection('users').doc(userId));
+            const schemeDoc = await t.get(adminDb.collection('savingsSchemes').doc(schemeId));
 
-        if (!userDoc.exists) {
-            return { success: false, error: 'Selected member does not exist.' };
-        }
-        if (!schemeDoc.exists) {
-            return { success: false, error: 'Selected scheme does not exist.' };
-        }
-        
-        const newAccount = {
-            userId,
-            schemeId,
-            accountNumber: generateAccountNumber(),
-            balance: initialDeposit,
-            status: 'Active' as const,
-            createdAt: new Date().toISOString(),
-            createdBy: session.uid,
-        };
+            if (!userDoc.exists) {
+                throw new Error('Selected member does not exist.');
+            }
+            if (!schemeDoc.exists) {
+                throw new Error('Selected scheme does not exist.');
+            }
+            
+            const newAccountNumber = await getNextAccountNumber(t, 'savings');
+            
+            const newAccount = {
+                userId,
+                schemeId,
+                accountNumber: newAccountNumber,
+                balance: initialDeposit,
+                status: 'Active' as const,
+                createdAt: new Date().toISOString(),
+                createdBy: session.uid,
+            };
 
-        await adminDb.collection('savingsAccounts').add(newAccount);
+            const newAccountRef = adminDb.collection('savingsAccounts').doc();
+            t.set(newAccountRef, newAccount);
+        });
 
         revalidatePath('/admin/savings');
         return { success: true };
@@ -287,28 +288,33 @@ export async function approveSavingsApplication(applicationId: string) {
     const appRef = adminDb.collection('savingsApplications').doc(applicationId);
 
     try {
-        const appDoc = await appRef.get();
-        if (!appDoc.exists) {
-            throw new Error("Application not found.");
-        }
-        const appData = appDoc.data() as Omit<SavingsApplication, 'id' | 'userName' | 'schemeName' | 'applicationDate'> & { applicationDate: string };
+        await adminDb.runTransaction(async (t) => {
+            const appDoc = await t.get(appRef);
+            if (!appDoc.exists) {
+                throw new Error("Application not found.");
+            }
+            const appData = appDoc.data() as Omit<SavingsApplication, 'id' | 'userName' | 'schemeName' | 'applicationDate'> & { applicationDate: string };
 
-        if (appData.status !== 'pending') {
-            throw new Error("This application has already been processed.");
-        }
+            if (appData.status !== 'pending') {
+                throw new Error("This application has already been processed.");
+            }
+            
+            const newAccountNumber = await getNextAccountNumber(t, 'savings');
 
-        const newAccount = {
-            userId: appData.userId,
-            schemeId: appData.schemeId,
-            accountNumber: generateAccountNumber(),
-            balance: appData.initialDeposit,
-            status: 'Active' as const,
-            createdAt: new Date().toISOString(),
-            createdBy: session.uid,
-        };
+            const newAccount = {
+                userId: appData.userId,
+                schemeId: appData.schemeId,
+                accountNumber: newAccountNumber,
+                balance: appData.initialDeposit,
+                status: 'Active' as const,
+                createdAt: new Date().toISOString(),
+                createdBy: session.uid,
+            };
 
-        await adminDb.collection('savingsAccounts').add(newAccount);
-        await appRef.update({ status: 'approved', approvedBy: session.uid, approvalDate: new Date().toISOString() });
+            const newAccountRef = adminDb.collection('savingsAccounts').doc();
+            t.set(newAccountRef, newAccount);
+            t.update(appRef, { status: 'approved', approvedBy: session.uid, approvalDate: new Date().toISOString() });
+        });
 
         revalidatePath('/admin/savings');
         return { success: true };

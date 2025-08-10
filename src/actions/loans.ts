@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -9,6 +10,7 @@ import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import Papa from 'papaparse';
+import { getNextAccountNumber } from './settings';
 
 
 const LOAN_VERIFIER_ROLES = ['admin', 'branch_manager', 'auditor'];
@@ -93,13 +95,6 @@ export async function applyForLoan(data: z.infer<typeof MemberLoanApplicationSch
     }
 }
 
-
-function generateLoanAccountNumber(): string {
-    const prefix = 'LOAN';
-    const timestamp = Date.now().toString().slice(-8);
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
-    return `${prefix}${timestamp}${randomSuffix}`;
-}
 
 export async function getLoanApplications(): Promise<LoanApplicationDetails[]> {
     await verifyUser(ADMIN_ROLES);
@@ -227,10 +222,12 @@ export async function disburseLoan(applicationId: string) {
                     status: 'pending',
                 });
             }
+            
+            const newAccountNumber = await getNextAccountNumber(transaction, 'loan');
 
             const newActiveLoan: Omit<ActiveLoan, 'id' | 'userName' | 'productName'> = {
                 userId: appData.userId,
-                accountNumber: generateLoanAccountNumber(),
+                accountNumber: newAccountNumber,
                 principal: appData.amountRequested,
                 interestRate: productData.interestRate,
                 termMonths: appData.termMonths,
@@ -240,7 +237,8 @@ export async function disburseLoan(applicationId: string) {
                 repaymentSchedule: schedule,
             };
 
-            transaction.set(adminDb.collection('activeLoans').doc(), newActiveLoan);
+            const newLoanRef = adminDb.collection('activeLoans').doc();
+            transaction.set(newLoanRef, newActiveLoan);
             transaction.update(appRef, { status: 'disbursed' });
         });
 

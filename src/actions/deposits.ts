@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -8,6 +9,7 @@ import { addDays } from 'date-fns';
 import type { DepositProduct, DepositApplication, ActiveDeposit } from '@/lib/definitions';
 import { DepositProductSchema, TermSchema, ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
+import { getNextAccountNumber } from './settings';
 
 
 const MEMBER_ROLES = ['member', ...ADMIN_ROLES];
@@ -123,12 +125,6 @@ export async function getDepositApplications(): Promise<DepositApplication[]> {
     return applications;
 }
 
-function generateDepositAccountNumber(): string {
-    const prefix = 'DEP';
-    const timestamp = Date.now().toString().slice(-8);
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000).toString();
-    return `${prefix}${timestamp}${randomSuffix}`;
-}
 
 export async function approveDepositApplication(applicationId: string) {
     const session = await verifyUser(ADMIN_ROLES);
@@ -159,9 +155,11 @@ export async function approveDepositApplication(applicationId: string) {
             const interestEarned = (appData.principalAmount * (appData.term.interestRate / 100) * (appData.term.durationMonths / 12));
             const maturityAmount = appData.principalAmount + interestEarned;
             
+            const newAccountNumber = await getNextAccountNumber(transaction, 'deposit');
+
             const newActiveDeposit: Omit<ActiveDeposit, 'id' | 'userName' | 'productName'> = {
                 userId: appData.userId,
-                accountNumber: generateDepositAccountNumber(),
+                accountNumber: newAccountNumber,
                 principalAmount: appData.principalAmount,
                 maturityAmount: parseFloat(maturityAmount.toFixed(2)),
                 interestRate: appData.term.interestRate,

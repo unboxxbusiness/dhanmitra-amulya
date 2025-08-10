@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor', 'member'] as const;
@@ -270,6 +271,13 @@ export type SocietyConfig = {
     address: string;
     kycRetentionYears: number;
     upiId?: string;
+    // Account Number Series
+    savingsPrefix?: string;
+    savingsNextNumber?: number;
+    loanPrefix?: string;
+    loanNextNumber?: number;
+    depositPrefix?: string;
+    depositNextNumber?: number;
 }
 
 export type ComplianceSettings = {
