@@ -17,7 +17,7 @@ export default async function Home() {
         <Lock className="w-8 h-8 text-primary" />
       </div>
       <h1 className="text-4xl md:text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-600">
-        Welcome to Amulya
+        अमूल्य सोसायटी
       </h1>
       <p className="max-w-xl mt-4 text-lg text-muted-foreground">
         A robust and secure authentication platform.
