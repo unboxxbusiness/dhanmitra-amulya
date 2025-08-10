@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth";
 import { ArrowRight, Lock, Landmark, BadgePercent } from "lucide-react";
@@ -22,8 +23,10 @@ export default async function Home() {
       className="flex items-center flex-col justify-center px-4 py-8 min-h-screen w-full"
     >
       <div className="text-center">
-        <div className="mb-4 flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
-          <Lock className="w-8 h-8 text-primary" />
+        <div className="mb-4 flex items-center justify-center">
+          <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+             <Lock className="w-8 h-8 text-primary" />
+          </div>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-white">
           अमूल्य सोसायटी
@@ -37,7 +40,7 @@ export default async function Home() {
             <CardTitle className="text-xl md:text-2xl font-bold text-amber-400 text-center">
               💰 अमूल्य सोसायटी – विशेष बचत एवं वित्तीय सुविधा ऑफ़र (सीमित समय के लिए!)
             </CardTitle>
-            <CardDescription className="text-center text-slate-400">
+            <CardDescription className="text-center text-slate-400 pt-2">
               अपने सपनों को साकार करने का सुनहरा अवसर – आज ही शुरुआत करें! अमूल्य सोसायटी में नया मेंबरशिप अकाउंट खोलें और पाएं शानदार लाभ:
             </CardDescription>
           </CardHeader>
@@ -45,7 +48,7 @@ export default async function Home() {
               <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                       <h3 className="font-semibold flex items-center gap-2 text-sky-400"><Landmark className="h-5 w-5"/>बचत सुविधाएं</h3>
-                      <ul className="text-sm space-y-2 text-slate-400 list-disc list-inside">
+                      <ul className="text-sm space-y-2 text-slate-300 list-disc list-outside pl-5">
                           <li><strong>शून्य रजिस्ट्रेशन शुल्क:</strong> बिना किसी प्रारंभिक खर्च के खाता खोलें।</li>
                           <li>पहले 3 महीने नि:शुल्क मेंटेनेंस।</li>
                           <li>बचत राशि पर विशेष ब्याज दर।</li>
@@ -55,7 +58,7 @@ export default async function Home() {
                   </div>
                    <div className="space-y-4">
                       <h3 className="font-semibold flex items-center gap-2 text-green-400"><BadgePercent className="h-5 w-5"/>लोन एवं अन्य सुविधाएं</h3>
-                      <ul className="text-sm space-y-2 text-slate-400 list-disc list-inside">
+                      <ul className="text-sm space-y-2 text-slate-300 list-disc list-outside pl-5">
                           <li>व्यक्तिगत, व्यवसायिक और आपातकालीन लोन पर कम ब्याज दर।</li>
                           <li>आसान EMI और लचीले रीपेमेंट विकल्प।</li>
                           <li>पूर्व-स्वीकृत लोन सीमा (अकाउंट होल्डर्स के लिए)।</li>
@@ -78,7 +81,7 @@ export default async function Home() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-           <Button asChild size="lg" variant="outline">
+           <Button asChild size="lg" variant="secondary">
             <Link href="/login">
               Login
             </Link>
