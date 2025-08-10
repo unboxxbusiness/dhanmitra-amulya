@@ -1,3 +1,4 @@
+
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,34 +8,87 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { adminDb } from '@/lib/firebase/server';
+
+type Account = {
+  id: string;
+  type: string;
+  balance: number;
+  currency: string;
+}
+
+type Loan = {
+  id: string;
+  type: string;
+  principal: number;
+  remaining: number;
+  interestRate: number;
+  status: string;
+}
+
+type Deposit = {
+  id: string;
+  type: string;
+  principal: number;
+  maturityDate: string;
+  interestRate: number;
+  status: string;
+}
+
+type Statement = {
+    id: string;
+    date: string;
+    description: string;
+}
+
+type Transaction = {
+    id: string;
+    date: string;
+    description: string;
+    amount: number;
+    type: 'credit' | 'debit';
+}
+
+type FinancialData = {
+    accounts: Account[];
+    loans: Loan[];
+    deposits: Deposit[];
+    statements: Statement[];
+    transactions: Transaction[];
+}
 
 // In a real application, you would fetch this data from Firestore
 // based on the logged-in user's ID.
-async function getFinancialData(userId: string) {
-  // Replace this with your actual Firestore fetching logic
+async function getFinancialData(userId: string): Promise<FinancialData> {
+  // This is where you would fetch data from Firestore.
+  // For now, we return empty arrays to remove mock data.
   console.log(`Fetching data for user: ${userId}`);
-  return {
-    accounts: [
-      { id: '**** **** **** 1234', type: 'Checking', balance: 5250.75, currency: 'USD' },
-      { id: '**** **** **** 5678', type: 'Savings', balance: 12800.00, currency: 'USD' },
-    ],
-    loans: [
-      { id: 'LOAN-001', type: 'Personal Loan', principal: 15000, remaining: 7500, interestRate: 5.0, status: 'Active' },
-      { id: 'LOAN-002', type: 'Auto Loan', principal: 25000, remaining: 18250.50, interestRate: 4.5, status: 'Active' },
-    ],
-    deposits: [
-        { id: 'DEP-001', type: 'Certificate of Deposit', principal: 10000, maturityDate: '2025-12-01', interestRate: 2.5, status: 'Active' },
-    ],
-    statements: [
-      { id: 'STMT-001', date: '2024-06-30', description: 'June 2024 Statement' },
-      { id: 'STMT-002', date: '2024-05-31', description: 'May 2024 Statement' },
-    ],
-    transactions: [
-      { id: 'txn_1', date: '2024-07-15', description: 'Grocery Store', amount: -75.50, type: 'debit' },
-      { id: 'txn_2', date: '2024-07-14', description: 'Paycheck Deposit', amount: 2200.00, type: 'credit' },
-      { id: 'txn_3', date: '2024-07-12', description: 'Utility Bill Payment', amount: -120.00, type: 'debit' },
-    ],
+  
+  const financialData: FinancialData = {
+      accounts: [],
+      loans: [],
+      deposits: [],
+      statements: [],
+      transactions: [],
   };
+
+  try {
+    const financialDoc = await adminDb.collection('financials').doc(userId).get();
+    if (financialDoc.exists) {
+        const data = financialDoc.data();
+        if(data) {
+          financialData.accounts = data.accounts || [];
+          financialData.loans = data.loans || [];
+          financialData.deposits = data.deposits || [];
+          financialData.statements = data.statements || [];
+          financialData.transactions = data.transactions || [];
+        }
+    }
+  } catch (error) {
+    console.error("Error fetching financial data:", error);
+  }
+  
+  return financialData;
 }
 
 
@@ -87,7 +141,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-6">
                <div className="grid gap-4 md:grid-cols-2">
-                {accounts.map(account => (
+                {accounts.length > 0 ? accounts.map(account => (
                   <Card key={account.id}>
                     <CardHeader>
                       <CardTitle>{account.type} Account</CardTitle>
@@ -98,7 +152,7 @@ export default async function DashboardPage() {
                       <p className="text-xs text-muted-foreground">{account.id}</p>
                     </CardContent>
                   </Card>
-                ))}
+                )) : <p className="text-muted-foreground col-span-2">No account information available.</p>}
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Recent Transactions</h3>
@@ -111,7 +165,7 @@ export default async function DashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map(tx => (
+                    {transactions.length > 0 ? transactions.map(tx => (
                       <TableRow key={tx.id}>
                         <TableCell>{tx.date}</TableCell>
                         <TableCell className="font-medium">{tx.description}</TableCell>
@@ -119,7 +173,7 @@ export default async function DashboardPage() {
                           {tx.type === 'credit' ? '+' : '-'}${Math.abs(tx.amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )) : <TableRow><TableCell colSpan={3} className="text-center">No transactions found.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div>
@@ -145,7 +199,7 @@ export default async function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deposits.map(deposit => (
+                  {deposits.length > 0 ? deposits.map(deposit => (
                     <TableRow key={deposit.id}>
                       <TableCell className="font-medium">{deposit.type}</TableCell>
                       <TableCell>${deposit.principal.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
@@ -153,7 +207,7 @@ export default async function DashboardPage() {
                       <TableCell>{deposit.interestRate.toFixed(2)}%</TableCell>
                       <TableCell><Badge>{deposit.status}</Badge></TableCell>
                     </TableRow>
-                  ))}
+                  )) : <TableRow><TableCell colSpan={5} className="text-center">No deposits found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -178,7 +232,7 @@ export default async function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loans.map(loan => (
+                  {loans.length > 0 ? loans.map(loan => (
                     <TableRow key={loan.id}>
                       <TableCell className="font-medium">{loan.type}</TableCell>
                       <TableCell>${loan.principal.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
@@ -186,7 +240,7 @@ export default async function DashboardPage() {
                       <TableCell>{loan.interestRate.toFixed(2)}%</TableCell>
                       <TableCell><Badge>{loan.status}</Badge></TableCell>
                     </TableRow>
-                  ))}
+                  )) : <TableRow><TableCell colSpan={5} className="text-center">No loans found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -209,7 +263,7 @@ export default async function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {statements.map(stmt => (
+                  {statements.length > 0 ? statements.map(stmt => (
                     <TableRow key={stmt.id}>
                       <TableCell>{stmt.date}</TableCell>
                       <TableCell className="font-medium">{stmt.description}</TableCell>
@@ -217,7 +271,7 @@ export default async function DashboardPage() {
                         <Button variant="outline" size="sm">Download</Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : <TableRow><TableCell colSpan={3} className="text-center">No statements found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
