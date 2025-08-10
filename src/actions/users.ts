@@ -5,6 +5,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { ROLES, type Role } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
+import Papa from 'papaparse';
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
@@ -163,4 +164,66 @@ export async function getPendingApplications(): Promise<Application[]> {
         console.error('Error fetching pending applications:', error);
         return [];
     }
+}
+
+
+export async function bulkImportMembers(csvContent: string) {
+    await verifyAdmin();
+    const parseResult = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+
+    if (parseResult.errors.length > 0) {
+        return { success: false, error: `CSV Parsing Error: ${parseResult.errors[0].message}` };
+    }
+
+    const members = parseResult.data as { name: string; email: string }[];
+    const results = {
+        successful: 0,
+        failed: 0,
+        errors: [] as { email: string; reason: string }[],
+    };
+
+    for (const member of members) {
+        if (!member.email || !member.name) {
+            results.failed++;
+            results.errors.push({ email: member.email || 'N/A', reason: 'Missing name or email.' });
+            continue;
+        }
+
+        try {
+            // Generate a secure random password for the user.
+            const tempPassword = Math.random().toString(36).slice(-8);
+
+            const userRecord = await adminAuth.createUser({
+                email: member.email,
+                displayName: member.name,
+                password: tempPassword,
+            });
+
+            const role: Role = 'member';
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role });
+
+            await adminDb.collection('users').doc(userRecord.uid).set({
+                name: member.name,
+                email: member.email,
+                role: role,
+                status: 'Active',
+                createdAt: new Date().toISOString(),
+            });
+
+            results.successful++;
+        } catch (error: any) {
+            results.failed++;
+            results.errors.push({ email: member.email, reason: error.message });
+        }
+    }
+
+    revalidatePath('/admin/members');
+    return { success: true, results };
+}
+
+export async function exportMembersToCsv(): Promise<string> {
+    await verifyAdmin();
+    const members = await getAllMembers();
+    const dataForCsv = members.map(({ id, ...rest }) => rest);
+    return Papa.unparse(dataForCsv);
 }
