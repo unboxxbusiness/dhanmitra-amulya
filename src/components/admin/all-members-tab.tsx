@@ -45,6 +45,16 @@ export function AllMembersTab() {
     }
   }
 
+  const getRoleBadgeVariant = (role: UserProfile['role']) => {
+    if (role === 'admin' || role === 'branch_manager') {
+        return 'destructive'
+    }
+    if (role !== 'member') {
+        return 'secondary'
+    }
+    return 'outline'
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -69,6 +79,7 @@ export function AllMembersTab() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Join Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -81,6 +92,7 @@ export function AllMembersTab() {
                   <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                 </TableRow>
@@ -90,6 +102,11 @@ export function AllMembersTab() {
                 <TableRow key={member.id}>
                   <TableCell className="font-medium">{member.name}</TableCell>
                   <TableCell>{member.email}</TableCell>
+                   <TableCell>
+                     <Badge variant={getRoleBadgeVariant(member.role)} className="capitalize">
+                      {member.role.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{member.joinDate}</TableCell>
                   <TableCell>
                     <Badge variant={getBadgeVariant(member.status)}>
