@@ -1,55 +1,41 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { adminAuth } from '@/lib/firebase/server';
-import type { Role } from '@/lib/definitions';
-import { ROLES } from '@/lib/definitions';
+import { getSession } from './lib/auth'; // Use relative path for middleware
 
 const AUTH_ROUTES = ['/login', '/signup'];
 const PROTECTED_ROUTES = ['/dashboard', '/admin'];
-const ADMIN_ROLES: Role[] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+const ADMIN_ROLES: string[] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get('session')?.value;
+  const session = await getSession();
 
-  // 1. If trying to access a protected route without a session, redirect to login
-  if (!sessionCookie && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
+  // If user is logged in, redirect from auth pages to their respective dashboard
+  if (session && AUTH_ROUTES.includes(pathname)) {
+    const destination = ADMIN_ROLES.includes(session.role) ? '/admin' : '/dashboard';
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
+  // If user is not logged in, redirect from protected pages to login
+  if (!session && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // 2. If logged in, handle routing based on role
-  if (sessionCookie) {
-    try {
-      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-      const userRole = (decodedClaims.role as Role) || 'member';
-      const role = ROLES.includes(userRole) ? userRole : 'member';
-      const isPrivilegedUser = ADMIN_ROLES.includes(role);
+  // If a logged-in user is on a protected route, verify their role access
+  if (session && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
+    const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 
-      // 2a. If logged in, redirect away from auth pages
-      if (AUTH_ROUTES.includes(pathname)) {
-        const destination = isPrivilegedUser ? '/admin' : '/dashboard';
-        return NextResponse.redirect(new URL(destination, request.url));
-      }
-
-      // 2b. If admin is trying to access member dashboard, redirect to admin dashboard
-      if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
+    // If a non-admin tries to access admin pages, redirect to their dashboard
+    if (pathname.startsWith('/admin') && !isPrivilegedUser) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    
+    // If an admin tries to access the member dashboard, redirect to admin dashboard
+    if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
         return NextResponse.redirect(new URL('/admin', request.url));
-      }
-
-      // 2c. If a non-admin is trying to access admin pages, redirect to member dashboard
-      if (pathname.startsWith('/admin') && !isPrivilegedUser) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-
-    } catch (error) {
-       // Session cookie is invalid. Clear it and redirect to login.
-       const response = NextResponse.redirect(new URL('/login', request.url));
-       response.cookies.delete('session');
-       return response;
     }
   }
 
-  // 3. If none of the above, allow the request to proceed
   return NextResponse.next();
 }
 

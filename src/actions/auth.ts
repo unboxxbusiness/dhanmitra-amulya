@@ -11,14 +11,6 @@ const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 export async function createSession(idToken: string) {
   try {
     const decodedClaims = await adminAuth.verifyIdToken(idToken);
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
-    cookies().set(SESSION_COOKIE_NAME, sessionCookie, {
-      maxAge: expiresIn,
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-    });
     
     let userRole: Role = (decodedClaims.role as Role) || 'member';
 
@@ -28,6 +20,19 @@ export async function createSession(idToken: string) {
     }
 
     const role = ROLES.includes(userRole) ? userRole : 'member';
+
+    // Set the role as a custom claim on the user's auth token.
+    // This makes the role available throughout the session.
+    await adminAuth.setCustomUserClaims(decodedClaims.uid, { role });
+
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    cookies().set(SESSION_COOKIE_NAME, sessionCookie, {
+      maxAge: expiresIn,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+    });
 
     return { success: true, role };
   } catch (error) {
