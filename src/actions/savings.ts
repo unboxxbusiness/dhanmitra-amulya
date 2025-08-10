@@ -45,7 +45,8 @@ export type SavingsSettings = {
 
 // Schemes Management
 export async function getSavingsSchemes(): Promise<SavingsScheme[]> {
-    // No auth check needed for reading schemes, can be public
+    // Auth check for privileged users
+    await verifyAdmin();
     try {
         const schemesSnapshot = await adminDb.collection('savingsSchemes').orderBy('name').get();
         return schemesSnapshot.docs.map(doc => ({
@@ -166,7 +167,7 @@ export async function createSavingsAccount(prevState: any, formData: FormData) {
 
 // Settings Management
 export async function getSavingsSettings(): Promise<SavingsSettings> {
-    // No auth check needed for reading settings, can be public
+    await verifyAdmin();
     try {
         const settingsDoc = await adminDb.collection('settings').doc(SETTINGS_DOC_ID).get();
         if (settingsDoc.exists) {

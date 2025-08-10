@@ -21,6 +21,8 @@ async function verifyAdmin() {
 
 // --- Society Config Management ---
 export async function getSocietyConfig(): Promise<SocietyConfig> {
+    // This is read by admin and non-admin pages, so no specific role check here.
+    // Security rules will enforce who can see what.
     const doc = await adminDb.collection('settings').doc(SETTINGS_DOC_ID).get();
     if (!doc.exists) {
         return {
@@ -111,7 +113,10 @@ export async function deleteBranch(branchId: string) {
 // --- Holiday Management ---
 
 export async function getHolidays(): Promise<Holiday[]> {
-    // Public read might be acceptable for holidays
+    // This can be read by any authenticated user
+    const session = await getSession();
+    if (!session) throw new Error("Not authenticated");
+
     const snapshot = await adminDb.collection('holidays').orderBy('date').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Holiday));
 }
