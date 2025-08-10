@@ -102,7 +102,7 @@ export default function AdminLayout({
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b px-4 lg:px-6">
+        <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
             <SidebarTrigger className="md:hidden"/>
             <div className="flex-1 text-center font-semibold">
                 Admin Panel
