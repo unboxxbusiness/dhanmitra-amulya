@@ -5,7 +5,8 @@ import { ArrowRight, Lock, Landmark, BadgePercent } from "lucide-react";
 import Link from "next/link";
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Vortex } from "@/components/ui/vortex";
+import { BackgroundPaths } from "@/components/ui/background-paths";
+
 
 export default async function Home() {
   const session = await getSession();
@@ -15,13 +16,7 @@ export default async function Home() {
   }
 
   return (
-    <Vortex
-      backgroundColor="#030712"
-      rangeY={800}
-      particleCount={500}
-      baseHue={230}
-      className="flex items-center flex-col justify-center px-4 py-8 min-h-screen w-full"
-    >
+    <BackgroundPaths>
       <div className="text-center">
         <div className="mb-4 flex items-center justify-center">
           <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -88,6 +83,6 @@ export default async function Home() {
           </Button>
         </div>
       </div>
-    </Vortex>
+    </BackgroundPaths>
   );
 }
