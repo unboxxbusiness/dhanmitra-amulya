@@ -1,21 +1,45 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getSession } from '@/lib/auth';
 
 const AUTH_ROUTES = ['/login', '/signup'];
-const PROTECTED_ROUTES = ['/dashboard', '/admin'];
+const PROTECTED_MEMBER_ROUTES = ['/dashboard'];
+const PROTECTED_ADMIN_ROUTES = ['/admin'];
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get('session');
+  const session = await getSession();
 
-  // If user is logged in, redirect from auth pages to dashboard
-  if (sessionCookie && AUTH_ROUTES.includes(pathname)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
+  const isMemberRoute = PROTECTED_MEMBER_ROUTES.some(p => pathname.startsWith(p));
+  const isAdminRoute = PROTECTED_ADMIN_ROUTES.some(p => pathname.startsWith(p));
+
+  // If user is logged in
+  if (session) {
+    const isPrivileged = ADMIN_ROLES.includes(session.role);
+
+    // Redirect from auth routes if logged in
+    if (isAuthRoute) {
+      const url = isPrivileged ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(url, request.url));
+    }
+    
+    // Redirect non-admins trying to access admin routes
+    if (isAdminRoute && !isPrivileged) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    return NextResponse.next();
   }
 
-  // If user is not logged in, redirect from protected pages to login
-  if (!sessionCookie && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // If user is not logged in
+  if (!session) {
+    // Protect routes
+    if (isMemberRoute || isAdminRoute) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   return NextResponse.next();
