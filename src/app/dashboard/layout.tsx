@@ -38,7 +38,7 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <Collapsible asChild>
+            <Collapsible>
                 <>
                     <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
