@@ -12,17 +12,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get('session')?.value;
 
-  // If user is logged in, redirect from auth pages
-  if (sessionCookie && AUTH_ROUTES.includes(pathname)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // If user is not logged in, redirect from protected pages to login
+  // 1. If trying to access a protected route without a session, redirect to login
   if (!sessionCookie && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  
-  // Role-based access control
+
+  // 2. If logged in, handle routing based on role
   if (sessionCookie) {
     try {
       const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
@@ -30,25 +25,31 @@ export async function middleware(request: NextRequest) {
       const role = ROLES.includes(userRole) ? userRole : 'member';
       const isPrivilegedUser = ADMIN_ROLES.includes(role);
 
+      // 2a. If logged in, redirect away from auth pages
+      if (AUTH_ROUTES.includes(pathname)) {
+        const destination = isPrivilegedUser ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(destination, request.url));
+      }
+
+      // 2b. If admin is trying to access member dashboard, redirect to admin dashboard
+      if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+
+      // 2c. If a non-admin is trying to access admin pages, redirect to member dashboard
       if (pathname.startsWith('/admin') && !isPrivilegedUser) {
-        // Non-admin trying to access /admin
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
 
-      if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
-        // Admin trying to access regular user dashboard
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
     } catch (error) {
-       // Invalid session, clear cookie and redirect to login
-       if (PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
-        const response = NextResponse.redirect(new URL('/login', request.url));
-        response.cookies.delete('session');
-        return response;
-       }
+       // Session cookie is invalid. Clear it and redirect to login.
+       const response = NextResponse.redirect(new URL('/login', request.url));
+       response.cookies.delete('session');
+       return response;
     }
   }
 
+  // 3. If none of the above, allow the request to proceed
   return NextResponse.next();
 }
 
