@@ -31,18 +31,15 @@ export default async function DashboardPage() {
     : '';
   
   return (
-    <>
-      <header className="flex items-center justify-between py-4">
+    <div className="space-y-6">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Member Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {session.name || 'member'}!</p>
         </div>
-         <div className="flex items-center gap-4">
-            <UserNav />
-        </div>
       </header>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Button asChild className="w-full py-6 text-base">
             <Link href="/dashboard/apply-loan">
               <PlusCircle className="mr-2 h-5 w-5"/>
@@ -195,6 +192,6 @@ export default async function DashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   );
 }
