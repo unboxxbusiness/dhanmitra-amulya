@@ -7,7 +7,7 @@ import { app } from '@/lib/firebase/client';
 import { useToast } from '@/hooks/use-toast';
 import { saveFcmToken } from '@/actions/users';
 
-async function requestPermissionAndGetToken() {
+async function requestPermissionAndGetToken(swRegistration: ServiceWorkerRegistration) {
   console.log('Requesting user permission for notifications...');
   try {
     const permission = await Notification.requestPermission();
@@ -18,6 +18,7 @@ async function requestPermissionAndGetToken() {
       // Get the token
       const currentToken = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY, // Get this from Firebase Console
+        serviceWorkerRegistration: swRegistration,
       });
 
       if (currentToken) {
@@ -44,21 +45,22 @@ export function FcmTokenManager() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(function(registration) {
-          console.log('Firebase Service Worker registered with scope: ', registration.scope);
-          // Request permission after service worker is registered
-          requestPermissionAndGetToken().then(token => {
-            if (token) {
-               // You can optionally show a toast or log that the setup is complete
-            } else {
-               toast({
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log('Firebase Service Worker registered with scope: ', registration.scope);
+            // Wait for the service worker to be ready
+            return navigator.serviceWorker.ready.then(() => {
+                console.log('Service Worker is active.');
+                return requestPermissionAndGetToken(registration);
+            });
+        }).then(token => {
+            if (!token) {
+                 toast({
                    variant: 'destructive',
                    title: 'Notification Setup Failed',
                    description: "Could not get permission to send notifications. Please enable them in your browser settings.",
                });
             }
-          });
         }).catch(function(err) {
           console.log('Service Worker registration failed: ', err);
            toast({
