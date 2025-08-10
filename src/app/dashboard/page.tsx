@@ -5,9 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+
+// In a real application, you would fetch this data from Firestore
+// based on the logged-in user's ID.
+async function getFinancialData(userId: string) {
+  // Replace this with your actual Firestore fetching logic
+  console.log(`Fetching data for user: ${userId}`);
+  return {
+    accounts: [
+      { id: '**** **** **** 1234', type: 'Checking', balance: 5250.75, currency: 'USD' },
+      { id: '**** **** **** 5678', type: 'Savings', balance: 12800.00, currency: 'USD' },
+    ],
+    loans: [
+      { id: 'LOAN-001', type: 'Personal Loan', principal: 15000, remaining: 7500, interestRate: 5.0, status: 'Active' },
+      { id: 'LOAN-002', type: 'Auto Loan', principal: 25000, remaining: 18250.50, interestRate: 4.5, status: 'Active' },
+    ],
+    deposits: [
+        { id: 'DEP-001', type: 'Certificate of Deposit', principal: 10000, maturityDate: '2025-12-01', interestRate: 2.5, status: 'Active' },
+    ],
+    statements: [
+      { id: 'STMT-001', date: '2024-06-30', description: 'June 2024 Statement' },
+      { id: 'STMT-002', date: '2024-05-31', description: 'May 2024 Statement' },
+    ],
+    transactions: [
+      { id: 'txn_1', date: '2024-07-15', description: 'Grocery Store', amount: -75.50, type: 'debit' },
+      { id: 'txn_2', date: '2024-07-14', description: 'Paycheck Deposit', amount: 2200.00, type: 'credit' },
+      { id: 'txn_3', date: '2024-07-12', description: 'Utility Bill Payment', amount: -120.00, type: 'debit' },
+    ],
+  };
+}
+
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -15,40 +44,10 @@ export default async function DashboardPage() {
   if (!session) {
     redirect('/login');
   }
+
+  // Fetch financial data for the current user
+  const { accounts, loans, deposits, statements, transactions } = await getFinancialData(session.uid);
   
-  const getInitials = (name: string) => {
-    return name.split(' ').map((n) => n[0]).join('');
-  };
-
-  const accounts = [
-    { id: '**** **** **** 1234', type: 'Checking', balance: 5250.75, currency: 'USD' },
-    { id: '**** **** **** 5678', type: 'Savings', balance: 12800.00, currency: 'USD' },
-  ];
-
-  const loans = [
-    { id: 'LOAN-001', type: 'Personal Loan', principal: 15000, remaining: 7500, interestRate: 5.0, status: 'Active' },
-    { id: 'LOAN-002', type: 'Auto Loan', principal: 25000, remaining: 18250.50, interestRate: 4.5, status: 'Active' },
-  ];
-
-  const deposits = [
-      { id: 'DEP-001', type: 'Certificate of Deposit', principal: 10000, maturityDate: '2025-12-01', interestRate: 2.5, status: 'Active' },
-  ];
-  
-  const statements = [
-    { id: 'STMT-001', date: '2024-06-30', description: 'June 2024 Statement' },
-    { id: 'STMT-002', date: '2024-05-31', description: 'May 2024 Statement' },
-    { id: 'STMT-003', date: '2024-04-30', description: 'April 2024 Statement' },
-  ];
-  
-  const transactions = [
-    { id: 'txn_1', date: '2024-07-15', description: 'Grocery Store', amount: -75.50, type: 'debit' },
-    { id: 'txn_2', date: '2024-07-14', description: 'Paycheck Deposit', amount: 2200.00, type: 'credit' },
-    { id: 'txn_3', date: '2024-07-12', description: 'Utility Bill Payment', amount: -120.00, type: 'debit' },
-    { id: 'txn_4', date: '2024-07-10', description: 'Restaurant', amount: -45.00, type: 'debit' },
-    { id: 'txn_5', date: '2024-07-08', description: 'ATM Withdrawal', amount: -100.00, type: 'debit' },
-  ];
-
-
   return (
     <div className="container mx-auto p-4 md:p-8">
       <header className="mb-8 flex items-center justify-between">
@@ -59,13 +58,13 @@ export default async function DashboardPage() {
          <div className="flex items-center gap-4">
           <Button asChild>
             <Link href="#">
-              <PlusCircle className="mr-2"/>
+              <PlusCircle className="mr-2 h-4 w-4"/>
               Apply for Loan
             </Link>
           </Button>
            <Button asChild variant="outline">
             <Link href="#">
-               <PlusCircle className="mr-2"/>
+               <PlusCircle className="mr-2 h-4 w-4"/>
                Make a Deposit
             </Link>
           </Button>
@@ -74,10 +73,10 @@ export default async function DashboardPage() {
       
       <Tabs defaultValue="accounts" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="accounts"><Landmark className="mr-2" /> Accounts</TabsTrigger>
-          <TabsTrigger value="deposits"><DollarSign className="mr-2" /> Deposits</TabsTrigger>
-          <TabsTrigger value="loans"><CreditCard className="mr-2" /> Loans</TabsTrigger>
-          <TabsTrigger value="statements"><Receipt className="mr-2" /> Statements</TabsTrigger>
+          <TabsTrigger value="accounts"><Landmark className="mr-2 h-4 w-4" /> Accounts</TabsTrigger>
+          <TabsTrigger value="deposits"><DollarSign className="mr-2 h-4 w-4" /> Deposits</TabsTrigger>
+          <TabsTrigger value="loans"><CreditCard className="mr-2 h-4 w-4" /> Loans</TabsTrigger>
+          <TabsTrigger value="statements"><Receipt className="mr-2 h-4 w-4" /> Statements</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
@@ -90,8 +89,8 @@ export default async function DashboardPage() {
                <div className="grid gap-4 md:grid-cols-2">
                 {accounts.map(account => (
                   <Card key={account.id}>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium">{account.type} Account</CardTitle>
+                    <CardHeader>
+                      <CardTitle>{account.type} Account</CardTitle>
                       <Landmark className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>

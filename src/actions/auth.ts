@@ -9,47 +9,32 @@ import { DecodedIdToken } from 'firebase-admin/auth';
 const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
-async function getUserRole(decodedClaims: DecodedIdToken): Promise<Role> {
-  try {
-    const userDoc = await adminDb.collection('users').doc(decodedClaims.uid).get();
-    if (userDoc.exists) {
-      const userRole = userDoc.data()?.role as Role;
-      if (ROLES.includes(userRole)) {
-        return userRole;
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching user role from Firestore:", error);
-  }
-  
-  // Default to 'member' if no role found or on error
-  return 'member';
-}
-
 export async function createSession(idToken: string) {
   try {
     const decodedClaims = await adminAuth.verifyIdToken(idToken);
     const userRef = adminDb.collection('users').doc(decodedClaims.uid);
     const userDoc = await userRef.get();
 
-    let role: Role = 'member';
+    let role: Role = 'member'; // Default role
 
     if (userDoc.exists) {
-        // If user document exists, get their role from it.
-        const userRole = userDoc.data()?.role as Role;
-        if (ROLES.includes(userRole)) {
-            role = userRole;
-        }
+      // If user document exists, get their role from it.
+      const userRole = userDoc.data()?.role as Role;
+      if (ROLES.includes(userRole)) {
+        role = userRole;
+      }
     } else {
-        // If it's a new user, create their document in Firestore with default 'member' role.
-        try {
-            await userRef.set({
-            email: decodedClaims.email,
-            role: 'member' 
-            });
-        } catch (dbError) {
-            console.error("Failed to create user document in Firestore:", dbError);
-        }
+      // If it's a new user, create their document in Firestore with default 'member' role.
+      try {
+        await userRef.set({
+          email: decodedClaims.email,
+          role: 'member',
+          createdAt: new Date().toISOString(),
+        });
+      } catch (dbError) {
+        console.error('Failed to create user document in Firestore:', dbError);
+        // Proceed with 'member' role even if DB write fails, but log the error.
+      }
     }
     
     // Set role as a custom claim on the user's auth token for security and server-side checks.
@@ -59,7 +44,7 @@ export async function createSession(idToken: string) {
     cookies().set(SESSION_COOKIE_NAME, sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
     });

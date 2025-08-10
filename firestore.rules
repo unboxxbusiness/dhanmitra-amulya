@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // Role is checked from the custom claim on the auth token
+      return request.auth.token.role == 'admin';
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Admins can read any user document.
+      // A user can read their own document.
+      allow read: if isAdmin() || isOwner(userId);
+
+      // A user can create their own document.
+      allow create: if isOwner(userId);
+
+      // Admins can update any field.
+      // A user can update their own document, but cannot change their 'role'.
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
+
+      // Nobody can delete user documents for now to prevent accidental data loss.
+      // You can change this rule based on your application's needs.
+      allow delete: if false;
+    }
+
+    // You would add rules for other collections like accounts, loans, etc. here.
+    // For example:
+    // match /accounts/{accountId} {
+    //   allow read, write: if isOwner(get(/databases/$(database)/documents/accounts/$(accountId)).data.userId);
+    // }
+  }
+}

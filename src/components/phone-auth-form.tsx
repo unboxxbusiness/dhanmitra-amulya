@@ -34,13 +34,14 @@ export function PhoneAuthForm() {
     defaultValues: { phone: '' },
   });
 
-  const otpForm = a.useForm<z.infer<typeof otpSchema>>({
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: '' },
   });
 
   React.useEffect(() => {
-    if (!window.recaptchaVerifier) {
+    // Ensure window is defined (for SSR)
+    if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
         });
