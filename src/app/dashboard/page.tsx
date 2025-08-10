@@ -35,13 +35,13 @@ export default async function DashboardPage() {
       
       <div className="flex items-center gap-4 mb-8">
           <Button asChild>
-            <Link href="#">
+            <Link href="/dashboard/apply-loan">
               <PlusCircle className="mr-2 h-4 w-4"/>
               Apply for Loan
             </Link>
           </Button>
            <Button asChild variant="outline">
-            <Link href="#">
+            <Link href="/dashboard/apply-deposit">
                <PlusCircle className="mr-2 h-4 w-4"/>
                Make a Deposit
             </Link>

@@ -5,15 +5,17 @@ import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails } from '@/lib/definitions';
-import { LoanProductSchema } from '@/lib/definitions';
+import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
+import { z } from 'zod';
 
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 const LOAN_VERIFIER_ROLES = ['admin', 'branch_manager', 'auditor'];
 const LOAN_APPROVER_ROLES = ['admin', 'branch_manager'];
+const MEMBER_ROLES = ['member', ...ADMIN_ROLES];
 
-async function verifyAdmin(roles: string[] = ADMIN_ROLES) {
+async function verifyUser(roles: string[]) {
   const session = await getSession();
   if (!session || !roles.includes(session.role)) {
     throw new Error('Not authorized for this action');
@@ -24,13 +26,19 @@ async function verifyAdmin(roles: string[] = ADMIN_ROLES) {
 // --- Product Management ---
 
 export async function getLoanProducts(): Promise<LoanProduct[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
+    const snapshot = await adminDb.collection('loanProducts').orderBy('name').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LoanProduct));
+}
+
+export async function getAvailableLoanProducts(): Promise<LoanProduct[]> {
+    await verifyUser(MEMBER_ROLES);
     const snapshot = await adminDb.collection('loanProducts').orderBy('name').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LoanProduct));
 }
 
 export async function addLoanProduct(product: LoanProduct) {
-    await verifyAdmin(LOAN_APPROVER_ROLES);
+    await verifyUser(LOAN_APPROVER_ROLES);
     try {
         const validation = LoanProductSchema.safeParse(product);
         if (!validation.success) {
@@ -47,6 +55,45 @@ export async function addLoanProduct(product: LoanProduct) {
 
 // --- Application Management ---
 
+export async function applyForLoan(data: z.infer<typeof MemberLoanApplicationSchema>) {
+    const session = await verifyUser(MEMBER_ROLES);
+
+    const validation = MemberLoanApplicationSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
+    }
+
+    try {
+        const productDoc = await adminDb.collection('loanProducts').doc(validation.data.productId).get();
+        if (!productDoc.exists) {
+            return { success: false, error: "Selected product does not exist." };
+        }
+        const product = productDoc.data() as LoanProduct;
+        if (validation.data.termMonths > product.maxTermMonths) {
+            return { success: false, error: `Term cannot exceed ${product.maxTermMonths} months.` };
+        }
+
+        const newApplication = {
+            userId: session.uid,
+            productId: validation.data.productId,
+            amountRequested: validation.data.amountRequested,
+            termMonths: validation.data.termMonths,
+            status: 'pending' as const,
+            applicationDate: new Date().toISOString(),
+        };
+
+        await adminDb.collection('loanApplications').add(newApplication);
+
+        revalidatePath('/admin/loans');
+        revalidatePath('/dashboard');
+        return { success: true };
+        
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+
 function generateLoanAccountNumber(): string {
     const prefix = 'LOAN';
     const timestamp = Date.now().toString().slice(-8);
@@ -55,7 +102,7 @@ function generateLoanAccountNumber(): string {
 }
 
 export async function getLoanApplications(): Promise<LoanApplicationDetails[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('loanApplications').where('status', 'in', ['pending', 'verified']).get();
     
     const applications = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -88,7 +135,7 @@ export async function getLoanApplications(): Promise<LoanApplicationDetails[]> {
 }
 
 export async function verifyLoanApplication(applicationId: string) {
-    const session = await verifyAdmin(LOAN_VERIFIER_ROLES);
+    const session = await verifyUser(LOAN_VERIFIER_ROLES);
     try {
         await adminDb.collection('loanApplications').doc(applicationId).update({
             status: 'verified',
@@ -103,7 +150,7 @@ export async function verifyLoanApplication(applicationId: string) {
 }
 
 export async function approveLoanApplication(applicationId: string) {
-    const session = await verifyAdmin(LOAN_APPROVER_ROLES);
+    const session = await verifyUser(LOAN_APPROVER_ROLES);
     const appRef = adminDb.collection('loanApplications').doc(applicationId);
 
     try {
@@ -128,7 +175,7 @@ export async function approveLoanApplication(applicationId: string) {
 }
 
 export async function rejectLoanApplication(applicationId: string) {
-    await verifyAdmin(LOAN_APPROVER_ROLES);
+    await verifyUser(LOAN_APPROVER_ROLES);
     try {
         await adminDb.collection('loanApplications').doc(applicationId).update({ status: 'rejected' });
         revalidatePath('/admin/loans');
@@ -139,7 +186,7 @@ export async function rejectLoanApplication(applicationId: string) {
 }
 
 export async function disburseLoan(applicationId: string) {
-    const session = await verifyAdmin(ADMIN_ROLES);
+    const session = await verifyUser(ADMIN_ROLES);
     const appRef = adminDb.collection('loanApplications').doc(applicationId);
 
     try {
@@ -208,7 +255,7 @@ export async function disburseLoan(applicationId: string) {
 // --- Active Loans & Repayments ---
 
 export async function getActiveLoans(): Promise<ActiveLoan[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('activeLoans').orderBy('disbursalDate', 'desc').get();
     
     const loans = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -230,7 +277,7 @@ export async function getActiveLoans(): Promise<ActiveLoan[]> {
 
 
 export async function getPendingRepayments(): Promise<RepaymentWithLoanDetails[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('activeLoans').get();
     
     let allPendingRepayments: RepaymentWithLoanDetails[] = [];
@@ -263,7 +310,7 @@ export async function getPendingRepayments(): Promise<RepaymentWithLoanDetails[]
 
 
 export async function recordRepayment(loanId: string, repaymentIndex: number) {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const loanRef = adminDb.collection('activeLoans').doc(loanId);
 
     try {

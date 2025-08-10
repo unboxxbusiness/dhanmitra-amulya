@@ -6,28 +6,37 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { addDays } from 'date-fns';
 import type { DepositProduct, DepositApplication, ActiveDeposit } from '@/lib/definitions';
-import { DepositProductSchema } from '@/lib/definitions';
+import { DepositProductSchema, TermSchema } from '@/lib/definitions';
+import { z } from 'zod';
 
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
+const MEMBER_ROLES = ['member', ...ADMIN_ROLES];
 
-async function verifyAdmin() {
+async function verifyUser(roles: string[]) {
   const session = await getSession();
-  if (!session || !ADMIN_ROLES.includes(session.role)) {
+  if (!session || !roles.includes(session.role)) {
     throw new Error('Not authorized');
   }
   return session;
 }
 
-// Product Management
+// Product Management (Admin)
 export async function getDepositProducts(): Promise<DepositProduct[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
+    const snapshot = await adminDb.collection('depositProducts').orderBy('name').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DepositProduct));
+}
+
+// Product Management (Public for members)
+export async function getAvailableDepositProducts(): Promise<DepositProduct[]> {
+    await verifyUser(MEMBER_ROLES); // Any logged in user can see products
     const snapshot = await adminDb.collection('depositProducts').orderBy('name').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DepositProduct));
 }
 
 export async function addDepositProduct(product: DepositProduct) {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     try {
         const validation = DepositProductSchema.safeParse(product);
         if (!validation.success) {
@@ -44,8 +53,58 @@ export async function addDepositProduct(product: DepositProduct) {
 
 
 // Application Management
+
+const MemberDepositApplicationSchema = z.object({
+  productId: z.string().min(1, 'Please select a product.'),
+  principalAmount: z.number().positive('Deposit amount must be positive.'),
+  term: TermSchema,
+});
+
+export async function applyForDeposit(data: z.infer<typeof MemberDepositApplicationSchema>) {
+    const session = await verifyUser(MEMBER_ROLES);
+    
+    const validation = MemberDepositApplicationSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
+    }
+
+    try {
+        // More server-side validation
+        const productDoc = await adminDb.collection('depositProducts').doc(validation.data.productId).get();
+        if (!productDoc.exists) {
+            return { success: false, error: 'Selected product does not exist.' };
+        }
+        const product = productDoc.data() as DepositProduct;
+        if (validation.data.principalAmount < product.minDeposit || validation.data.principalAmount > product.maxDeposit) {
+            return { success: false, error: `Deposit amount must be between ₹${product.minDeposit} and ₹${product.maxDeposit}.` };
+        }
+        if (!product.terms.some(t => t.durationMonths === validation.data.term.durationMonths && t.interestRate === validation.data.term.interestRate)) {
+            return { success: false, error: 'Selected term is not valid for this product.' };
+        }
+        
+        const newApplication = {
+            userId: session.uid,
+            productId: validation.data.productId,
+            principalAmount: validation.data.principalAmount,
+            term: validation.data.term,
+            status: 'pending' as const,
+            applicationDate: new Date().toISOString(),
+        };
+
+        await adminDb.collection('depositApplications').add(newApplication);
+
+        revalidatePath('/admin/deposits'); // To show up in admin panel
+        revalidatePath('/dashboard');
+        return { success: true };
+
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+
 export async function getDepositApplications(): Promise<DepositApplication[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('depositApplications').where('status', '==', 'pending').get();
     
     const applications = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -73,7 +132,7 @@ function generateDepositAccountNumber(): string {
 }
 
 export async function approveDepositApplication(applicationId: string) {
-    const session = await verifyAdmin();
+    const session = await verifyUser(ADMIN_ROLES);
     const appRef = adminDb.collection('depositApplications').doc(applicationId);
 
     try {
@@ -128,7 +187,7 @@ export async function approveDepositApplication(applicationId: string) {
 }
 
 export async function rejectDepositApplication(applicationId: string) {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     try {
         await adminDb.collection('depositApplications').doc(applicationId).update({
             status: 'rejected'
@@ -143,7 +202,7 @@ export async function rejectDepositApplication(applicationId: string) {
 
 // Active Deposits
 export async function getActiveDeposits(): Promise<ActiveDeposit[]> {
-    await verifyAdmin();
+    await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('activeDeposits').orderBy('startDate', 'desc').get();
     
     const deposits = await Promise.all(snapshot.docs.map(async (doc) => {

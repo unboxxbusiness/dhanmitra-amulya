@@ -1,0 +1,152 @@
+
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { type LoanProduct } from "@/lib/definitions";
+import { useToast } from "@/hooks/use-toast";
+import { applyForLoan } from '@/actions/loans';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+
+const LoanApplicationSchema = z.object({
+  productId: z.string().min(1, 'Please select a loan product.'),
+  amountRequested: z.coerce.number().positive('Loan amount must be positive.'),
+  termMonths: z.coerce.number().int().positive('Loan term must be positive.'),
+});
+
+type FormValues = z.infer<typeof LoanApplicationSchema>;
+
+export function ApplyForLoanForm({ products }: { products: LoanProduct[] }) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [selectedProduct, setSelectedProduct] = useState<LoanProduct | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [term, setTerm] = useState(12);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(LoanApplicationSchema),
+    defaultValues: {
+      termMonths: 12,
+    },
+  });
+
+  const handleProductChange = (productId: string) => {
+    const product = products.find(p => p.id === productId) || null;
+    setSelectedProduct(product);
+    form.setValue('productId', productId);
+    setTerm(12);
+    form.setValue('termMonths', 12);
+  };
+  
+  const handleTermChange = (value: number[]) => {
+      setTerm(value[0]);
+      form.setValue('termMonths', value[0]);
+  }
+
+  const onSubmit = async (data: FormValues) => {
+    setLoading(true);
+    const result = await applyForLoan(data);
+    setLoading(false);
+
+    if (result.success) {
+      toast({
+        title: "Application Submitted",
+        description: "Your loan application has been received and is pending review.",
+      });
+      router.push('/dashboard');
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Application Failed",
+        description: result.error,
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Loan Application Form</CardTitle>
+          <CardDescription>All applications are subject to review and approval.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label>Select Loan Product</Label>
+            <Select onValueChange={handleProductChange} {...form.register('productId')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a loan product..." />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map(p => (
+                  <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.formState.errors.productId && <p className="text-red-500 text-sm">{form.formState.errors.productId.message}</p>}
+          </div>
+
+          {selectedProduct && (
+            <>
+              <p className="text-sm text-muted-foreground">{selectedProduct.collateralNotes}</p>
+              <div className="space-y-2">
+                <Label htmlFor="amountRequested">Loan Amount (₹)</Label>
+                <Input
+                  id="amountRequested"
+                  type="number"
+                  {...form.register('amountRequested')}
+                />
+                {form.formState.errors.amountRequested && <p className="text-red-500 text-sm">{form.formState.errors.amountRequested.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                 <Label htmlFor="termMonths">Loan Term (Months)</Label>
+                 <div className="flex items-center gap-4">
+                    <Slider
+                        id="termMonths"
+                        min={1}
+                        max={selectedProduct.maxTermMonths}
+                        step={1}
+                        value={[term]}
+                        onValueChange={handleTermChange}
+                        className="flex-1"
+                    />
+                    <span className="font-bold w-12 text-center">{term}</span>
+                 </div>
+                {form.formState.errors.termMonths && <p className="text-red-500 text-sm">{form.formState.errors.termMonths.message}</p>}
+              </div>
+            </>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" disabled={!selectedProduct || loading}>
+             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Submit Application
+          </Button>
+        </CardFooter>
+      </Card>
+    </form>
+  );
+}
