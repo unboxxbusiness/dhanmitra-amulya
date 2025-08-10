@@ -6,11 +6,12 @@ import type { UserSession, Role } from '@/lib/definitions';
 import { ROLES } from './definitions';
 
 export const getSession = async (): Promise<UserSession | null> => {
-  const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) {
-    return null;
-  }
   try {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) {
+      return null;
+    }
+  
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
     
     // Get role from custom claims which were set during session creation.
@@ -27,8 +28,8 @@ export const getSession = async (): Promise<UserSession | null> => {
       role: role,
     };
   } catch (error: any) {
-    // Session cookie is invalid or expired.
-    console.error("Error verifying session cookie:", error.message);
+    // Session cookie is invalid or expired, or cookies() is not available in the context.
+    // console.error("Error verifying session cookie:", error.message);
     return null;
   }
 };
