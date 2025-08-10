@@ -2,17 +2,20 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Toaster } from "@/components/ui/toaster"
+import { getSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Amulya - Secure Authentication Platform',
   description: 'A modern, secure authentication application built with Next.js and Firebase.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getSession();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -22,7 +25,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <div className="relative flex min-h-screen flex-col">
-          <Header />
+          {!session && <Header />}
           <main className="flex-1">{children}</main>
         </div>
         <Toaster />

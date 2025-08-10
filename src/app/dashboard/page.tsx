@@ -49,7 +49,7 @@ export default async function DashboardPage() {
   const { accounts, loans, deposits, statements, transactions } = await getFinancialData(session.uid);
   
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <>
       <header className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Member Dashboard</h1>
@@ -224,6 +224,6 @@ export default async function DashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   );
 }
