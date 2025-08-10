@@ -13,15 +13,35 @@ export type UserSession = {
 };
 
 // --- User Profile & Applications ---
-export type UserProfile = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  joinDate: string; // ISO string
-  status: 'Active' | 'Suspended' | 'Resigned' | 'Pending';
-  role: Role;
-  fcmTokens?: string[]; // For Push Notifications
-};
+
+const KycDocsSchema = z.object({
+    id: z.string().url(),
+    photo: z.string().url(),
+    addressProof: z.string().url(),
+});
+export type KycDocs = z.infer<typeof KycDocsSchema>;
+
+const NomineeSchema = z.object({
+    name: z.string().min(2, "Nominee name is required."),
+    relationship: z.string().min(2, "Relationship is required."),
+});
+export type Nominee = z.infer<typeof NomineeSchema>;
+
+export const UserProfileSchema = z.object({
+  id: z.string(),
+  name: z.string().min(2, "Name is required."),
+  email: z.string().email(),
+  phone: z.string().min(10, "A valid phone number is required."),
+  address: z.string().min(10, "A valid address is required."),
+  nominee: NomineeSchema,
+  kycDocs: KycDocsSchema.optional(), // KYC docs are associated with the user profile
+  joinDate: z.string().optional(),
+  status: z.enum(['Active', 'Suspended', 'Resigned', 'Pending']).optional(),
+  role: z.enum(ROLES).optional(),
+  fcmTokens: z.array(z.string()).optional(),
+});
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
 
 export type Application = {
     id: string;

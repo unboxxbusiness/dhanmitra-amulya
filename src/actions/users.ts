@@ -3,11 +3,12 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
-import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit } from '@/lib/definitions';
+import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit, UserProfileSchema } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
 import { ADMIN_ROLES } from '@/middleware';
+import { z } from 'zod';
 
 
 // A helper function to verify if the current user is an admin
@@ -33,7 +34,7 @@ export async function getAllMembers(): Promise<UserProfile[]> {
         status: data.status || 'Active',
         role: data.role || 'member',
         fcmTokens: data.fcmTokens || [],
-      };
+      } as UserProfile;
     });
     return users;
   } catch (error) {
@@ -78,31 +79,9 @@ export async function addMember(formData: FormData) {
     }
 }
 
-export async function updateUserProfile(userId: string, formData: FormData) {
-    await verifyAdmin();
-    const name = formData.get('name') as string;
-    const role = formData.get('role') as Role;
-
-     if (!name || !role || !ROLES.includes(role)) {
-        return { success: false, error: "Missing or invalid fields" };
-    }
-
-    try {
-        await adminAuth.updateUser(userId, { displayName: name });
-        await adminAuth.setCustomUserClaims(userId, { role });
-        await adminDb.collection('users').doc(userId).update({ name, role });
-
-        revalidatePath('/admin/members');
-        return { success: true };
-    } catch (error: any) {
-        console.error(`Error updating profile for user ${userId}:`, error);
-        return { success: false, error: error.message };
-    }
-}
-
 export async function updateUserStatus(userId: string, status: UserProfile['status']) {
     await verifyAdmin();
-    if (!['Active', 'Suspended', 'Resigned'].includes(status)) {
+    if (!['Active', 'Suspended', 'Resigned'].includes(status as string)) {
         return { success: false, error: 'Invalid status provided.' };
     }
     try {
@@ -159,7 +138,7 @@ export async function submitApplication(data: Omit<Application, 'id' | 'applyDat
     } catch (error: any) {
         console.error('Error submitting application:', error);
         // Provide a more user-friendly error message
-        if (error.code === 'already-exists') {
+        if ((error as any).code === 'already-exists') {
              return { success: false, error: 'An application with this email already exists.' };
         }
         return { success: false, error: 'Could not submit your application. Please try again later.' };
@@ -214,6 +193,10 @@ export async function approveApplication(applicationId: string) {
         await adminDb.collection('users').doc(userRecord.uid).set({
             name: appData.name,
             email: appData.email,
+            phone: '', // Initialize empty fields
+            address: '',
+            nominee: { name: '', relationship: '' },
+            kycDocs: appData.kycDocs, // Copy KYC docs from application
             role: 'member',
             status: 'Active',
             createdAt: new Date().toISOString(),
@@ -383,5 +366,96 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
     } catch (error: any) {
         console.error("Error fetching member financials:", error);
         throw new Error("Could not load financial data.");
+    }
+}
+
+// --- Member Profile Actions ---
+
+export async function getMemberProfile(): Promise<UserProfile> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("Not authenticated");
+    }
+
+    const userDoc = await adminDb.collection('users').doc(session.uid).get();
+    if (!userDoc.exists) {
+        throw new Error("User profile not found.");
+    }
+    const data = userDoc.data();
+    // Ensure data conforms to schema, providing defaults for missing fields
+    return {
+        id: userDoc.id,
+        name: data?.name || '',
+        email: data?.email || '',
+        phone: data?.phone || '',
+        address: data?.address || '',
+        nominee: data?.nominee || { name: '', relationship: '' },
+        kycDocs: data?.kycDocs || { id: '', photo: '', addressProof: '' },
+        ...data,
+    };
+}
+
+
+const UpdateProfileSchema = UserProfileSchema.pick({
+    name: true,
+    phone: true,
+    address: true,
+    nominee: true,
+});
+
+export async function updateMemberProfile(data: z.infer<typeof UpdateProfileSchema>) {
+    const session = await getSession();
+    if (!session) {
+        return { success: false, error: "Not authenticated." };
+    }
+
+    const validation = UpdateProfileSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
+    }
+    
+    try {
+        const userRef = adminDb.collection('users').doc(session.uid);
+        await userRef.update({
+            name: validation.data.name,
+            phone: validation.data.phone,
+            address: validation.data.address,
+            nominee: validation.data.nominee,
+        });
+
+        // Also update the display name in Firebase Auth
+        await adminAuth.updateUser(session.uid, { displayName: validation.data.name });
+
+        revalidatePath('/dashboard/profile');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+const MemberEditableProfileSchema = UserProfileSchema.pick({
+    name: true,
+    role: true,
+});
+
+export async function updateUserProfile(userId: string, formData: FormData) {
+    await verifyAdmin();
+    const name = formData.get('name') as string;
+    const role = formData.get('role') as Role;
+
+     if (!name || !role || !ROLES.includes(role)) {
+        return { success: false, error: "Missing or invalid fields" };
+    }
+
+    try {
+        await adminAuth.updateUser(userId, { displayName: name });
+        await adminAuth.setCustomUserClaims(userId, { role });
+        await adminDb.collection('users').doc(userId).update({ name, role });
+
+        revalidatePath('/admin/members');
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error updating profile for user ${userId}:`, error);
+        return { success: false, error: error.message };
     }
 }
