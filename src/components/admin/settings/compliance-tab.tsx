@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useFormStatus, useFormState } from 'react-dom';
+import { useEffect, useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ function SubmitButton() {
 export function ComplianceTab({ config }: { config: SocietyConfig }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [state, formAction] = useFormState(updateComplianceSettings, initialState);
+  const [state, formAction] = useActionState(updateComplianceSettings, initialState);
 
   useEffect(() => {
     if (state.success) {
