@@ -12,17 +12,18 @@ import { postJournalEntry } from './accounting';
 import type * as admin from 'firebase-admin';
 
 const TELLER_ROLES = ['admin', 'branch_manager', 'teller', 'accountant'];
+const MEMBER_AND_TELLER_ROLES = [...TELLER_ROLES, 'member'];
 
-async function verifyTeller() {
-  const session = await getSession();
-  if (!session || !TELLER_ROLES.includes(session.role)) {
-    throw new Error('Not authorized for teller operations');
-  }
-  return session;
+async function verifyUser(roles: string[]) {
+    const session = await getSession();
+    if (!session || !roles.includes(session.role)) {
+        throw new Error('Not authorized for this operation');
+    }
+    return session;
 }
 
 export async function createTransaction(prevState: any, formData: FormData) {
-    const session = await verifyTeller();
+    const session = await verifyUser(TELLER_ROLES);
     
     const accountId = formData.get('accountId') as string;
     const type = formData.get('type') as 'credit' | 'debit';
@@ -109,16 +110,33 @@ export async function createTransaction(prevState: any, formData: FormData) {
 }
 
 
-export async function getTransactionHistory(filters: { accountId?: string; type?: string; limit?: number }): Promise<Transaction[]> {
-    await verifyTeller();
+export async function getTransactionHistory(filters: { accountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
+    const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
 
     let query: admin.firestore.Query = adminDb.collection('transactions');
 
     if (filters.accountId) {
         query = query.where('accountId', '==', filters.accountId);
     }
+    // If a non-admin is making the request, scope it to their user ID for security.
+    if (session.role === 'member') {
+        query = query.where('userId', '==', session.uid);
+    } else if (filters.userId) {
+        query = query.where('userId', '==', filters.userId);
+    }
+
     if (filters.type) {
         query = query.where('type', '==', filters.type);
+    }
+
+    if (filters.startDate) {
+        query = query.where('date', '>=', new Date(filters.startDate).toISOString());
+    }
+    if (filters.endDate) {
+        // Add 1 day to the end date to include the whole day
+        const endDate = new Date(filters.endDate);
+        endDate.setDate(endDate.getDate() + 1);
+        query = query.where('date', '<', endDate.toISOString());
     }
 
     query = query.orderBy('date', 'desc');
@@ -133,14 +151,14 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
         // This could be optimized by storing userName/accountNumber on the transaction doc itself.
         const accountDoc = await adminDb.collection('savingsAccounts').doc(data.accountId).get();
         const userDoc = await adminDb.collection('users').doc(data.userId).get();
-        const tellerDoc = await adminDb.collection('users').doc(data.tellerId).get();
+        const tellerDoc = data.tellerId ? await adminDb.collection('users').doc(data.tellerId).get() : null;
 
         return {
             id: doc.id,
             ...data,
             accountNumber: accountDoc.data()?.accountNumber || 'N/A',
             userName: userDoc.data()?.name || 'N/A',
-            tellerName: tellerDoc.data()?.name || 'N/A',
+            tellerName: tellerDoc?.data()?.name || 'System',
             date: new Date(data.date).toLocaleString(),
         } as Transaction;
     }));
@@ -150,7 +168,7 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
 
 
 export async function reconcileBankStatement(csvContent: string) {
-    await verifyTeller();
+    await verifyUser(TELLER_ROLES);
     
     const parseResult = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
 
@@ -186,3 +204,22 @@ export async function reconcileBankStatement(csvContent: string) {
     revalidatePath('/admin/integrations');
     return { success: true, results };
 }
+
+
+export async function exportTransactionsToCsv(filters: { accountId?: string, startDate?: string, endDate?: string }): Promise<string> {
+    const session = await getSession();
+    if (!session) throw new Error("Not authenticated");
+
+    const transactions = await getTransactionHistory({ ...filters, userId: session.uid });
+
+    const csvData = transactions.map(tx => ({
+        "Date": tx.date,
+        "Description": tx.description,
+        "Debit": tx.type === 'debit' ? tx.amount.toFixed(2) : '',
+        "Credit": tx.type === 'credit' ? tx.amount.toFixed(2) : '',
+        "Balance": tx.balanceAfter.toFixed(2),
+    }));
+
+    return Papa.unparse(csvData);
+}
+

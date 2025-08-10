@@ -262,3 +262,33 @@ export type SocietyConfig = {
 export type ComplianceSettings = {
     kycRetentionYears: number;
 }
+
+
+// --- Statement & Certificate Schemas ---
+export type InterestCertificateData = {
+    societyName: string;
+    societyAddress: string;
+    memberName: string;
+    memberAddress: string;
+    financialYear: string;
+    totalInterest: number;
+    accounts: {
+        accountNumber: string;
+        principal: number;
+        rate: number;
+        interestEarned: number;
+    }[];
+    generatedDate: string;
+};
+
+export type LoanClosureCertificateData = {
+    societyName: string;
+    societyAddress: string;
+    memberName: string;
+    memberAddress: string;
+    loanAccountNumber: string;
+    loanAmount: number;
+    disbursalDate: string;
+    isClosed: boolean;
+    generatedDate: string;
+}

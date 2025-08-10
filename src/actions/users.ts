@@ -3,12 +3,13 @@
 
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
-import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit, UserProfileSchema } from '@/lib/definitions';
+import { ROLES, type Role, type UserProfile, type Application, type LoanApplication, type DepositApplication, type SavingsAccount, type Transaction, type ActiveLoan, type ActiveDeposit, UserProfileSchema, type InterestCertificateData, type LoanClosureCertificateData } from '@/lib/definitions';
 import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
 import { ADMIN_ROLES } from '@/middleware';
 import { z } from 'zod';
+import { getSocietyConfig } from './settings';
 
 
 // A helper function to verify if the current user is an admin
@@ -459,3 +460,85 @@ export async function updateUserProfile(userId: string, formData: FormData) {
         return { success: false, error: error.message };
     }
 }
+
+
+// --- Certificate and Statement Actions ---
+
+export async function generateInterestCertificate(financialYear: string): Promise<InterestCertificateData> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("Not authenticated");
+    }
+
+    // TODO: A more robust implementation would calculate actual interest credited
+    // for now, we simulate by estimating interest on current balances.
+
+    const [deposits, societyConfig, user] = await Promise.all([
+        adminDb.collection('activeDeposits').where('userId', '==', session.uid).get(),
+        getSocietyConfig(),
+        getMemberProfile()
+    ]);
+
+    let totalInterest = 0;
+    const accountDetails = [];
+
+    for (const doc of deposits.docs) {
+        const deposit = doc.data() as ActiveDeposit;
+        // Simplified calculation: (Principal * Rate * Term) / 12
+        // This is an approximation. A real system would sum actual interest credit transactions.
+        const interest = (deposit.principalAmount * deposit.interestRate / 100);
+        totalInterest += interest;
+        accountDetails.push({
+            accountNumber: deposit.accountNumber,
+            principal: deposit.principalAmount,
+            rate: deposit.interestRate,
+            interestEarned: interest
+        });
+    }
+
+    return {
+        societyName: societyConfig.name,
+        societyAddress: societyConfig.address,
+        memberName: user.name,
+        memberAddress: user.address,
+        financialYear,
+        totalInterest,
+        accounts: accountDetails,
+        generatedDate: new Date().toLocaleDateString('en-IN')
+    };
+}
+
+
+export async function generateLoanClosureCertificate(loanId: string): Promise<LoanClosureCertificateData> {
+    const session = await getSession();
+    if (!session) {
+        throw new Error("Not authenticated");
+    }
+
+    const [loanDoc, societyConfig, user] = await Promise.all([
+        adminDb.collection('activeLoans').doc(loanId).get(),
+        getSocietyConfig(),
+        getMemberProfile()
+    ]);
+    
+    if (!loanDoc.exists) throw new Error("Loan not found");
+
+    const loan = loanDoc.data() as ActiveLoan;
+    if (loan.userId !== session.uid) throw new Error("Not authorized to view this loan");
+
+    // A real implementation should verify the outstanding balance is zero.
+    const isClosed = loan.outstandingBalance <= 0;
+
+    return {
+        societyName: societyConfig.name,
+        societyAddress: societyConfig.address,
+        memberName: user.name,
+        memberAddress: user.address,
+        loanAccountNumber: loan.accountNumber,
+        loanAmount: loan.principal,
+        disbursalDate: new Date(loan.disbursalDate).toLocaleDateString('en-IN'),
+        isClosed,
+        generatedDate: new Date().toLocaleDateString('en-IN')
+    };
+}
+
