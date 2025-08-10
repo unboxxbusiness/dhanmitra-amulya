@@ -1,7 +1,7 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, Bell, LifeBuoy } from 'lucide-react';
+import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History, FileText, Bell, LifeBuoy, Settings } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -46,36 +46,34 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <Collapsible>
-                <>
-                    <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                             <Button variant="ghost" className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-                                <Wallet />
-                                <span className="group-data-[collapsible=icon]:hidden flex-1 text-left ml-2">My Accounts</span>
-                                <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
-                            </Button>
-                        </CollapsibleTrigger>
-                    </SidebarMenuItem>
-                    <CollapsibleContent asChild>
-                        <SidebarMenuSub>
-                            <SidebarMenuSubItem>
-                                 <SidebarMenuSubButton asChild>
-                                    <Link href="/dashboard#accounts">Savings Accounts</Link>
-                                </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                             <SidebarMenuSubItem>
-                                 <SidebarMenuSubButton asChild>
-                                    <Link href="/dashboard#loans">Loan Accounts</Link>
-                                </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                                 <SidebarMenuSubButton asChild>
-                                    <Link href="/dashboard#deposits">Deposit Accounts</Link>
-                                </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                        </SidebarMenuSub>
-                    </CollapsibleContent>
-                </>
+                <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                         <Button variant="ghost" className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                            <Wallet />
+                            <span className="group-data-[collapsible=icon]:hidden flex-1 text-left ml-2">My Accounts</span>
+                            <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        </Button>
+                    </CollapsibleTrigger>
+                </SidebarMenuItem>
+                <CollapsibleContent asChild>
+                    <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard#accounts">Savings Accounts</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                         <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard#loans">Loan Accounts</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard#deposits">Deposit Accounts</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                </CollapsibleContent>
             </Collapsible>
             
              <SidebarMenuItem>
@@ -120,7 +118,7 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Support">
                 <Link href="/dashboard/support">
                   <LifeBuoy />
@@ -128,6 +126,28 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            
+             <Collapsible>
+                <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                         <Button variant="ghost" className="w-full justify-start px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                            <Settings />
+                            <span className="group-data-[collapsible=icon]:hidden flex-1 text-left ml-2">Settings</span>
+                            <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        </Button>
+                    </CollapsibleTrigger>
+                </SidebarMenuItem>
+                <CollapsibleContent asChild>
+                    <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/security">Security</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </Collapsible>
+
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>

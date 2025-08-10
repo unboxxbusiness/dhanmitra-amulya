@@ -542,4 +542,34 @@ export async function generateLoanClosureCertificate(loanId: string): Promise<Lo
     };
 }
 
+// --- Security Actions ---
 
+export async function sendPasswordReset() {
+    const session = await getSession();
+    if (!session || !session.email) {
+        return { success: false, error: "Not authenticated or user has no email." };
+    }
+
+    try {
+        await adminAuth.generatePasswordResetLink(session.email);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function revokeAllSessions() {
+    const session = await getSession();
+    if (!session) {
+        return { success: false, error: "Not authenticated." };
+    }
+
+    try {
+        await adminAuth.revokeRefreshTokens(session.uid);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error revoking sessions:", error);
+        return { success: false, error: error.message };
+    }
+}
