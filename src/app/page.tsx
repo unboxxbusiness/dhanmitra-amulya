@@ -26,7 +26,7 @@ export default async function Home() {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-amber-300 [text-shadow:0_0_8px_rgba(252,211,77,0.5)]">
           अमूल्य सोसायटी
         </h1>
-        <p className="max-w-xl mt-4 text-lg text-slate-400">
+        <p className="max-w-xl mx-auto mt-4 text-lg text-slate-400">
           विश्वास, सहयोग और समृद्धि का संगम
         </p>
 
@@ -69,7 +69,7 @@ export default async function Home() {
         </Card>
 
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg">
             <Link href="/signup">
               Sign Up Now
