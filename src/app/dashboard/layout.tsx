@@ -2,7 +2,7 @@
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
 import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown } from 'lucide-react';
-import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
