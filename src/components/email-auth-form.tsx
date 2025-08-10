@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ROLES } from '@/lib/definitions';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -25,6 +26,8 @@ type UserFormValue = z.infer<typeof formSchema>;
 interface EmailAuthFormProps {
   mode: 'login' | 'signup';
 }
+
+const ADMIN_ROLES: (typeof ROLES)[number][] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const router = useRouter();
@@ -46,7 +49,8 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
       
       const sessionResult = await createSession(idToken);
       if (sessionResult.success) {
-        router.push('/dashboard');
+        const destination = ADMIN_ROLES.includes(sessionResult.role) ? '/admin' : '/dashboard';
+        router.push(destination);
         toast({
           title: mode === 'login' ? "Login Successful" : "Account Created",
           description: "Welcome! You are now logged in.",
