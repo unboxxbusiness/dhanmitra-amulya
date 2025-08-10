@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Role } from '@/lib/definitions';
+import { ADMIN_ROLES } from '@/lib/definitions';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -27,8 +28,6 @@ type UserFormValue = z.infer<typeof formSchema>;
 interface EmailAuthFormProps {
   mode: 'login' | 'signup';
 }
-
-const ADMIN_ROLES: Role[] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const router = useRouter();
