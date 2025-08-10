@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle } from 'lucide-react';
+import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { UserNav } from '@/components/user-nav';
+import { getSocietyConfig } from '@/actions/settings';
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -18,7 +19,11 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const financialData: MemberFinancials = await getMemberFinancials();
+  const [financialData, societyConfig] = await Promise.all([
+    getMemberFinancials(),
+    getSocietyConfig(),
+  ]);
+  
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
   
   return (
@@ -33,19 +38,27 @@ export default async function DashboardPage() {
         </div>
       </header>
       
-      <div className="flex items-center gap-4 mb-8">
-          <Button asChild>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Button asChild className="w-full">
             <Link href="/dashboard/apply-loan">
               <PlusCircle className="mr-2 h-4 w-4"/>
               Apply for Loan
             </Link>
           </Button>
-           <Button asChild variant="outline">
+           <Button asChild variant="outline" className="w-full">
             <Link href="/dashboard/apply-deposit">
                <PlusCircle className="mr-2 h-4 w-4"/>
                Make a Deposit
             </Link>
           </Button>
+          {societyConfig.upiPaymentLink && (
+            <Button asChild variant="secondary" className="w-full">
+              <a href={societyConfig.upiPaymentLink} target="_blank" rel="noopener noreferrer">
+                <LinkIcon className="mr-2 h-4 w-4"/>
+                Pay with UPI
+              </a>
+            </Button>
+          )}
         </div>
 
       <Tabs defaultValue="accounts" className="w-full">

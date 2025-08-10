@@ -30,6 +30,7 @@ export async function getSocietyConfig(): Promise<SocietyConfig> {
             registrationNumber: 'Not Set',
             address: 'Not Set',
             kycRetentionYears: 7,
+            upiPaymentLink: '',
         };
     }
     return doc.data() as SocietyConfig;
@@ -51,6 +52,21 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
         return { success: false, error: error.message };
     }
 }
+
+export async function updateUpiLink(prevState: any, formData: FormData) {
+    await verifyAdmin();
+    const upiLink = formData.get('upiLink') as string;
+
+    try {
+        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set({ upiPaymentLink: upiLink }, { merge: true });
+        revalidatePath('/admin/integrations');
+        revalidatePath('/dashboard');
+        return { success: true, message: 'UPI link updated successfully.' };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 
 export async function updateComplianceSettings(prevState: any, formData: FormData) {
     await verifyAdmin();

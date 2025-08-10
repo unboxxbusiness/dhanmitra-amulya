@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CreditCard, Terminal } from "lucide-react";
 
 export function PaymentGatewayTab() {
-    const isKeySet = !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const isKeySet = false; // This will be driven by env vars in a real app
 
     return (
         <Card>

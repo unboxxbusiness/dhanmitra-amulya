@@ -1,9 +1,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BankReconciliationTab } from "@/components/admin/integrations/bank-reconciliation-tab"
-import { PaymentGatewayTab } from "@/components/admin/integrations/payment-gateway-tab"
+import { UpiPaymentTab } from "@/components/admin/integrations/upi-payment-tab"
+import { getSocietyConfig } from "@/actions/settings";
 
-export default function IntegrationsPage() {
+export default async function IntegrationsPage() {
+  const config = await getSocietyConfig();
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,13 +19,13 @@ export default function IntegrationsPage() {
       <Tabs defaultValue="reconciliation" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="reconciliation">Bank Reconciliation</TabsTrigger>
-          <TabsTrigger value="payment-gateway">Payment Gateway</TabsTrigger>
+          <TabsTrigger value="upi-payment">UPI Payment Link</TabsTrigger>
         </TabsList>
         <TabsContent value="reconciliation">
           <BankReconciliationTab />
         </TabsContent>
-        <TabsContent value="payment-gateway">
-          <PaymentGatewayTab />
+        <TabsContent value="upi-payment">
+          <UpiPaymentTab config={config} />
         </TabsContent>
       </Tabs>
     </div>
