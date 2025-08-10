@@ -7,12 +7,12 @@ import { ROLES } from './definitions';
 
 export const getSession = async (): Promise<UserSession | null> => {
   try {
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) {
+    const sessionCookieValue = cookies().get('session')?.value;
+    if (!sessionCookieValue) {
       return null;
     }
   
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookieValue, true);
     
     // Get role from custom claims which were set during session creation.
     const userRole = (decodedClaims.role as Role) || 'member';
