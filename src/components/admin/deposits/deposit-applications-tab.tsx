@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from '../../ui/skeleton';
-import { getDepositApplications, approveDepositApplication, rejectDepositApplication, type DepositApplication } from '@/actions/deposits';
+import { getDepositApplications, approveDepositApplication, rejectDepositApplication } from '@/actions/deposits';
+import type { DepositApplication } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 

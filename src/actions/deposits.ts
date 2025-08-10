@@ -4,8 +4,10 @@
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
+import type { DepositProduct, DepositApplication, ActiveDeposit } from '@/lib/definitions';
+import { DepositProductSchema } from '@/lib/definitions';
+
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
 
@@ -15,51 +17,6 @@ async function verifyAdmin() {
     throw new Error('Not authorized');
   }
   return session;
-}
-
-// Data Types
-export const TermSchema = z.object({
-  durationMonths: z.number().int().positive(),
-  interestRate: z.number().positive(),
-});
-export type Term = z.infer<typeof TermSchema>;
-
-export const DepositProductSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(3),
-  type: z.enum(['FD', 'RD']),
-  description: z.string().min(10),
-  terms: z.array(TermSchema).min(1),
-  minDeposit: z.number().positive(),
-  maxDeposit: z.number().positive(),
-});
-export type DepositProduct = z.infer<typeof DepositProductSchema>;
-
-export type DepositApplication = {
-    id: string;
-    userId: string;
-    userName: string;
-    productName: string;
-    productId: string;
-    term: Term;
-    principalAmount: number;
-    status: 'pending' | 'approved' | 'rejected';
-    applicationDate: string; // ISO String
-}
-
-export type ActiveDeposit = {
-    id: string;
-    userId: string;
-    userName: string;
-    productName: string;
-    accountNumber: string;
-    principalAmount: number;
-    maturityAmount: number;
-    interestRate: number;
-    termMonths: number;
-    startDate: string; // ISO String
-    maturityDate: string; // ISO String
-    status: 'active' | 'matured' | 'closed';
 }
 
 // Product Management

@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { addDepositProduct, DepositProductSchema, type DepositProduct } from '@/actions/deposits';
+import { addDepositProduct } from '@/actions/deposits';
+import { DepositProductSchema, type DepositProduct } from '@/lib/definitions';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 

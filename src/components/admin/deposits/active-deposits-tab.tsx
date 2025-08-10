@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getActiveDeposits, type ActiveDeposit } from '@/actions/deposits';
+import { getActiveDeposits } from '@/actions/deposits';
+import type { ActiveDeposit } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 
 export function ActiveDepositsTab() {

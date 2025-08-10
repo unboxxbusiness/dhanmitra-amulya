@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
-import { getDepositProducts, type DepositProduct } from '@/actions/deposits';
+import { getDepositProducts } from '@/actions/deposits';
 import { useToast } from '@/hooks/use-toast';
 import { AddProductDialog } from './add-product-dialog';
+import type { DepositProduct } from '@/lib/definitions';
 
 export function DepositProductsTab() {
   const { toast } = useToast();
