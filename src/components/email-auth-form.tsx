@@ -41,17 +41,21 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
     try {
-      const authFn = mode === 'login' ? signInWithEmailAndPassword : createUserWithEmailAndPassword;
+      const isNewUser = mode === 'signup';
+      const authFn = isNewUser ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
       const userCredential = await authFn(auth, data.email, data.password);
       const idToken = await userCredential.user.getIdToken();
       
-      const sessionResult = await createSession(idToken);
+      // Pass isNewUser flag to the server action
+      const sessionResult = await createSession(idToken, isNewUser);
+      
       if (sessionResult.success) {
         toast({
           title: mode === 'login' ? "Login Successful" : "Account Created",
           description: "Redirecting...",
         });
-        // Instead of client-side push, refresh the page and let the middleware handle redirection.
+        // Refresh the page and let the middleware handle redirection.
+        // This is a more robust approach than client-side redirection.
         router.refresh();
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
