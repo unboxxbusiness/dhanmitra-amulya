@@ -125,6 +125,21 @@ export async function updateUserStatus(userId: string, status: UserProfile['stat
     }
 }
 
+export async function deleteMember(userId: string) {
+    await verifyAdmin();
+    try {
+        await adminAuth.deleteUser(userId);
+        await adminDb.collection('users').doc(userId).delete();
+        // In a real production app, you would also need to handle cleanup
+        // of related data (loans, deposits, etc.) which can be complex.
+        revalidatePath('/admin/members');
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error deleting user ${userId}:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
 
 export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
     // This is a public action, no role check needed, just auth.

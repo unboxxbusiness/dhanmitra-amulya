@@ -6,7 +6,7 @@ import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,9 +15,10 @@ import { AddMemberDialog } from './add-member-dialog';
 import { EditMemberDialog } from './edit-member-dialog';
 import { UpdateStatusDialog } from './update-status-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DeleteMemberAlert } from './delete-member-alert';
 
 type DialogState = {
-  type: 'add' | 'edit' | 'status' | null;
+  type: 'add' | 'edit' | 'status' | 'delete' | null;
   data?: UserProfile;
 }
 
@@ -158,6 +159,13 @@ export function AllMembersTab() {
                            <DropdownMenuItem onClick={() => setDialogState({ type: 'status', data: member })}>
                             Change Status
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={() => setDialogState({ type: 'delete', data: member })}
+                          >
+                            Delete Member
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -180,6 +188,11 @@ export function AllMembersTab() {
       />
        <UpdateStatusDialog
         isOpen={dialogState.type === 'status'}
+        onClose={closeDialog}
+        member={dialogState.data}
+      />
+      <DeleteMemberAlert
+        isOpen={dialogState.type === 'delete'}
         onClose={closeDialog}
         member={dialogState.data}
       />
