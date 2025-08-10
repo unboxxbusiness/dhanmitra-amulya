@@ -4,10 +4,11 @@
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails } from '@/lib/definitions';
+import type { LoanProduct, LoanApplication, LoanApplicationDetails, ActiveLoan, Repayment, RepaymentWithLoanDetails, UserSession } from '@/lib/definitions';
 import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
+import Papa from 'papaparse';
 
 
 const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant'];
@@ -221,6 +222,7 @@ export async function disburseLoan(applicationId: string) {
                 dueDate.setMonth(dueDate.getMonth() + i);
 
                 schedule.push({
+                    repaymentId: adminDb.collection('temp').doc().id, // Generate unique ID
                     dueDate: dueDate.toISOString(),
                     amount: parseFloat(emi.toFixed(2)),
                     status: 'pending',
@@ -291,6 +293,7 @@ export async function getPendingRepayments(): Promise<RepaymentWithLoanDetails[]
                 allPendingRepayments.push({
                     id: `${doc.id}_${index}`,
                     loanId: doc.id,
+                    repaymentId: repayment.repaymentId,
                     repaymentIndex: index,
                     userName: userDoc.data()?.name || 'Unknown',
                     accountNumber: loan.accountNumber,
@@ -343,4 +346,51 @@ export async function recordRepayment(loanId: string, repaymentIndex: number) {
     } catch (error: any) {
         return { success: false, error: error.message };
     }
+}
+
+
+// --- Member-facing Actions ---
+export async function getMemberLoanHistory(session: UserSession): Promise<RepaymentWithLoanDetails[]> {
+  const loansSnapshot = await adminDb.collection('activeLoans').where('userId', '==', session.uid).get();
+
+  let allRepayments: RepaymentWithLoanDetails[] = [];
+
+  for (const doc of loansSnapshot.docs) {
+    const loan = doc.data() as ActiveLoan;
+    
+    loan.repaymentSchedule.forEach((repayment, index) => {
+      allRepayments.push({
+        id: repayment.repaymentId, // Use the unique ID
+        loanId: doc.id,
+        repaymentId: repayment.repaymentId,
+        repaymentIndex: index,
+        userName: session.name || 'N/A',
+        accountNumber: loan.accountNumber,
+        emiAmount: repayment.amount,
+        dueDate: new Date(repayment.dueDate).toLocaleDateString(),
+        status: repayment.status,
+        paymentDate: repayment.paymentDate ? new Date(repayment.paymentDate).toLocaleDateString() : undefined,
+      });
+    });
+  }
+
+  // Sort by due date, descending
+  allRepayments.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+
+  return allRepayments;
+}
+
+export async function exportMemberLoanHistory(): Promise<string> {
+    const session = await verifyUser(MEMBER_ROLES);
+    const history = await getMemberLoanHistory(session);
+
+    const csvData = history.map(item => ({
+        "Loan Account": item.accountNumber,
+        "Due Date": item.dueDate,
+        "Amount": item.emiAmount,
+        "Status": item.status,
+        "Payment Date": item.paymentDate || 'N/A',
+    }));
+    
+    return Papa.unparse(csvData);
 }

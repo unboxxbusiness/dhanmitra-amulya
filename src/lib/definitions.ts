@@ -138,6 +138,7 @@ export type LoanApplicationDetails = {
 }
 
 export type Repayment = {
+    repaymentId: string;
     dueDate: string; // ISO String
     amount: number;
     status: 'pending' | 'paid' | 'overdue';
@@ -167,7 +168,9 @@ export type RepaymentWithLoanDetails = {
     dueDate: string;
     status: Repayment['status'];
     loanId: string;
+    repaymentId: string;
     repaymentIndex: number;
+    paymentDate?: string;
 }
 
 // --- Savings & Transaction Schemas ---

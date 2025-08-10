@@ -1,7 +1,7 @@
 
 import { FcmTokenManager } from '@/components/fcm-token-manager';
 import Link from 'next/link';
-import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown } from 'lucide-react';
+import { Home, Landmark, PiggyBank, UserCircle, Wallet, ArrowLeftRight, ChevronDown, History } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -76,6 +76,15 @@ export default function DashboardLayout({
                 <Link href="/dashboard#transactions">
                   <ArrowLeftRight />
                   <span>Transactions</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Payment History">
+                <Link href="/dashboard/payment-history">
+                  <History />
+                  <span>Payment History</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
