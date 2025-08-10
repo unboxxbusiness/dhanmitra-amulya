@@ -179,3 +179,18 @@ export type JournalEntry = {
     entries: JournalEntryDetail[];
     relatedTransactionId?: string; // e.g., link back to a teller transaction
 }
+
+
+// --- Settings Schemas ---
+export type Branch = {
+    id: string;
+    name: string;
+    address: string;
+}
+
+export type Holiday = {
+    id: string;
+    date: string; // YYYY-MM-DD
+    name: string;
+    type: 'National' | 'Regional' | 'Cooperative';
+}

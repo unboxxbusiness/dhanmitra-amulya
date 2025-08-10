@@ -2,7 +2,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GeneralSettingsTab } from "@/components/admin/settings/general-settings-tab"
 import { ComplianceTab } from "@/components/admin/settings/compliance-tab"
-import { PlaceholderTab } from "@/components/admin/settings/placeholder-tab"
+import { BranchesTab } from "@/components/admin/settings/branches-tab";
+import { HolidaysTab } from "@/components/admin/settings/holidays-tab";
 
 export default function SettingsPage() {
   return (
@@ -17,21 +18,21 @@ export default function SettingsPage() {
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="holidays">Holiday Calendar</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <GeneralSettingsTab />
         </TabsContent>
-        <TabsContent value="compliance">
-          <ComplianceTab />
-        </TabsContent>
-        <TabsContent value="branches">
-          <PlaceholderTab title="Branch Setup" description="Manage your cooperative's branches."/>
+         <TabsContent value="branches">
+          <BranchesTab />
         </TabsContent>
          <TabsContent value="holidays">
-          <PlaceholderTab title="Holiday Calendar" description="Define the holiday calendar for the year."/>
+          <HolidaysTab />
+        </TabsContent>
+        <TabsContent value="compliance">
+          <ComplianceTab />
         </TabsContent>
       </Tabs>
     </div>
