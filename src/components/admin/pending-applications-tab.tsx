@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,11 +10,23 @@ import { KycViewerDialog } from './kyc-viewer-dialog';
 import { getPendingApplications, approveApplication, rejectApplication, type Application } from '@/actions/users';
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function PendingApplicationsTab() {
   const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [kycDialogOpen, setKycDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -37,18 +49,15 @@ export function PendingApplicationsTab() {
 
   const handleViewKyc = (applicant: Application) => {
     setSelectedApplicant(applicant);
-    setDialogOpen(true);
+    setKycDialogOpen(true);
   }
 
   const handleApprove = async (id: string) => {
     setProcessingId(id);
     const result = await approveApplication(id);
-    if (result.success) {
-      toast({ 
-        title: 'Application Approved', 
-        description: `Member created. Please provide them this temporary password: ${result.tempPassword}`,
-        duration: 10000,
-      });
+    if (result.success && result.tempPassword) {
+      setTempPassword(result.tempPassword);
+      setPasswordDialogOpen(true);
       fetchApplications();
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
@@ -66,6 +75,13 @@ export function PendingApplicationsTab() {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
     }
     setProcessingId(null);
+  }
+
+  const copyToClipboard = () => {
+    if (tempPassword) {
+        navigator.clipboard.writeText(tempPassword);
+        toast({ title: 'Copied!', description: 'Password copied to clipboard.' });
+    }
   }
 
   return (
@@ -136,12 +152,35 @@ export function PendingApplicationsTab() {
       </Card>
       {selectedApplicant && (
         <KycViewerDialog 
-            isOpen={dialogOpen} 
-            onOpenChange={setDialogOpen}
+            isOpen={kycDialogOpen} 
+            onOpenChange={setKycDialogOpen}
             applicant={selectedApplicant}
             kycDocs={selectedApplicant.kycDocs}
         />
       )}
+
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Application Approved!</DialogTitle>
+                  <DialogDescription>
+                      A new member account has been created. Please securely provide the temporary password to the member.
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <Label htmlFor="temp-password">Temporary Password</Label>
+                <div className="flex items-center space-x-2">
+                    <Input id="temp-password" value={tempPassword || ''} readOnly />
+                    <Button size="icon" onClick={copyToClipboard}>
+                        <Copy className="h-4 w-4" />
+                    </Button>
+                </div>
+              </div>
+              <DialogFooter>
+                  <Button onClick={() => setPasswordDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
     </>
   );
 }
