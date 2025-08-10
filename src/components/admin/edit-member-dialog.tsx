@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ function SubmitButton() {
 export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogProps) {
     const { toast } = useToast();
     const updateUserWithId = updateUserProfile.bind(null, member?.id ?? '');
-    const [state, formAction] = useFormState(updateUserWithId, initialState);
+    const [state, formAction] = useActionState(updateUserWithId, initialState);
     
     useEffect(() => {
         if (state.success) {
