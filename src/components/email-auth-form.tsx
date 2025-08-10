@@ -27,8 +27,6 @@ interface EmailAuthFormProps {
   mode: 'login' | 'signup';
 }
 
-const ADMIN_ROLES: Role[] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
-
 export function EmailAuthForm({ mode }: EmailAuthFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -49,12 +47,12 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
       
       const sessionResult = await createSession(idToken);
       if (sessionResult.success) {
-        const destination = ADMIN_ROLES.includes(sessionResult.role) ? '/admin' : '/dashboard';
-        router.push(destination);
         toast({
           title: mode === 'login' ? "Login Successful" : "Account Created",
-          description: "Welcome! You are now logged in.",
+          description: "Redirecting...",
         });
+        // Instead of client-side push, refresh the page and let the middleware handle redirection.
+        router.refresh();
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
       }

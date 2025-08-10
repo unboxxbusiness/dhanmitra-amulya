@@ -1,38 +1,41 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSession } from './lib/auth'; // Use relative path for middleware
+import { getSession } from './lib/auth';
 
 const AUTH_ROUTES = ['/login', '/signup'];
 const PROTECTED_ROUTES = ['/dashboard', '/admin'];
-const ADMIN_ROLES: string[] = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+const ADMIN_ROLES = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await getSession();
 
-  // If user is logged in, redirect from auth pages to their respective dashboard
-  if (session && AUTH_ROUTES.includes(pathname)) {
-    const destination = ADMIN_ROLES.includes(session.role) ? '/admin' : '/dashboard';
-    return NextResponse.redirect(new URL(destination, request.url));
-  }
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
 
-  // If user is not logged in, redirect from protected pages to login
-  if (!session && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // If a logged-in user is on a protected route, verify their role access
-  if (session && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
+  // If user is logged in
+  if (session) {
     const isPrivilegedUser = ADMIN_ROLES.includes(session.role);
 
-    // If a non-admin tries to access admin pages, redirect to their dashboard
+    // If user is on an auth page, redirect them to their correct dashboard
+    if (isAuthRoute) {
+      const destination = isPrivilegedUser ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
+
+    // If a non-admin tries to access /admin, redirect to /dashboard
     if (pathname.startsWith('/admin') && !isPrivilegedUser) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    
-    // If an admin tries to access the member dashboard, redirect to admin dashboard
+
+    // If an admin tries to access /dashboard, redirect to /admin
     if (pathname.startsWith('/dashboard') && isPrivilegedUser) {
-        return NextResponse.redirect(new URL('/admin', request.url));
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+  } else {
+    // If user is not logged in and trying to access a protected route, redirect to login
+    if (isProtectedRoute) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
