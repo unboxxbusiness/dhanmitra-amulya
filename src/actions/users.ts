@@ -323,7 +323,7 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         const savingsPromise = adminDb.collection('savingsAccounts').where('userId', '==', userId).get();
         const loansPromise = adminDb.collection('activeLoans').where('userId', '==', userId).get();
         const depositsPromise = adminDb.collection('activeDeposits').where('userId', '==', userId).get();
-        const transactionsPromise = adminDb.collection('transactions').where('userId', '==', userId).orderBy('date', 'desc').limit(10).get();
+        const transactionsPromise = adminDb.collection('transactions').where('userId', '==', userId).get();
 
         const [savingsSnap, loansSnap, depositsSnap, transSnap] = await Promise.all([savingsPromise, loansPromise, depositsPromise, transactionsPromise]);
 
@@ -350,7 +350,9 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
             id: doc.id,
             ...doc.data(),
             date: new Date(doc.data().date).toLocaleDateString(),
-        } as Transaction));
+        } as Transaction))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10);
 
         return {
             savingsAccounts,
