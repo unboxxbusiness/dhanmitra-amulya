@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -121,13 +122,8 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium">KYC Documents</h3>
                 <p className="text-sm text-muted-foreground">
-                    Your KYC documents are on file. To make changes, please contact support.
+                    Contact Amulya support team for documents update.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <a href={profile.kycDocs?.id} target="_blank" rel="noopener noreferrer" className="text-primary underline">View ID Document</a>
-                    <a href={profile.kycDocs?.photo} target="_blank" rel="noopener noreferrer" className="text-primary underline">View Photo</a>
-                    <a href={profile.kycDocs?.addressProof} target="_blank" rel="noopener noreferrer" className="text-primary underline">View Address Proof</a>
-                </div>
             </div>
 
         </CardContent>

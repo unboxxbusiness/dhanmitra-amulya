@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -116,14 +117,15 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
 
     let query: admin.firestore.Query = adminDb.collection('transactions');
 
-    if (filters.accountId) {
-        query = query.where('accountId', '==', filters.accountId);
-    }
     // If a non-admin is making the request, scope it to their user ID for security.
     if (session.role === 'member') {
         query = query.where('userId', '==', session.uid);
     } else if (filters.userId) {
         query = query.where('userId', '==', filters.userId);
+    }
+    
+    if (filters.accountId) {
+        query = query.where('accountId', '==', filters.accountId);
     }
 
     if (filters.type) {
