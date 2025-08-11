@@ -92,11 +92,15 @@ export async function createTransaction(prevState: any, formData: FormData) {
             });
             // --- End GL Posting ---
 
+            // Fetch user data to ensure userName is available for the receipt
+            const userDoc = await t.get(adminDb.collection('users').doc(accountData.userId));
+            const userName = userDoc.data()?.name || 'N/A';
+
             return {
                 id: transactionId,
                 ...transactionData,
                 accountNumber: accountData.accountNumber,
-                userName: accountData.userName,
+                userName: userName,
                 tellerName: session.name, // Add teller name from session
             };
         });
@@ -106,6 +110,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
         return { success: true, transaction: newTransactionData };
 
     } catch (error: any) {
+        console.error("Transaction Error:", error);
         return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
 }
