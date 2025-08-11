@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -107,7 +106,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
         return { success: true, transaction: newTransactionData };
 
     } catch (error: any) {
-        return { success: false, error: 'Could not process transaction. Please try again.' };
+        return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
 }
 
