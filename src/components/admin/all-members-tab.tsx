@@ -104,76 +104,78 @@ export function AllMembersTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Join Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                filteredMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(member.role)} className="capitalize">
-                        {member.role.replace('_', ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{member.joinDate}</TableCell>
-                    <TableCell>
-                      <Badge variant={getBadgeVariant(member.status)}>
-                        {member.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setDialogState({ type: 'edit', data: member })}>
-                            View/Edit Profile
-                          </DropdownMenuItem>
-                           <DropdownMenuItem onClick={() => setDialogState({ type: 'status', data: member })}>
-                            Change Status
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                            onClick={() => setDialogState({ type: 'delete', data: member })}
-                          >
-                            Delete Member
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <div className="w-full overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Join Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  filteredMembers.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">{member.name}</TableCell>
+                      <TableCell>{member.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={getRoleBadgeVariant(member.role)} className="capitalize">
+                          {member.role.replace('_', ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{member.joinDate}</TableCell>
+                      <TableCell>
+                        <Badge variant={getBadgeVariant(member.status)}>
+                          {member.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setDialogState({ type: 'edit', data: member })}>
+                              View/Edit Profile
+                            </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => setDialogState({ type: 'status', data: member })}>
+                              Change Status
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                              onClick={() => setDialogState({ type: 'delete', data: member })}
+                            >
+                              Delete Member
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

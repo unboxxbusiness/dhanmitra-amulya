@@ -61,38 +61,40 @@ export function PaymentHistoryClient({ history }: PaymentHistoryClientProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Loan Account</TableHead>
-                            <TableHead>Due Date</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Payment Date</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {history.length > 0 ? history.map((item) => (
-                            <TableRow key={item.id}>
-                                <TableCell className="font-mono">{item.accountNumber}</TableCell>
-                                <TableCell>{item.dueDate}</TableCell>
-                                <TableCell>₹{item.emiAmount.toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
-                                        {item.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{item.paymentDate || 'N/A'}</TableCell>
-                            </TableRow>
-                        )) : (
+                <div className="w-full overflow-auto">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center h-24">
-                                    You have no loan repayment history.
-                                </TableCell>
+                                <TableHead>Loan Account</TableHead>
+                                <TableHead>Due Date</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Payment Date</TableHead>
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {history.length > 0 ? history.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell className="font-mono">{item.accountNumber}</TableCell>
+                                    <TableCell>{item.dueDate}</TableCell>
+                                    <TableCell>₹{item.emiAmount.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
+                                            {item.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{item.paymentDate || 'N/A'}</TableCell>
+                                </TableRow>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center h-24">
+                                        You have no loan repayment history.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
             <CardFooter>
                 <Button onClick={handleExport} disabled={isExporting}>
