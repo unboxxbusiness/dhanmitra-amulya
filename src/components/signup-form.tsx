@@ -18,6 +18,7 @@ import { Separator } from './ui/separator';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
+  phone: z.string().min(10, { message: 'Please enter a valid mobile number.' }),
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
@@ -33,6 +34,7 @@ export function SignupForm() {
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
     },
   });
 
@@ -43,6 +45,7 @@ export function SignupForm() {
       const applicationData = {
         name: data.name,
         email: data.email,
+        phone: data.phone,
         kycDocs: {
           id: '',
           photo: '',
@@ -107,6 +110,19 @@ export function SignupForm() {
                  <FormDescription>
                     You will receive an email with a temporary password once your application is approved.
                 </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Mobile No</FormLabel>
+                <FormControl>
+                    <Input type="tel" placeholder="Your mobile number" disabled={loading} {...field} />
+                </FormControl>
                 <FormMessage />
                 </FormItem>
             )}

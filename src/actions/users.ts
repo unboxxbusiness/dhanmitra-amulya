@@ -121,10 +121,10 @@ export async function deleteMember(userId: string) {
 }
 
 
-export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status' | 'phone'>) {
+export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
     // This action is now public for self-registration.
     // It no longer requires authentication.
-    if (!data.name || !data.email) {
+    if (!data.name || !data.email || !data.phone) {
         return { success: false, error: 'Missing user data for application.' };
     }
 
@@ -194,7 +194,7 @@ export async function approveApplication(applicationId: string) {
 
         // 3. Create user profile in Firestore 'users' collection, preserving application data
         await adminDb.collection('users').doc(userRecord.uid).set({
-            ...appData, // Preserves name, email, phone, kycDocs, etc. from application
+            ...appData,
             role: 'member',
             status: 'Active',
             createdAt: new Date().toISOString(),
