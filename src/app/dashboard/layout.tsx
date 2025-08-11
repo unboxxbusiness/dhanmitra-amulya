@@ -111,7 +111,7 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
             <div className="flex items-center gap-2">
-                <SidebarTrigger className="hidden md:flex" />
+                <SidebarTrigger />
                 <div className="flex-1 font-semibold">
                     Member Portal
                 </div>
