@@ -1,8 +1,8 @@
 
+
 'use client';
 
-import { useState, useActionState, useRef, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -26,29 +26,30 @@ interface AdminTicketDetailsProps {
 const ReplyForm = ({ ticketId }: { ticketId: string }) => {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
-    const addReplyWithId = addTicketReply.bind(null, ticketId);
-    const [state, formAction] = useActionState(addReplyWithId, { success: false, error: null as string | null });
-    const { pending } = useFormStatus();
+    const [isPending, startTransition] = useTransition();
 
-    useEffect(() => {
-        if (state.success) {
-            toast({ title: "Reply Sent" });
-            formRef.current?.reset();
-        } else if (state.error) {
-            toast({ variant: 'destructive', title: "Error", description: state.error });
-        }
-    }, [state, toast]);
-
+    const handleFormAction = (formData: FormData) => {
+        startTransition(async () => {
+            const result = await addTicketReply(ticketId, formData);
+            if (result.success) {
+                toast({ title: "Reply Sent" });
+                formRef.current?.reset();
+            } else if (result.error) {
+                toast({ variant: 'destructive', title: "Error", description: result.error });
+            }
+        });
+    };
+    
     return (
-        <form ref={formRef} action={formAction}>
+        <form ref={formRef} action={handleFormAction}>
             <Textarea
                 name="message"
                 placeholder="Type your reply..."
                 required
                 className="min-h-[100px]"
             />
-            <Button type="submit" disabled={pending} className="mt-2">
-                {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            <Button type="submit" disabled={isPending} className="mt-2">
+                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Send Reply
             </Button>
         </form>

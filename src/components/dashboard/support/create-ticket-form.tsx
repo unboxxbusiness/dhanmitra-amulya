@@ -1,8 +1,8 @@
 
+
 'use client';
 
-import { useRef, useState, useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useRef, useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,17 +27,7 @@ import { createSupportTicket } from '@/actions/support';
 import { TICKET_CATEGORIES } from '@/lib/definitions';
 import { Loader2 } from 'lucide-react';
 
-const initialState = {
-    success: false,
-    error: {
-        _form: [] as string[],
-        subject: undefined as string[] | undefined,
-        message: undefined as string[] | undefined,
-    },
-};
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
     return (
         <Button type="submit" disabled={pending}>
             {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -49,26 +39,29 @@ function SubmitButton() {
 export function CreateTicketForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, isPending] = useActionState(createSupportTicket, initialState);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state.success) {
-      toast({
-        title: "Ticket Submitted",
-        description: "Our team will get back to you shortly.",
-      });
-      formRef.current?.reset();
-    } else if (state.error?._form?.length) {
-       toast({
-        variant: "destructive",
-        title: "Submission Failed",
-        description: state.error._form.join(', '),
-      });
-    }
-  }, [state, toast]);
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await createSupportTicket(null, formData);
+        if (result.success) {
+            toast({
+                title: "Ticket Submitted",
+                description: "Our team will get back to you shortly.",
+            });
+            formRef.current?.reset();
+        } else if (result.error?._form?.length) {
+            toast({
+                variant: "destructive",
+                title: "Submission Failed",
+                description: result.error._form.join(', '),
+            });
+        }
+    });
+  };
 
   return (
-    <form ref={formRef} action={formAction}>
+    <form ref={formRef} action={handleFormAction}>
       <Card>
         <CardHeader>
           <CardTitle>Create a New Support Ticket</CardTitle>
@@ -91,16 +84,14 @@ export function CreateTicketForm() {
             <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
                 <Input id="subject" name="subject" required />
-                {state.error?.subject && <p className="text-sm text-destructive">{state.error.subject.join(', ')}</p>}
             </div>
              <div className="space-y-2">
                 <Label htmlFor="message">Message</Label>
                 <Textarea id="message" name="message" required className="min-h-[150px]" />
-                {state.error?.message && <p className="text-sm text-destructive">{state.error.message.join(', ')}</p>}
             </div>
         </CardContent>
         <CardFooter>
-          <SubmitButton />
+          <SubmitButton pending={isPending} />
         </CardFooter>
       </Card>
     </form>

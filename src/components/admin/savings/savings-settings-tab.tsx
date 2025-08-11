@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useActionState } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,11 @@ function SubmitButton() {
     )
 }
 
-const initialState = { success: false, error: null };
-
 export function SavingsSettingsTab() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<SavingsSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [state, formAction] = useActionState(updateSavingsSettings, initialState);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     getSavingsSettings()
@@ -40,15 +39,16 @@ export function SavingsSettingsTab() {
         .finally(() => setLoading(false));
   }, [toast]);
 
-  useEffect(() => {
-    if (state.success) {
-      toast({ title: "Settings Saved", description: "Global savings settings have been updated." });
-      state.success = false; // Reset for next action
-    } else if (state.error) {
-      toast({ variant: 'destructive', title: "Error", description: state.error });
-      state.error = null; // Reset for next action
-    }
-  }, [state, toast]);
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await updateSavingsSettings(null, formData);
+        if (result.success) {
+            toast({ title: "Settings Saved", description: "Global savings settings have been updated." });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: result.error });
+        }
+    });
+  }
 
   if (loading) {
     return (
@@ -65,7 +65,7 @@ export function SavingsSettingsTab() {
 
   return (
     <Card>
-        <form action={formAction}>
+        <form action={handleFormAction}>
             <CardHeader>
                 <CardTitle>Global Savings Settings</CardTitle>
                 <CardDescription>

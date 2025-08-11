@@ -1,8 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,10 @@ import { Loader2 } from "lucide-react";
 import { updateSocietyConfig } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
 
-const initialState = { success: false, error: null };
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Settings
         </Button>
     )
@@ -26,21 +23,22 @@ function SubmitButton() {
 
 export function GeneralSettingsTab({ config }: { config: SocietyConfig }) {
   const { toast } = useToast();
-  const [state, formAction] = useActionState(updateSocietyConfig, initialState);
-
-  useEffect(() => {
-    if (state.success) {
-      toast({ title: 'Settings Saved', description: 'Society configuration has been updated.' });
-      state.success = false;
-    } else if (state.error) {
-      toast({ variant: 'destructive', title: 'Error', description: state.error });
-      state.error = null;
-    }
-  }, [state, toast]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await updateSocietyConfig(null, formData);
+        if (result.success) {
+            toast({ title: 'Settings Saved', description: 'Society configuration has been updated.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+    });
+  }
 
   return (
     <Card>
-      <form action={formAction}>
+      <form action={handleFormAction}>
         <CardHeader>
           <CardTitle>Society Configuration</CardTitle>
           <CardDescription>
@@ -62,7 +60,7 @@ export function GeneralSettingsTab({ config }: { config: SocietyConfig }) {
           </div>
         </CardContent>
         <CardFooter className="border-t px-6 py-4">
-          <SubmitButton />
+          <SubmitButton isPending={isPending} />
         </CardFooter>
       </form>
     </Card>

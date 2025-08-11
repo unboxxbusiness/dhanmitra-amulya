@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmailAuthForm } from '@/components/email-auth-form';
-import { PhoneAuthForm } from '@/components/phone-auth-form';
 
 export default function LoginPage() {
   return (
@@ -14,18 +12,7 @@ export default function LoginPage() {
         <CardDescription>Enter your credentials to access your account</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="email" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="phone">Phone</TabsTrigger>
-          </TabsList>
-          <TabsContent value="email" className="pt-4">
-            <EmailAuthForm mode="login" />
-          </TabsContent>
-          <TabsContent value="phone" className="pt-4">
-            <PhoneAuthForm />
-          </TabsContent>
-        </Tabs>
+        <EmailAuthForm mode="login" />
       </CardContent>
       <CardFooter className="flex-col items-center space-y-2">
         <p className="text-sm text-center text-muted-foreground">

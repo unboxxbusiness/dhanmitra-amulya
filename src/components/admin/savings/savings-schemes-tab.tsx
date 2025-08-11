@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useActionState } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -34,15 +35,13 @@ function SubmitButton() {
     )
 }
 
-const initialState = { success: false, error: null };
-
 export function SavingsSchemesTab() {
   const { toast } = useToast();
   const [schemes, setSchemes] = useState<SavingsScheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const [state, formAction] = useActionState(addSavingsScheme, initialState);
+  const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const fetchSchemes = async () => {
     setLoading(true);
@@ -64,21 +63,22 @@ export function SavingsSchemesTab() {
     fetchSchemes();
   }, []);
 
-  useEffect(() => {
-    if(state.success === true) {
-        toast({ title: "Scheme Added", description: "The new savings scheme has been created." });
-        fetchSchemes();
-        setIsDialogOpen(false); // Close dialog on success
-        state.success = false; // Reset state
-    } else if (state.error) {
-        toast({
-            variant: 'destructive',
-            title: "Error",
-            description: state.error
-        });
-        state.error = null; // Reset state
-    }
-  }, [state, toast]);
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await addSavingsScheme(null, formData);
+        if (result.success) {
+            toast({ title: "Scheme Added", description: "The new savings scheme has been created." });
+            fetchSchemes();
+            setIsDialogOpen(false); // Close dialog on success
+        } else {
+            toast({
+                variant: 'destructive',
+                title: "Error",
+                description: result.error
+            });
+        }
+    });
+  }
 
   return (
     <>
@@ -95,7 +95,7 @@ export function SavingsSchemesTab() {
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
-                    <form action={formAction}>
+                    <form ref={formRef} action={handleFormAction}>
                         <DialogHeader>
                             <DialogTitle>Add New Savings Scheme</DialogTitle>
                             <DialogDescription>

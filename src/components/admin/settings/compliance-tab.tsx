@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useState, useActionState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,8 +13,6 @@ import { Download, Loader2 } from 'lucide-react';
 import { exportMembersToCsv } from '@/actions/users';
 import { updateComplianceSettings } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
-
-const initialState = { success: false, error: null };
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -28,17 +27,18 @@ function SubmitButton() {
 export function ComplianceTab({ config }: { config: SocietyConfig }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [state, formAction] = useActionState(updateComplianceSettings, initialState);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state.success) {
-      toast({ title: 'Policy Saved', description: 'Compliance settings have been updated.'});
-      state.success = false;
-    } else if (state.error) {
-      toast({ variant: 'destructive', title: 'Error', description: state.error });
-      state.error = null;
-    }
-  }, [state, toast]);
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await updateComplianceSettings(null, formData);
+        if (result.success) {
+            toast({ title: 'Policy Saved', description: 'Compliance settings have been updated.'});
+        } else if (result.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+    });
+  }
 
   const handleExport = async () => {
     setLoading(true);
@@ -62,7 +62,7 @@ export function ComplianceTab({ config }: { config: SocietyConfig }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
-        <form action={formAction}>
+        <form action={handleFormAction}>
           <CardHeader>
             <CardTitle>KYC Document Retention</CardTitle>
             <CardDescription>

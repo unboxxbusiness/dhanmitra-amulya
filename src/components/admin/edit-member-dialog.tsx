@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useActionState, useState } from 'react';
+import { useEffect, useState, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,6 @@ interface EditMemberDialogProps {
     member?: UserProfile;
 }
 
-const initialState = {
-  success: false,
-  error: null,
-};
-
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -38,22 +33,26 @@ function SubmitButton() {
 
 export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogProps) {
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
     const [isSendingReset, setIsSendingReset] = useState(false);
-    const updateUserWithId = updateUserProfile.bind(null, member?.id ?? '');
-    const [state, formAction] = useActionState(updateUserWithId, initialState);
+    const formRef = useRef<HTMLFormElement>(null);
     
-    useEffect(() => {
-        if (state.success) {
-            toast({ title: "Profile Updated", description: "The member's profile has been saved." });
-            onClose(true);
-        } else if (state.error) {
-            toast({
-                variant: 'destructive',
-                title: "Error",
-                description: state.error,
-            });
-        }
-    }, [state, toast, onClose]);
+    const handleFormAction = (formData: FormData) => {
+        if (!member) return;
+        startTransition(async () => {
+            const result = await updateUserProfile(member.id, formData);
+            if (result.success) {
+                toast({ title: "Profile Updated", description: "The member's profile has been saved." });
+                onClose(true);
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: "Error",
+                    description: result.error,
+                });
+            }
+        });
+    }
 
     const handleSendResetEmail = async () => {
         if (!member) return;
@@ -67,13 +66,12 @@ export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogPr
         setIsSendingReset(false);
     }
 
-
     if (!isOpen || !member) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
-                <form action={formAction}>
+                <form ref={formRef} action={handleFormAction}>
                     <DialogHeader>
                         <DialogTitle>Edit Member Profile</DialogTitle>
                         <DialogDescription>

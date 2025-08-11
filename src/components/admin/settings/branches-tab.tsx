@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useActionState, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,9 +36,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-
-const initialState = { success: false, error: null };
-
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -54,8 +52,7 @@ export function BranchesTab() {
     const [loading, setLoading] = useState(true);
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
-
-    const [state, formAction] = useActionState(addBranch, initialState);
+    const [isPending, startTransition] = useTransition();
 
     const fetchBranches = async () => {
         setLoading(true);
@@ -73,18 +70,19 @@ export function BranchesTab() {
         fetchBranches();
     }, []);
     
-    useEffect(() => {
-        if(state.success) {
-            toast({ title: "Branch Added" });
-            fetchBranches();
-            setAddDialogOpen(false);
-            formRef.current?.reset();
-            state.success = false;
-        } else if (state.error) {
-            toast({ variant: 'destructive', title: "Error", description: state.error });
-            state.error = null;
-        }
-    }, [state, toast]);
+    const handleFormAction = (formData: FormData) => {
+        startTransition(async () => {
+            const result = await addBranch(null, formData);
+            if(result.success) {
+                toast({ title: "Branch Added" });
+                fetchBranches();
+                setAddDialogOpen(false);
+                formRef.current?.reset();
+            } else if (result.error) {
+                toast({ variant: 'destructive', title: "Error", description: result.error });
+            }
+        });
+    }
 
     const handleDelete = async (id: string) => {
         const result = await deleteBranch(id);
@@ -164,7 +162,7 @@ export function BranchesTab() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
-                        <form ref={formRef} action={formAction}>
+                        <form ref={formRef} action={handleFormAction}>
                             <DialogHeader>
                                 <DialogTitle>Add New Branch</DialogTitle>
                                 <DialogDescription>Enter the details for the new branch.</DialogDescription>

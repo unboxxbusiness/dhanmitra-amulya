@@ -10,7 +10,7 @@ export default function SignupPage() {
           Join Amulya Cooperative Society
         </CardTitle>
         <CardDescription>
-          Create your account and upload your KYC documents to get started.
+          Create your account to get started.
         </CardDescription>
       </CardHeader>
       <CardContent>

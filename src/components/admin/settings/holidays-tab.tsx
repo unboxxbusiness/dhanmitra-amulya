@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useActionState, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -28,8 +29,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const initialState = { success: false, error: null };
-
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -47,8 +46,7 @@ export function HolidaysTab() {
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-    
-    const [state, formAction] = useActionState(addHoliday, initialState);
+    const [isPending, startTransition] = useTransition();
 
     const fetchHolidays = async () => {
         setLoading(true);
@@ -66,18 +64,19 @@ export function HolidaysTab() {
         fetchHolidays();
     }, []);
 
-    useEffect(() => {
-        if(state.success) {
-            toast({ title: "Holiday Added" });
-            fetchHolidays();
-            setAddDialogOpen(false);
-            formRef.current?.reset();
-            state.success = false;
-        } else if (state.error) {
-            toast({ variant: 'destructive', title: "Error", description: state.error });
-            state.error = null;
-        }
-    }, [state, toast]);
+    const handleFormAction = (formData: FormData) => {
+        startTransition(async () => {
+            const result = await addHoliday(null, formData);
+            if(result.success) {
+                toast({ title: "Holiday Added" });
+                fetchHolidays();
+                setAddDialogOpen(false);
+                formRef.current?.reset();
+            } else if (result.error) {
+                toast({ variant: 'destructive', title: "Error", description: result.error });
+            }
+        });
+    }
 
     const handleDelete = async (id: string) => {
         const result = await deleteHoliday(id);
@@ -141,7 +140,7 @@ export function HolidaysTab() {
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
-                            <form ref={formRef} action={formAction}>
+                            <form ref={formRef} action={handleFormAction}>
                                 <input type="hidden" name="date" value={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''} />
                                 <DialogHeader>
                                     <DialogTitle>Add New Holiday</DialogTitle>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -17,7 +18,6 @@ import { Separator } from './ui/separator';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  phone: z.string().min(10, { message: 'Please enter a valid 10-digit mobile number.' }),
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
@@ -33,7 +33,6 @@ export function SignupForm() {
     defaultValues: {
       name: '',
       email: '',
-      phone: '',
     },
   });
 
@@ -44,8 +43,6 @@ export function SignupForm() {
       const applicationData = {
         name: data.name,
         email: data.email,
-        phone: data.phone,
-        // @ts-ignore
         kycDocs: {
           id: '',
           photo: '',
@@ -114,19 +111,6 @@ export function SignupForm() {
                 </FormItem>
             )}
             />
-             <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
-                    <FormControl>
-                        <Input type="tel" placeholder="Your mobile number" disabled={loading} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
         </div>
 
         <Button disabled={loading} className="w-full" type="submit">

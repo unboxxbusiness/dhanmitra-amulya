@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useActionState, useState } from 'react';
+import { useEffect, useState, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,11 +19,6 @@ interface CreateAccountDialogProps {
     onClose: (refresh?: boolean) => void;
 }
 
-const initialState = {
-  success: false,
-  error: null,
-};
-
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -35,7 +31,8 @@ function SubmitButton() {
 
 export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProps) {
     const { toast } = useToast();
-    const [state, formAction] = useActionState(createSavingsAccount, initialState);
+    const formRef = useRef<HTMLFormElement>(null);
+    const [isPending, startTransition] = useTransition();
     
     const [members, setMembers] = useState<UserProfile[]>([]);
     const [schemes, setSchemes] = useState<SavingsScheme[]>([]);
@@ -62,28 +59,28 @@ export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProp
         fetchData();
     }, [isOpen, toast]);
     
-    useEffect(() => {
-        if (state.success) {
-            toast({ title: "Account Created", description: "The new savings account is now active." });
-            onClose(true);
-            state.success = false;
-        } else if (state.error) {
-            toast({
-                variant: 'destructive',
-                title: "Error",
-                description: state.error,
-            });
-            state.error = null;
-        }
-    }, [state, toast, onClose]);
-
+    const handleFormAction = (formData: FormData) => {
+        startTransition(async () => {
+            const result = await createSavingsAccount(null, formData);
+            if (result.success) {
+                 toast({ title: "Account Created", description: "The new savings account is now active." });
+                onClose(true);
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: "Error",
+                    description: result.error,
+                });
+            }
+        });
+    }
 
     if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-[425px]">
-                <form action={formAction}>
+                <form ref={formRef} action={handleFormAction}>
                     <DialogHeader>
                         <DialogTitle>Create New Savings Account</DialogTitle>
                         <DialogDescription>

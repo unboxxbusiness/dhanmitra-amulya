@@ -121,10 +121,10 @@ export async function deleteMember(userId: string) {
 }
 
 
-export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status'>) {
+export async function submitApplication(data: Omit<Application, 'id' | 'applyDate' | 'status' | 'phone'>) {
     // This action is now public for self-registration.
     // It no longer requires authentication.
-    if (!data.name || !data.email || !data.phone) {
+    if (!data.name || !data.email) {
         return { success: false, error: 'Missing user data for application.' };
     }
 
@@ -182,13 +182,11 @@ export async function approveApplication(applicationId: string) {
 
         // 1. Create user in Firebase Auth
         const tempPassword = Math.random().toString(36).slice(-8); // Generate temporary password
-        const formattedPhoneNumber = `+91${appData.phone}`;
-
+        
         const userRecord = await adminAuth.createUser({
             email: appData.email,
             password: tempPassword,
             displayName: appData.name,
-            phoneNumber: formattedPhoneNumber,
         });
 
         // 2. Set custom claims (default to 'member' role)
@@ -198,7 +196,7 @@ export async function approveApplication(applicationId: string) {
         await adminDb.collection('users').doc(userRecord.uid).set({
             name: appData.name,
             email: appData.email,
-            phone: appData.phone,
+            phone: '', // Phone is no longer collected
             address: '',
             nominee: { name: '', relationship: '' },
             kycDocs: appData.kycDocs, // Copy KYC docs from application

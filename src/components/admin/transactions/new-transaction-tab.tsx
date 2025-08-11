@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useActionState, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Loader2, Receipt } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,6 @@ import { createTransaction, type Transaction } from '@/actions/transactions';
 import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { ReceiptDialog } from './receipt-dialog';
 import { Combobox } from '@/components/ui/combobox';
-
-const initialState = {
-  success: false,
-  error: null,
-  transaction: null as Transaction | null,
-};
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -34,7 +29,7 @@ function SubmitButton() {
 export function NewTransactionTab() {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
-    const [state, formAction] = useActionState(createTransaction, initialState);
+    const [isPending, startTransition] = useTransition();
     
     const [accounts, setAccounts] = useState<SavingsAccount[]>([]);
     const [loadingAccounts, setLoadingAccounts] = useState(true);
@@ -58,25 +53,24 @@ export function NewTransactionTab() {
         fetchAccounts();
     }, [toast]);
     
-    useEffect(() => {
-        if (state.success && state.transaction) {
-            toast({ title: "Transaction Successful", description: `The transaction was processed successfully.` });
-            setReceiptData(state.transaction);
-            setReceiptOpen(true);
-            formRef.current?.reset();
-            setSelectedAccountId('');
-            // Reset state
-            state.success = false; 
-            state.transaction = null;
-        } else if (state.error) {
-            toast({
-                variant: 'destructive',
-                title: "Transaction Failed",
-                description: state.error,
-            });
-            state.error = null;
-        }
-    }, [state, toast]);
+    const handleFormAction = (formData: FormData) => {
+        startTransition(async () => {
+            const result = await createTransaction(null, formData);
+            if (result.success && result.transaction) {
+                toast({ title: "Transaction Successful", description: `The transaction was processed successfully.` });
+                setReceiptData(result.transaction);
+                setReceiptOpen(true);
+                formRef.current?.reset();
+                setSelectedAccountId('');
+            } else if (result.error) {
+                toast({
+                    variant: 'destructive',
+                    title: "Transaction Failed",
+                    description: result.error,
+                });
+            }
+        });
+    }
 
     const accountOptions = accounts.map(account => ({
         value: account.id,
@@ -88,7 +82,7 @@ export function NewTransactionTab() {
     return (
       <>
         <Card className="max-w-2xl mx-auto">
-            <form ref={formRef} action={formAction}>
+            <form ref={formRef} action={handleFormAction}>
                 {/* Hidden input to carry accountId in the form */}
                 <input type="hidden" name="accountId" value={selectedAccountId} />
                 <CardHeader>

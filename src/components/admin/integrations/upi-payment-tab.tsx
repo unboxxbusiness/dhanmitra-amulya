@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useActionState, useRef } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -11,8 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Link } from "lucide-react";
 import { updateUpiId } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
-
-const initialState = { success: false, error: null, message: null };
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -27,22 +26,22 @@ function SubmitButton() {
 export function UpiPaymentTab({ config }: { config: SocietyConfig }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction] = useActionState(updateUpiId, initialState);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state.success) {
-      toast({ title: 'Success', description: state.message });
-      state.success = false;
-      state.message = null;
-    } else if (state.error) {
-      toast({ variant: 'destructive', title: 'Error', description: state.error });
-      state.error = null;
-    }
-  }, [state, toast]);
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await updateUpiId(null, formData);
+         if (result.success) {
+            toast({ title: 'Success', description: result.message });
+        } else if (result.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+    });
+  }
 
   return (
     <Card>
-      <form ref={formRef} action={formAction}>
+      <form ref={formRef} action={handleFormAction}>
         <CardHeader>
           <CardTitle>UPI Payment Configuration</CardTitle>
           <CardDescription>
