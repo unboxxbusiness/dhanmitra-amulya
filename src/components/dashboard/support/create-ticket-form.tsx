@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useActionState, useEffect } from 'react';
+import { useRef, useState, useEffect, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,8 @@ const initialState = {
     success: false,
     error: {
         _form: [] as string[],
+        subject?: string[],
+        message?: string[],
     },
 };
 
@@ -47,7 +49,15 @@ function SubmitButton() {
 export function CreateTicketForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction] = useActionState(createSupportTicket, initialState);
+  const [state, setState] = useState(initialState);
+  const [isPending, startTransition] = useTransition();
+
+  const handleFormAction = (formData: FormData) => {
+    startTransition(async () => {
+        const result = await createSupportTicket(initialState, formData);
+        setState(result as any);
+    });
+  }
 
   useEffect(() => {
     if (state.success) {
@@ -56,7 +66,7 @@ export function CreateTicketForm() {
         description: "Our team will get back to you shortly.",
       });
       formRef.current?.reset();
-      // TODO: Maybe switch tab? For now, just reset form.
+      setState(initialState); // Reset state
     } else if (state.error?._form?.length) {
        toast({
         variant: "destructive",
@@ -67,7 +77,7 @@ export function CreateTicketForm() {
   }, [state, toast]);
 
   return (
-    <form ref={formRef} action={formAction}>
+    <form ref={formRef} action={handleFormAction}>
       <Card>
         <CardHeader>
           <CardTitle>Create a New Support Ticket</CardTitle>
@@ -99,7 +109,10 @@ export function CreateTicketForm() {
             </div>
         </CardContent>
         <CardFooter>
-          <SubmitButton />
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Submit Ticket
+          </Button>
         </CardFooter>
       </Card>
     </form>
