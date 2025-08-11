@@ -32,7 +32,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
 
     if (!accountId || !type || isNaN(amount) || amount <= 0 || !description) {
-        return { success: false, error: 'Invalid transaction details provided.' };
+        return { success: false, error: 'Invalid transaction details provided. Please check all fields.' };
     }
 
     const accountRef = adminDb.collection('savingsAccounts').doc(accountId);
@@ -86,13 +86,12 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
             await postJournalEntry(t, {
                 date: new Date(),
-                description: `Teller transaction: ${description}`,
+                description: `Teller transaction: ${description} for A/C ending in ...${accountData.accountNumber.slice(-4)}`,
                 entries: ledgerEntries,
                 relatedTransactionId: transactionId
             });
             // --- End GL Posting ---
 
-            // Fetch user data to ensure userName is available for the receipt
             const userDoc = await t.get(adminDb.collection('users').doc(accountData.userId));
             const userName = userDoc.data()?.name || 'N/A';
 
@@ -101,7 +100,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
                 ...transactionData,
                 accountNumber: accountData.accountNumber,
                 userName: userName,
-                tellerName: session.name, // Add teller name from session
+                tellerName: session.name || 'N/A',
             };
         });
 
@@ -111,7 +110,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
     } catch (error: any) {
         console.error("Transaction Error:", error);
-        return { success: false, error: 'An unexpected error occurred. Please try again.' };
+        return { success: false, error: error.message || 'An unexpected error occurred. Please try again.' };
     }
 }
 
@@ -123,9 +122,9 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
     // Security check and query modification
     if (session.role === 'member') {
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', session.uid).get();
+        if (userAccountsSnapshot.empty) return [];
+        
         const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
-
-        if (userAccountIds.length === 0) return []; // Member has no accounts
 
         // If a specific account is requested, ensure it belongs to the member
         if (filters.accountId && !userAccountIds.includes(filters.accountId)) {
@@ -133,17 +132,14 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
         }
         
         const accountsToQuery = filters.accountId ? [filters.accountId] : userAccountIds;
-        if(accountsToQuery.length > 0) {
-            query = query.where('accountId', 'in', accountsToQuery);
-        } else {
-            return []; // No valid accounts to query
-        }
+        query = query.where('accountId', 'in', accountsToQuery);
+
     } else if (filters.userId) {
         // Admin/teller filtering by a specific user
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
+        if (userAccountsSnapshot.empty) return [];
+
         const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
-        
-        if (userAccountIds.length === 0) return [];
         
         const accountsToQuery = filters.accountId && userAccountIds.includes(filters.accountId)
             ? [filters.accountId]

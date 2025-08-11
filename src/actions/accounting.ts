@@ -99,7 +99,8 @@ export async function postJournalEntry(
     const totalDebits = entry.entries.reduce((sum, e) => sum + e.debit, 0);
     const totalCredits = entry.entries.reduce((sum, e) => sum + e.credit, 0);
 
-    if (totalDebits.toFixed(4) !== totalCredits.toFixed(4)) {
+    // Use a small epsilon for float comparison to avoid precision issues
+    if (Math.abs(totalDebits - totalCredits) > 0.0001) {
         throw new Error('Journal entry is unbalanced. Debits must equal credits.');
     }
 
@@ -116,6 +117,11 @@ export async function postJournalEntry(
     for (const line of entry.entries) {
         const accountRef = adminDb.collection('chartOfAccounts').doc(line.accountId);
         const amountChange = line.debit - line.credit;
+        
+        const accountDoc = await t.get(accountRef);
+        if (!accountDoc.exists) {
+            throw new Error(`Accounting Error: Account with ID ${line.accountId} not found in the Chart of Accounts.`);
+        }
         
         // In accounting, assets and expenses have a "debit" normal balance.
         // Liabilities, equity, and revenue have a "credit" normal balance.
