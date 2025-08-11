@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -146,7 +147,7 @@ export function ApplyForLoanForm({ products }: { products: LoanProduct[] }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Loan Term (Months)</FormLabel>
-                       <div className="flex items-center gap-4">
+                       <div className="flex flex-col md:flex-row items-center gap-4">
                           <FormControl>
                              <Slider
                                 id="termMonths"

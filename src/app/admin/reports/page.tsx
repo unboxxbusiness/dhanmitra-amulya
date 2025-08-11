@@ -1,4 +1,5 @@
 
+
 import { MemberListReport } from "@/components/admin/reports/member-list-report";
 import { TrialBalanceReport } from "@/components/admin/reports/trial-balance-report";
 import { SavingsAccountReport } from "@/components/admin/reports/savings-account-report";
@@ -16,7 +17,7 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {/* Core Reports */}
         <MemberListReport />
         <SavingsAccountReport />
