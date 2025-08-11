@@ -1,87 +1,137 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    function isMember() {
-      return request.auth.token.role == 'member';
+    // Helper function to check if a user has a specific role.
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
     
+    // Helper function to check if a user has one of several admin-level roles.
     function isAdmin() {
-      return request.auth.token.role in ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+      let adminRoles = ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in adminRoles;
     }
-
-    // Users can read/update their own profile. Admins can manage all users.
+    
+    // By default, deny all reads and writes.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // --- User and Application Data ---
+    
+    // Users can read their own profile, admins can read any.
+    // Users can update their own profile, admins can update any.
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId || isAdmin();
-      allow create: if isAdmin();
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow update: if request.auth.uid == userId || isAdmin();
+      allow create: if isAdmin(); // Only admins can create new users directly.
     }
     
-    // New members can apply, admins manage applications.
+    // Public can submit an application, admins can manage them.
     match /applications/{appId} {
-      allow create; // Public can apply for membership
+      allow create;
       allow read, update: if isAdmin();
     }
-
-    // Financial Products are public to read for any authenticated user.
-    // Only admins can modify them.
-    match /{productCollection}/{productId} 
-      where productCollection in ['savingsSchemes', 'depositProducts', 'loanProducts'] {
-      allow read: if request.auth != null;
+    
+    // --- Core Financial Products (Read-only for members) ---
+    match /loanProducts/{productId} {
+      allow read: if request.auth.uid != null;
       allow write: if isAdmin();
     }
     
-    // Members can apply for financial products. Admins manage the applications.
-    match /{applicationCollection}/{appId}
-      where applicationCollection in ['savingsApplications', 'depositApplications', 'loanApplications'] {
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read, update: if isAdmin();
-    }
-
-    // Financial accounts can only be read by the owner or an admin.
-    // Writes are admin-only to ensure server logic is enforced.
-    match /{accountCollection}/{accountId}
-      where accountCollection in ['savingsAccounts', 'activeDeposits', 'activeLoans'] {
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
+    match /depositProducts/{productId} {
+      allow read: if request.auth.uid != null;
       allow write: if isAdmin();
     }
     
-    // Transactions can only be read by the owner or an admin.
-    // Writes are admin-only.
-    match /transactions/{transactionId} {
-       allow read: if resource.data.userId == request.auth.uid || isAdmin();
+    match /savingsSchemes/{schemeId} {
+      allow read: if request.auth.uid != null;
+      allow write: if isAdmin();
+    }
+    
+    // --- Financial Applications (Members can create, admins manage) ---
+    match /loanApplications/{appId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if isAdmin();
+    }
+    
+    match /depositApplications/{appId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if isAdmin();
+    }
+    
+    match /savingsApplications/{appId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if isAdmin();
+    }
+    
+    // --- Active Accounts (Members read own, admins manage) ---
+    
+    // User can read their own loan accounts. Admins can read all.
+    match /activeLoans/{loanId} {
+      allow read: if get(/databases/$(database)/documents/activeLoans/$(loanId)).data.userId == request.auth.uid || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // User can read their own deposit accounts. Admins can read all.
+    match /activeDeposits/{depositId} {
+      allow read: if get(/databases/$(database)/documents/activeDeposits/$(depositId)).data.userId == request.auth.uid || isAdmin();
        allow write: if isAdmin();
     }
     
-    // Settings, Branches, and Holidays can be read by any authenticated user.
-    // Only admins can change them.
-    match /{settingsCollection}/{docId}
-      where settingsCollection in ['settings', 'branches', 'holidays'] {
-        allow read: if request.auth != null;
-        allow write: if isAdmin();
+    // User can read their own savings accounts. Admins can read all.
+    match /savingsAccounts/{accountId} {
+      allow read: if get(/databases/$(database)/documents/savingsAccounts/$(accountId)).data.userId == request.auth.uid || isAdmin();
+      allow write: if isAdmin();
     }
     
-    // Accounting ledger is admin-only.
-    match /{accountingCollection}/{docId}
-      where accountingCollection in ['chartOfAccounts', 'journalEntries'] {
-        allow read, write: if isAdmin();
+    // Transactions: Users can only read their own. Admins can read all.
+    // Transactions can only be created by admins (server-side actions).
+    match /transactions/{txId} {
+      allow read: if get(/databases/$(database)/documents/transactions/$(txId)).data.userId == request.auth.uid || isAdmin();
+      allow write: if isAdmin();
     }
     
-    // Support tickets can be created by members.
-    // Members can only access their own tickets. Admins can access all.
+     // --- Support & Notifications ---
+     
+    // Users can create tickets for themselves. Users can read/update their own tickets. Admins can manage all.
     match /supportTickets/{ticketId} {
       allow create: if request.auth.uid == request.resource.data.userId;
-      allow read, update: if request.auth.uid == resource.data.userId || isAdmin();
+      allow read, update: if get(/databases/$(database)/documents/supportTickets/$(ticketId)).data.userId == request.auth.uid || isAdmin();
     }
     
-    // Notifications: Global ones are readable by all authenticated users.
-    // User-specific ones are only readable by the target user or an admin.
+    // Notifications can only be written by admins.
+    // Users can read global notifications or notifications targeted to them.
     match /notifications/{notificationId} {
-      allow read: if (resource.data.target == 'all' && request.auth != null) ||
-                   (resource.data.userId == request.auth.uid) ||
-                   isAdmin();
       allow write: if isAdmin();
+      allow read: if request.auth.uid != null && 
+                     (resource.data.target == 'all' || resource.data.userId == request.auth.uid);
+    }
+    
+    // --- Admin & Settings Collections (Admin-only access) ---
+    
+    match /chartOfAccounts/{accountId} {
+       allow read, write: if isAdmin();
+    }
+    
+     match /journalEntries/{entryId} {
+       allow read, write: if isAdmin();
+    }
+    
+    match /settings/{settingId} {
+      allow read: if request.auth.uid != null; // All authenticated users can read settings
+      allow write: if isAdmin();
+    }
+    
+    match /branches/{branchId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /holidays/{holidayId} {
+       allow read: if request.auth.uid != null;
+       allow write: if isAdmin();
     }
   }
 }

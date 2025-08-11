@@ -52,11 +52,14 @@ export async function sendNotification(payload: SendNotificationPayload) {
       }
       const userData = userDoc.data() as UserProfile;
       tokens = userData.fcmTokens || [];
+      if (tokens.length === 0) {
+        return { success: true, message: `Notice saved, but the selected user has no registered devices for push notifications.` };
+      }
       // Save notification specifically for this user
       await notificationRef.set({ ...notificationData, userId });
 
     } else if (target === 'all') {
-      const usersSnapshot = await adminDb.collection('users').where('fcmTokens', '!=', []).get();
+      const usersSnapshot = await adminDb.collection('users').where('fcmTokens', 'array-contains-any', ['']).get();
       usersSnapshot.forEach(doc => {
         const userData = doc.data() as UserProfile;
         if (userData.fcmTokens) {
