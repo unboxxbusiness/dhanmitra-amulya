@@ -192,14 +192,9 @@ export async function approveApplication(applicationId: string) {
         // 2. Set custom claims (default to 'member' role)
         await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member' });
 
-        // 3. Create user profile in Firestore 'users' collection
+        // 3. Create user profile in Firestore 'users' collection, preserving application data
         await adminDb.collection('users').doc(userRecord.uid).set({
-            name: appData.name,
-            email: appData.email,
-            phone: '', // Phone is no longer collected
-            address: '',
-            nominee: { name: '', relationship: '' },
-            kycDocs: appData.kycDocs, // Copy KYC docs from application
+            ...appData, // Preserves name, email, phone, kycDocs, etc. from application
             role: 'member',
             status: 'Active',
             createdAt: new Date().toISOString(),
