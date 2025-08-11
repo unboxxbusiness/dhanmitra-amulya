@@ -5,7 +5,7 @@ import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { Transaction } from '@/lib/definitions';
+import type { Transaction, UserProfile } from '@/lib/definitions';
 import { type SavingsAccount } from './savings';
 import Papa from 'papaparse';
 import { postJournalEntry } from './accounting';
@@ -26,16 +26,16 @@ async function verifyUser(roles: string[]) {
 export async function createTransaction(prevState: any, formData: FormData) {
     const session = await verifyUser(TELLER_ROLES);
     
-    const accountId = formData.get('accountId') as string;
+    const savingsAccountId = formData.get('savingsAccountId') as string;
     const type = formData.get('type') as 'credit' | 'debit';
     const amount = parseFloat(formData.get('amount') as string);
     const description = formData.get('description') as string;
 
-    if (!accountId || !type || isNaN(amount) || amount <= 0 || !description) {
+    if (!savingsAccountId || !type || isNaN(amount) || amount <= 0 || !description) {
         return { success: false, error: 'Invalid transaction details provided. Please check all fields.' };
     }
 
-    const accountRef = adminDb.collection('savingsAccounts').doc(accountId);
+    const accountRef = adminDb.collection('savingsAccounts').doc(savingsAccountId);
     const transactionId = adminDb.collection('transactions').doc().id;
 
     try {
@@ -46,6 +46,13 @@ export async function createTransaction(prevState: any, formData: FormData) {
             }
 
             const accountData = accountDoc.data() as SavingsAccount;
+            const userRef = adminDb.collection('users').doc(accountData.userId);
+            const userDoc = await t.get(userRef);
+            if (!userDoc.exists) {
+                throw new Error('Associated member profile not found.');
+            }
+            const userData = userDoc.data() as UserProfile;
+
 
             if (type === 'debit' && accountData.balance < amount) {
                 throw new Error('Insufficient balance for this withdrawal.');
@@ -57,8 +64,8 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
             t.update(accountRef, { balance: newBalance });
 
-            const transactionData: Omit<Transaction, 'id'|'accountNumber'|'userName'|'tellerName'> = {
-                accountId,
+            const transactionData: Omit<Transaction, 'id'|'userName'|'tellerName'> = {
+                savingsAccountId,
                 userId: accountData.userId,
                 type,
                 amount,
@@ -86,20 +93,16 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
             await postJournalEntry(t, {
                 date: new Date(),
-                description: `Teller transaction: ${description} for A/C ending in ...${accountData.accountNumber.slice(-4)}`,
+                description: `Teller transaction: ${description} for Member ID ${userData.memberId}`,
                 entries: ledgerEntries,
                 relatedTransactionId: transactionId
             });
             // --- End GL Posting ---
-
-            const userDoc = await t.get(adminDb.collection('users').doc(accountData.userId));
-            const userName = userDoc.data()?.name || 'N/A';
-
+            
             return {
                 id: transactionId,
                 ...transactionData,
-                accountNumber: accountData.accountNumber,
-                userName: userName,
+                userName: userData.name,
                 tellerName: session.name || 'N/A',
             };
         });
@@ -115,7 +118,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
 }
 
 
-export async function getTransactionHistory(filters: { accountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
+export async function getTransactionHistory(filters: { savingsAccountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
     const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
     let query: admin.firestore.Query = adminDb.collection('transactions');
 
@@ -127,12 +130,14 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
         const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
 
         // If a specific account is requested, ensure it belongs to the member
-        if (filters.accountId && !userAccountIds.includes(filters.accountId)) {
+        if (filters.savingsAccountId && !userAccountIds.includes(filters.savingsAccountId)) {
             return []; // Security: Don't return transactions for an account the user doesn't own
         }
         
-        const accountsToQuery = filters.accountId ? [filters.accountId] : userAccountIds;
-        query = query.where('accountId', 'in', accountsToQuery);
+        const accountsToQuery = filters.savingsAccountId ? [filters.savingsAccountId] : userAccountIds;
+        if (accountsToQuery.length === 0) return [];
+
+        query = query.where('savingsAccountId', 'in', accountsToQuery);
 
     } else if (filters.userId) {
         // Admin/teller filtering by a specific user
@@ -141,19 +146,19 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
 
         const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
         
-        const accountsToQuery = filters.accountId && userAccountIds.includes(filters.accountId)
-            ? [filters.accountId]
+        const accountsToQuery = filters.savingsAccountId && userAccountIds.includes(filters.savingsAccountId)
+            ? [filters.savingsAccountId]
             : userAccountIds;
             
         if (accountsToQuery.length > 0) {
-            query = query.where('accountId', 'in', accountsToQuery);
+            query = query.where('savingsAccountId', 'in', accountsToQuery);
         } else {
              return [];
         }
 
-    } else if (filters.accountId) {
+    } else if (filters.savingsAccountId) {
         // Admin filtering by a single account
-        query = query.where('accountId', '==', filters.accountId);
+        query = query.where('savingsAccountId', '==', filters.savingsAccountId);
     }
     
     if (filters.type) {
@@ -179,15 +184,12 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
     const snapshot = await query.get();
     const transactions = await Promise.all(snapshot.docs.map(async doc => {
         const data = doc.data();
-        // This could be optimized by storing userName/accountNumber on the transaction doc itself.
-        const accountDoc = await adminDb.collection('savingsAccounts').doc(data.accountId).get();
         const userDoc = await adminDb.collection('users').doc(data.userId).get();
         const tellerDoc = data.tellerId ? await adminDb.collection('users').doc(data.tellerId).get() : null;
 
         return {
             id: doc.id,
             ...data,
-            accountNumber: accountDoc.data()?.accountNumber || 'N/A',
             userName: userDoc.data()?.name || 'N/A',
             tellerName: tellerDoc?.data()?.name || 'System',
             date: new Date(data.date).toLocaleString(),
@@ -237,7 +239,7 @@ export async function reconcileBankStatement(csvContent: string) {
 }
 
 
-export async function exportTransactionsToCsv(filters: { accountId?: string, startDate?: string, endDate?: string }): Promise<string> {
+export async function exportTransactionsToCsv(filters: { savingsAccountId?: string, startDate?: string, endDate?: string }): Promise<string> {
     const session = await getSession();
     if (!session) throw new Error("Not authenticated");
 

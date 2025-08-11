@@ -44,7 +44,7 @@ export function SavingsHistoryClient({ history, accounts, onSearch, isLoading }:
         setIsExporting(true);
         try {
             const csvString = await exportTransactionsToCsv({ 
-                accountId: selectedAccountId,
+                savingsAccountId: selectedAccountId,
                 startDate: format(date.from, 'yyyy-MM-dd'),
                 endDate: format(date.to, 'yyyy-MM-dd')
             });
@@ -90,7 +90,7 @@ export function SavingsHistoryClient({ history, accounts, onSearch, isLoading }:
                             <SelectContent>
                                 {accounts.map(acc => (
                                     <SelectItem key={acc.id} value={acc.id}>
-                                        {acc.accountNumber} ({acc.schemeName})
+                                        {acc.schemeName}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

@@ -45,8 +45,8 @@ export function ActiveDepositsTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Account Number</TableHead>
               <TableHead>Member Name</TableHead>
+              <TableHead>Product</TableHead>
               <TableHead>Principal Amount</TableHead>
               <TableHead>Maturity Amount</TableHead>
               <TableHead>Start Date</TableHead>
@@ -70,8 +70,8 @@ export function ActiveDepositsTab() {
             ) : deposits.length > 0 ? (
               deposits.map((deposit) => (
                 <TableRow key={deposit.id}>
-                  <TableCell className="font-mono">{deposit.accountNumber}</TableCell>
                   <TableCell className="font-medium">{deposit.userName}</TableCell>
+                  <TableCell>{deposit.productName}</TableCell>
                   <TableCell>₹{deposit.principalAmount.toFixed(2)}</TableCell>
                   <TableCell>₹{deposit.maturityAmount.toFixed(2)}</TableCell>
                   <TableCell>{deposit.startDate}</TableCell>

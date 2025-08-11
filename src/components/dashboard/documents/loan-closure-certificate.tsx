@@ -58,7 +58,7 @@ export function LoanClosureCertificate({ loans }: { loans: ActiveLoan[] }) {
                         </SelectTrigger>
                         <SelectContent>
                             {closedLoans.length > 0 ? closedLoans.map(loan => (
-                                <SelectItem key={loan.id} value={loan.id}>{loan.accountNumber}</SelectItem>
+                                <SelectItem key={loan.id} value={loan.id}>{loan.productName}</SelectItem>
                             )) : <SelectItem value="none" disabled>No closed loans found</SelectItem>}
                         </SelectContent>
                     </Select>
@@ -86,7 +86,7 @@ export function LoanClosureCertificate({ loans }: { loans: ActiveLoan[] }) {
                             This is to certify that the loan account detailed below, held by you with our society, has been fully repaid and is now closed.
                         </p>
                         <div className="my-4 space-y-2 border p-4 rounded-md">
-                            <div className="flex justify-between"><span>Loan Account Number:</span><span className="font-mono">{certificate.loanAccountNumber}</span></div>
+                            <div className="flex justify-between"><span>Loan Product:</span><span className="font-mono">{certificate.loanAccountNumber}</span></div>
                             <div className="flex justify-between"><span>Loan Amount:</span><span>₹{certificate.loanAmount.toFixed(2)}</span></div>
                             <div className="flex justify-between"><span>Disbursal Date:</span><span>{certificate.disbursalDate}</span></div>
                         </div>

@@ -41,7 +41,7 @@ export function AccountStatementGenerator({ savingsAccounts }: { savingsAccounts
         setTransactions(null);
         try {
             const result = await getTransactionHistory({
-                accountId: selectedAccountId,
+                savingsAccountId: selectedAccountId,
                 startDate: format(date.from, 'yyyy-MM-dd'),
                 endDate: format(date.to, 'yyyy-MM-dd'),
             });
@@ -61,7 +61,7 @@ export function AccountStatementGenerator({ savingsAccounts }: { savingsAccounts
         setLoading(true);
         try {
             const csvString = await exportTransactionsToCsv({
-                accountId: selectedAccountId,
+                savingsAccountId: selectedAccountId,
                 startDate: format(date.from, 'yyyy-MM-dd'),
                 endDate: format(date.to, 'yyyy-MM-dd'),
             });
@@ -94,7 +94,7 @@ export function AccountStatementGenerator({ savingsAccounts }: { savingsAccounts
                             <SelectContent>
                                 {savingsAccounts.map(acc => (
                                     <SelectItem key={acc.id} value={acc.id}>
-                                        {acc.accountNumber}
+                                        {acc.schemeName}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

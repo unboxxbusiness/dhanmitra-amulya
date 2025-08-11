@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { getSocietyConfig } from './settings';
+import { getSocietyConfig, getNextMemberId } from './settings';
 
 
 // A helper function to verify if the current user is an admin
@@ -29,6 +29,7 @@ export async function getAllMembers(): Promise<UserProfile[]> {
       const data = doc.data();
       return {
         id: doc.id,
+        memberId: data.memberId || 'N/A',
         name: data.name || data.email || 'N/A',
         email: data.email || 'N/A',
         joinDate: data.createdAt ? new Date(data.createdAt).toISOString().split('T')[0] : 'N/A',
@@ -56,20 +57,26 @@ export async function addMember(formData: FormData) {
     }
 
     try {
-        const userRecord = await adminAuth.createUser({
-            email,
-            password,
-            displayName: name,
-        });
+        await adminDb.runTransaction(async (t) => {
+            const userRecord = await adminAuth.createUser({
+                email,
+                password,
+                displayName: name,
+            });
 
-        await adminAuth.setCustomUserClaims(userRecord.uid, { role });
-        
-        await adminDb.collection('users').doc(userRecord.uid).set({
-            name,
-            email,
-            role,
-            status: 'Active',
-            createdAt: new Date().toISOString(),
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role });
+            
+            const newMemberId = await getNextMemberId(t);
+            const userRef = adminDb.collection('users').doc(userRecord.uid);
+
+            t.set(userRef, {
+                name,
+                email,
+                role,
+                memberId: newMemberId,
+                status: 'Active',
+                createdAt: new Date().toISOString(),
+            });
         });
 
         revalidatePath('/admin/members');
@@ -173,41 +180,47 @@ export async function getPendingApplications(): Promise<Application[]> {
 export async function approveApplication(applicationId: string) {
     await verifyAdmin();
     const appRef = adminDb.collection('applications').doc(applicationId);
+    
     try {
-        const appDoc = await appRef.get();
-        if (!appDoc.exists) {
-            throw new Error('Application not found.');
-        }
-        const appData = appDoc.data() as Application;
-
-        // 1. Create user in Firebase Auth
         const tempPassword = Math.random().toString(36).slice(-8); // Generate temporary password
-        
-        const userRecord = await adminAuth.createUser({
-            email: appData.email,
-            password: tempPassword,
-            displayName: appData.name,
-        });
 
-        // 2. Set custom claims (default to 'member' role)
-        await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member' });
+        await adminDb.runTransaction(async (t) => {
+            const appDoc = await t.get(appRef);
+            if (!appDoc.exists) {
+                throw new Error('Application not found.');
+            }
+            const appData = appDoc.data() as Application;
 
-        // 3. Create user profile in Firestore 'users' collection, preserving application data
-        await adminDb.collection('users').doc(userRecord.uid).set({
-            ...appData,
-            role: 'member',
-            status: 'Active',
-            createdAt: new Date().toISOString(),
+            // 1. Create user in Firebase Auth
+            const userRecord = await adminAuth.createUser({
+                email: appData.email,
+                password: tempPassword,
+                displayName: appData.name,
+            });
+
+            // 2. Set custom claims (default to 'member' role)
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member' });
+            
+            const newMemberId = await getNextMemberId(t);
+
+            // 3. Create user profile in Firestore 'users' collection
+            const userRef = adminDb.collection('users').doc(userRecord.uid);
+            t.set(userRef, {
+                ...appData,
+                role: 'member',
+                memberId: newMemberId,
+                status: 'Active',
+                createdAt: new Date().toISOString(),
+            });
+            
+            // 4. Update the application status
+            t.update(appRef, { status: 'approved' });
         });
-        
-        // 4. Update the application status
-        await appRef.update({ status: 'approved' });
 
         revalidatePath('/admin/members');
         return { success: true, tempPassword };
 
-    } catch (error: any)
-     {
+    } catch (error: any) {
         console.error("Error approving application:", error);
         if ((error as any).code === 'auth/email-already-exists') {
             await appRef.update({ status: 'rejected' });
@@ -252,24 +265,30 @@ export async function bulkImportMembers(csvContent: string) {
         }
 
         try {
-            // Generate a secure random password for the user.
-            const tempPassword = Math.random().toString(36).slice(-8);
+            await adminDb.runTransaction(async (t) => {
+                 // Generate a secure random password for the user.
+                const tempPassword = Math.random().toString(36).slice(-8);
 
-            const userRecord = await adminAuth.createUser({
-                email: member.email,
-                displayName: member.name,
-                password: tempPassword,
-            });
+                const userRecord = await adminAuth.createUser({
+                    email: member.email,
+                    displayName: member.name,
+                    password: tempPassword,
+                });
 
-            const role: Role = 'member';
-            await adminAuth.setCustomUserClaims(userRecord.uid, { role });
+                const role: Role = 'member';
+                await adminAuth.setCustomUserClaims(userRecord.uid, { role });
+                
+                const newMemberId = await getNextMemberId(t);
+                const userRef = adminDb.collection('users').doc(userRecord.uid);
 
-            await adminDb.collection('users').doc(userRecord.uid).set({
-                name: member.name,
-                email: member.email,
-                role: role,
-                status: 'Active',
-                createdAt: new Date().toISOString(),
+                t.set(userRef, {
+                    name: member.name,
+                    email: member.email,
+                    memberId: newMemberId,
+                    role: role,
+                    status: 'Active',
+                    createdAt: new Date().toISOString(),
+                });
             });
 
             results.successful++;
@@ -349,11 +368,14 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
             maturityDate: new Date(doc.data().maturityDate).toLocaleDateString(),
         } as ActiveDeposit));
         
-        const recentTransactions = transSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            date: new Date(doc.data().date).toLocaleDateString(),
-        } as Transaction));
+        const recentTransactions = transSnap.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                date: new Date(data.date).toLocaleDateString(),
+            } as Transaction
+        });
 
         return {
             savingsAccounts,
@@ -486,7 +508,7 @@ export async function generateInterestCertificate(financialYear: string): Promis
         const interest = (deposit.principalAmount * deposit.interestRate / 100);
         totalInterest += interest;
         accountDetails.push({
-            accountNumber: deposit.accountNumber,
+            accountNumber: deposit.productName || 'Deposit',
             principal: deposit.principalAmount,
             rate: deposit.interestRate,
             interestEarned: interest
@@ -531,7 +553,7 @@ export async function generateLoanClosureCertificate(loanId: string): Promise<Lo
         societyAddress: societyConfig.address,
         memberName: user.name,
         memberAddress: user.address,
-        loanAccountNumber: loan.accountNumber,
+        loanAccountNumber: loan.productName || 'Loan',
         loanAmount: loan.principal,
         disbursalDate: new Date(loan.disbursalDate).toLocaleDateString('en-IN'),
         isClosed,

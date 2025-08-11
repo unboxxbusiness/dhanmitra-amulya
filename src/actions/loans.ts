@@ -10,7 +10,6 @@ import { LoanProductSchema, LoanApplicationSchema as MemberLoanApplicationSchema
 import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import Papa from 'papaparse';
-import { getNextAccountNumber } from './settings';
 
 
 const LOAN_VERIFIER_ROLES = ['admin', 'branch_manager', 'auditor'];
@@ -222,12 +221,10 @@ export async function disburseLoan(applicationId: string) {
                     status: 'pending',
                 });
             }
-            
-            const newAccountNumber = await getNextAccountNumber(transaction, 'loan');
 
-            const newActiveLoan: Omit<ActiveLoan, 'id' | 'userName' | 'productName'> = {
+            const newActiveLoan: Omit<ActiveLoan, 'id' | 'userName'> = {
                 userId: appData.userId,
-                accountNumber: newAccountNumber,
+                productName: productData.name,
                 principal: appData.amountRequested,
                 interestRate: productData.interestRate,
                 termMonths: appData.termMonths,
@@ -260,13 +257,11 @@ export async function getActiveLoans(): Promise<ActiveLoan[]> {
     const loans = await Promise.all(snapshot.docs.map(async (doc) => {
         const data = doc.data();
         const userDoc = await adminDb.collection('users').doc(data.userId).get();
-        const productDoc = await adminDb.collection('loanProducts').doc(data.productId).get();
         
         return {
             id: doc.id,
             ...data,
             userName: userDoc.data()?.name || 'Unknown User',
-            productName: productDoc.data()?.name || 'Unknown Product',
             disbursalDate: new Date(data.disbursalDate).toLocaleDateString(),
         } as ActiveLoan;
     }));
@@ -293,7 +288,7 @@ export async function getPendingRepayments(): Promise<RepaymentWithLoanDetails[]
                     repaymentId: repayment.repaymentId,
                     repaymentIndex: index,
                     userName: userDoc.data()?.name || 'Unknown',
-                    accountNumber: loan.accountNumber,
+                    productName: loan.productName,
                     emiAmount: repayment.amount,
                     dueDate: new Date(repayment.dueDate).toLocaleDateString(),
                     status: repayment.status,
@@ -303,7 +298,7 @@ export async function getPendingRepayments(): Promise<RepaymentWithLoanDetails[]
     }
 
     // Sort by due date
-    allPendingRepayments.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    allPendingRepayments.sort((a, b) => new Date(a.dueDate).getTime() - new Date(a.dueDate).getTime());
 
     return allPendingRepayments;
 }
@@ -367,7 +362,7 @@ export async function getMemberLoanHistory(): Promise<RepaymentWithLoanDetails[]
         repaymentId: repayment.repaymentId,
         repaymentIndex: index,
         userName: session.name || 'N/A',
-        accountNumber: loan.accountNumber,
+        productName: loan.productName,
         emiAmount: repayment.amount,
         dueDate: new Date(repayment.dueDate).toLocaleDateString(),
         status: repayment.status,
@@ -387,7 +382,7 @@ export async function exportMemberLoanHistory(): Promise<string> {
     const history = await getMemberLoanHistory();
 
     const csvData = history.map(item => ({
-        "Loan Account": item.accountNumber,
+        "Loan Product": item.productName,
         "Due Date": item.dueDate,
         "Amount": item.emiAmount,
         "Status": item.status,

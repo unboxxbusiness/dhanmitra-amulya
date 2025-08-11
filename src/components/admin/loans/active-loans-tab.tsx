@@ -50,8 +50,8 @@ export function ActiveLoansTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Account Number</TableHead>
               <TableHead>Member Name</TableHead>
+              <TableHead>Loan Product</TableHead>
               <TableHead>Principal</TableHead>
               <TableHead>EMI</TableHead>
               <TableHead>Outstanding</TableHead>
@@ -75,8 +75,8 @@ export function ActiveLoansTab() {
             ) : loans.length > 0 ? (
               loans.map((loan) => (
                 <TableRow key={loan.id}>
-                  <TableCell className="font-mono">{loan.accountNumber}</TableCell>
                   <TableCell className="font-medium">{loan.userName}</TableCell>
+                  <TableCell>{loan.productName}</TableCell>
                   <TableCell>₹{loan.principal.toFixed(2)}</TableCell>
                   <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
                   <TableCell>₹{loan.outstandingBalance.toFixed(2)}</TableCell>

@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { createSavingsAccount, getSavingsSchemes, type SavingsScheme } from '@/actions/savings';
 import { getAllMembers, type UserProfile } from '@/actions/users';
 import { Loader2 } from 'lucide-react';
+import { Combobox } from '@/components/ui/combobox';
 
 interface CreateAccountDialogProps {
     isOpen: boolean;
@@ -35,6 +35,10 @@ export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProp
     const [members, setMembers] = useState<UserProfile[]>([]);
     const [schemes, setSchemes] = useState<SavingsScheme[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const [selectedMemberId, setSelectedMemberId] = useState<string>('');
+    const [selectedSchemeId, setSelectedSchemeId] = useState<string>('');
+
 
     useEffect(() => {
         if (!isOpen) return;
@@ -75,10 +79,15 @@ export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProp
 
     if (!isOpen) return null;
 
+    const memberOptions = members.map(m => ({ label: `${m.name} (${m.memberId})`, value: m.id }));
+    const schemeOptions = schemes.map(s => ({ label: `${s.name} (${s.interestRate}%)`, value: s.id }));
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-md">
                 <form ref={formRef} action={handleFormAction}>
+                     <input type="hidden" name="userId" value={selectedMemberId} />
+                     <input type="hidden" name="schemeId" value={selectedSchemeId} />
                     <DialogHeader>
                         <DialogTitle>Create New Savings Account</DialogTitle>
                         <DialogDescription>
@@ -92,39 +101,27 @@ export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProp
                         </div>
                     ) : (
                         <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="userId" className="text-right">Member</Label>
-                                <Select name="userId" required>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Select a member" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {members.map(member => (
-                                            <SelectItem key={member.id} value={member.id}>
-                                                {member.name} ({member.email})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="space-y-2">
+                                <Label>Member</Label>
+                                <Combobox 
+                                    options={memberOptions}
+                                    value={selectedMemberId}
+                                    onChange={setSelectedMemberId}
+                                    placeholder='Select a member...'
+                                />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="schemeId" className="text-right">Scheme</Label>
-                                <Select name="schemeId" required>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Select a scheme" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {schemes.map(scheme => (
-                                            <SelectItem key={scheme.id} value={scheme.id}>
-                                                {scheme.name} ({scheme.interestRate}%)
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="space-y-2">
+                                <Label>Scheme</Label>
+                                 <Combobox 
+                                    options={schemeOptions}
+                                    value={selectedSchemeId}
+                                    onChange={setSelectedSchemeId}
+                                    placeholder='Select a scheme...'
+                                />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="initialDeposit" className="text-right">Initial Deposit</Label>
-                                <Input id="initialDeposit" name="initialDeposit" type="number" step="0.01" placeholder="0.00" className="col-span-3" />
+                            <div className="space-y-2">
+                                <Label htmlFor="initialDeposit">Initial Deposit</Label>
+                                <Input id="initialDeposit" name="initialDeposit" type="number" step="0.01" placeholder="0.00" />
                             </div>
                         </div>
                     )}

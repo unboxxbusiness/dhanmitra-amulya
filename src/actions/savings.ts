@@ -9,7 +9,6 @@ import { getAllMembers } from './users';
 import { ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
 import type { SavingsApplication } from '@/lib/definitions';
-import { getNextAccountNumber } from './settings';
 import { FieldValue } from 'firebase-admin/firestore';
 
 const MEMBER_ROLES = [...ADMIN_ROLES, 'member'];
@@ -37,7 +36,6 @@ export type SavingsAccount = {
     userName: string;
     schemeId: string;
     schemeName: string;
-    accountNumber: string;
     balance: number;
     status: 'Active' | 'Dormant' | 'Closed';
     createdAt: string; // ISO String
@@ -157,12 +155,9 @@ export async function createSavingsAccount(prevState: any, formData: FormData) {
                 throw new Error('Selected scheme does not exist.');
             }
             
-            const newAccountNumber = await getNextAccountNumber(t, 'savings');
-            
             const newAccount = {
                 userId,
                 schemeId,
-                accountNumber: newAccountNumber,
                 balance: initialDeposit,
                 status: 'Active' as const,
                 createdAt: new Date().toISOString(),
@@ -299,12 +294,9 @@ export async function approveSavingsApplication(applicationId: string) {
                 throw new Error("This application has already been processed.");
             }
             
-            const newAccountNumber = await getNextAccountNumber(t, 'savings');
-
             const newAccount = {
                 userId: appData.userId,
                 schemeId: appData.schemeId,
-                accountNumber: newAccountNumber,
                 balance: appData.initialDeposit,
                 status: 'Active' as const,
                 createdAt: new Date().toISOString(),

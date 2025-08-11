@@ -76,7 +76,6 @@ export function SavingsAccountsTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Account Number</TableHead>
                 <TableHead>Member Name</TableHead>
                 <TableHead>Scheme</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
@@ -89,7 +88,6 @@ export function SavingsAccountsTab() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[100px] ml-auto" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-[80px]" /></TableCell>
@@ -99,7 +97,6 @@ export function SavingsAccountsTab() {
               ) : (
                 accounts.map((account) => (
                   <TableRow key={account.id}>
-                    <TableCell className="font-mono">{account.accountNumber}</TableCell>
                     <TableCell className="font-medium">{account.userName}</TableCell>
                     <TableCell>{account.schemeName}</TableCell>
                     <TableCell className="text-right font-medium">₹{account.balance.toFixed(2)}</TableCell>
@@ -114,7 +111,7 @@ export function SavingsAccountsTab() {
               )}
                {!loading && accounts.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     No savings accounts found.
                   </TableCell>
                 </TableRow>

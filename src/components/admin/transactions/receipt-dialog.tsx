@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useRef } from 'react';
@@ -55,10 +56,6 @@ export function ReceiptDialog({ isOpen, onClose, transaction }: ReceiptDialogPro
                     <span>Member:</span>
                     <span className="font-medium">{transaction.userName}</span>
                 </div>
-                <div className="flex justify-between">
-                    <span>Account Number:</span>
-                    <span className="font-mono">{transaction.accountNumber}</span>
-                </div>
             </div>
 
             <Separator className="my-4" />
@@ -83,11 +80,11 @@ export function ReceiptDialog({ isOpen, onClose, transaction }: ReceiptDialogPro
              <div className="space-y-2 text-sm">
                  <div className="flex justify-between">
                     <span>Balance Before:</span>
-                    <span className="font-mono">₹{(transaction as any).balanceBefore.toFixed(2)}</span>
+                    <span className="font-mono">₹{transaction.balanceBefore.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span>Balance After:</span>
-                    <span className="font-mono font-bold">₹{(transaction as any).balanceAfter.toFixed(2)}</span>
+                    <span className="font-mono font-bold">₹{transaction.balanceAfter.toFixed(2)}</span>
                 </div>
             </div>
 

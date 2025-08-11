@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -47,7 +48,6 @@ export function TransactionHistoryTab() {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Member</TableHead>
-              <TableHead>Account</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Teller</TableHead>
@@ -64,7 +64,6 @@ export function TransactionHistoryTab() {
                   <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : transactions.length > 0 ? (
@@ -72,7 +71,6 @@ export function TransactionHistoryTab() {
                 <TableRow key={tx.id}>
                   <TableCell className="text-xs">{tx.date}</TableCell>
                   <TableCell className="font-medium">{tx.userName}</TableCell>
-                  <TableCell className="font-mono text-xs">{tx.accountNumber}</TableCell>
                    <TableCell>
                       <Badge variant={tx.type === 'credit' ? 'default' : 'secondary'} className={tx.type === 'credit' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}>
                         {tx.type}
@@ -87,7 +85,7 @@ export function TransactionHistoryTab() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">No transactions found.</TableCell>
+                <TableCell colSpan={6} className="text-center">No transactions found.</TableCell>
               </TableRow>
             )}
           </TableBody>

@@ -58,7 +58,8 @@ export function AllMembersTab() {
 
   const filteredMembers = members.filter(member =>
     (member.name && member.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (member.memberId && member.memberId.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getBadgeVariant = (status: UserProfile['status']) => {
@@ -92,7 +93,7 @@ export function AllMembersTab() {
           <CardDescription>A list of all members in the cooperative.</CardDescription>
           <div className="flex items-center gap-4 pt-4">
             <Input
-              placeholder="Filter members by name or email..."
+              placeholder="Filter by name, email, or Member ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
@@ -108,6 +109,7 @@ export function AllMembersTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Member ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
@@ -120,6 +122,7 @@ export function AllMembersTab() {
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
@@ -131,6 +134,7 @@ export function AllMembersTab() {
                 ) : (
                   filteredMembers.map((member) => (
                     <TableRow key={member.id}>
+                       <TableCell className="font-mono">{member.memberId}</TableCell>
                       <TableCell className="font-medium">{member.name}</TableCell>
                       <TableCell>{member.email}</TableCell>
                       <TableCell>

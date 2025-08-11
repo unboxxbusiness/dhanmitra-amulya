@@ -76,7 +76,7 @@ export function SavingsAccountReport() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Account Number</TableHead>
+                                        <TableHead>Member ID</TableHead>
                                         <TableHead>Member Name</TableHead>
                                         <TableHead>Scheme</TableHead>
                                         <TableHead>Status</TableHead>
@@ -85,8 +85,8 @@ export function SavingsAccountReport() {
                                 </TableHeader>
                                 <TableBody>
                                     {data.map((acc) => (
-                                        <TableRow key={acc.accountNumber}>
-                                            <TableCell className="font-mono">{acc.accountNumber}</TableCell>
+                                        <TableRow key={acc.memberId}>
+                                            <TableCell className="font-mono">{acc.memberId}</TableCell>
                                             <TableCell className="font-medium">{acc.userName}</TableCell>
                                             <TableCell>{acc.schemeName}</TableCell>
                                             <TableCell><Badge>{acc.status}</Badge></TableCell>

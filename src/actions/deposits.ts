@@ -9,7 +9,6 @@ import { addDays } from 'date-fns';
 import type { DepositProduct, DepositApplication, ActiveDeposit } from '@/lib/definitions';
 import { DepositProductSchema, TermSchema, ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
-import { getNextAccountNumber } from './settings';
 
 
 const MEMBER_ROLES = ['member', ...ADMIN_ROLES];
@@ -154,12 +153,10 @@ export async function approveDepositApplication(applicationId: string) {
             // Simple interest for FD, can be expanded for compounding
             const interestEarned = (appData.principalAmount * (appData.term.interestRate / 100) * (appData.term.durationMonths / 12));
             const maturityAmount = appData.principalAmount + interestEarned;
-            
-            const newAccountNumber = await getNextAccountNumber(transaction, 'deposit');
 
-            const newActiveDeposit: Omit<ActiveDeposit, 'id' | 'userName' | 'productName'> = {
+            const newActiveDeposit: Omit<ActiveDeposit, 'id' | 'userName'> = {
                 userId: appData.userId,
-                accountNumber: newAccountNumber,
+                productName: productData.name,
                 principalAmount: appData.principalAmount,
                 maturityAmount: parseFloat(maturityAmount.toFixed(2)),
                 interestRate: appData.term.interestRate,

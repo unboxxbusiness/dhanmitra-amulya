@@ -14,6 +14,8 @@ import { createTransaction, type Transaction } from '@/actions/transactions';
 import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { ReceiptDialog } from './receipt-dialog';
 import { Combobox } from '@/components/ui/combobox';
+import type { UserProfile } from '@/lib/definitions';
+import { getAllMembers } from '@/actions/users';
 
 function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
@@ -29,26 +31,32 @@ export function NewTransactionTab() {
     const formRef = useRef<HTMLFormElement>(null);
     const [isPending, startTransition] = useTransition();
     
+    const [members, setMembers] = useState<UserProfile[]>([]);
     const [accounts, setAccounts] = useState<SavingsAccount[]>([]);
-    const [loadingAccounts, setLoadingAccounts] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [selectedMemberId, setSelectedMemberId] = useState<string>('');
     const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
     const [isReceiptOpen, setReceiptOpen] = useState(false);
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
 
     useEffect(() => {
-        async function fetchAccounts() {
-            setLoadingAccounts(true);
+        async function fetchData() {
+            setLoading(true);
             try {
-                const fetchedAccounts = await getSavingsAccounts();
+                const [fetchedMembers, fetchedAccounts] = await Promise.all([
+                    getAllMembers(),
+                    getSavingsAccounts()
+                ]);
+                setMembers(fetchedMembers.filter(m => m.status === 'Active'));
                 setAccounts(fetchedAccounts.filter(acc => acc.status === 'Active'));
             } catch (error) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to load savings accounts.' });
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to load accounts.' });
             } finally {
-                setLoadingAccounts(false);
+                setLoading(false);
             }
         }
-        fetchAccounts();
+        fetchData();
     }, [toast]);
     
     const handleFormAction = (formData: FormData) => {
@@ -59,6 +67,7 @@ export function NewTransactionTab() {
                 setReceiptData(result.transaction);
                 setReceiptOpen(true);
                 formRef.current?.reset();
+                setSelectedMemberId('');
                 setSelectedAccountId('');
             } else if (result.error) {
                 toast({
@@ -70,9 +79,15 @@ export function NewTransactionTab() {
         });
     }
 
-    const accountOptions = accounts.map(account => ({
+    const memberOptions = members.map(member => ({
+        value: member.id,
+        label: `${member.name} - ${member.memberId}`
+    }));
+
+    const memberAccounts = accounts.filter(acc => acc.userId === selectedMemberId);
+    const accountOptions = memberAccounts.map(account => ({
         value: account.id,
-        label: `${account.userName} - ${account.accountNumber}`
+        label: `${account.schemeName}`
     }));
 
     const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
@@ -81,8 +96,7 @@ export function NewTransactionTab() {
       <>
         <Card className="max-w-2xl mx-auto">
             <form ref={formRef} action={handleFormAction}>
-                {/* Hidden input to carry accountId in the form */}
-                <input type="hidden" name="accountId" value={selectedAccountId} />
+                <input type="hidden" name="savingsAccountId" value={selectedAccountId} />
                 <CardHeader>
                     <CardTitle>New Manual Transaction</CardTitle>
                     <CardDescription>
@@ -91,27 +105,39 @@ export function NewTransactionTab() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
-                        <Label htmlFor="accountId">Select Member's Account</Label>
-                        {loadingAccounts ? (
+                        <Label htmlFor="memberId">Select Member</Label>
+                        {loading ? (
                             <div className="flex items-center space-x-2">
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                <span>Loading accounts...</span>
+                                <span>Loading members...</span>
                             </div>
                         ) : (
                             <Combobox
-                                options={accountOptions}
-                                value={selectedAccountId}
-                                onChange={setSelectedAccountId}
-                                placeholder="Search by name or account number..."
-                                emptyPlaceholder="No account found."
+                                options={memberOptions}
+                                value={selectedMemberId}
+                                onChange={(value) => {
+                                    setSelectedMemberId(value);
+                                    setSelectedAccountId(''); // Reset account selection
+                                }}
+                                placeholder="Search by name or member ID..."
+                                emptyPlaceholder="No member found."
                             />
                         )}
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="accountId">Select Savings Account</Label>
+                        <Combobox
+                            options={accountOptions}
+                            value={selectedAccountId}
+                            onChange={setSelectedAccountId}
+                            placeholder="Select a savings account..."
+                            emptyPlaceholder="No savings account found."
+                            className={!selectedMemberId ? "disabled:cursor-not-allowed disabled:opacity-50" : ""}
+                        />
                     </div>
 
                     {selectedAccount && (
                          <div className="p-3 bg-muted rounded-md text-sm">
-                            <p><b>Selected Account:</b> {selectedAccount.accountNumber}</p>
-                            <p><b>Member:</b> {selectedAccount.userName}</p>
                             <p><b>Current Balance:</b> <span className="font-mono">₹{selectedAccount.balance.toFixed(2)}</span></p>
                         </div>
                     )}

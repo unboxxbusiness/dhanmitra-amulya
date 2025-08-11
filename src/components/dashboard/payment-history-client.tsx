@@ -65,7 +65,7 @@ export function PaymentHistoryClient({ history }: PaymentHistoryClientProps) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Loan Account</TableHead>
+                                <TableHead>Loan Product</TableHead>
                                 <TableHead>Due Date</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Status</TableHead>
@@ -75,7 +75,7 @@ export function PaymentHistoryClient({ history }: PaymentHistoryClientProps) {
                         <TableBody>
                             {history.length > 0 ? history.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-mono">{item.accountNumber}</TableCell>
+                                    <TableCell className="font-medium">{item.productName}</TableCell>
                                     <TableCell>{item.dueDate}</TableCell>
                                     <TableCell>₹{item.emiAmount.toFixed(2)}</TableCell>
                                     <TableCell>

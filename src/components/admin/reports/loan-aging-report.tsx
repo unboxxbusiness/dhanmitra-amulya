@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -82,7 +83,7 @@ export function LoanAgingReport() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Account Number</TableHead>
+                                        <TableHead>Member ID</TableHead>
                                         <TableHead>Member Name</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Days Overdue</TableHead>
@@ -92,8 +93,8 @@ export function LoanAgingReport() {
                                 </TableHeader>
                                 <TableBody>
                                     {data.map((loan) => (
-                                        <TableRow key={loan.accountNumber}>
-                                            <TableCell className="font-mono">{loan.accountNumber}</TableCell>
+                                        <TableRow key={loan.memberId}>
+                                            <TableCell className="font-mono">{loan.memberId}</TableCell>
                                             <TableCell className="font-medium">{loan.userName}</TableCell>
                                             <TableCell>
                                                 <Badge variant={getStatusVariant(loan.status)}>{loan.status}</Badge>

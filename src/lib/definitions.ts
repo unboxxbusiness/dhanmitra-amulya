@@ -32,6 +32,7 @@ export type Nominee = z.infer<typeof NomineeSchema>;
 
 export const UserProfileSchema = z.object({
   id: z.string(),
+  memberId: z.string(),
   name: z.string().min(2, "Name is required."),
   email: z.string().email(),
   phone: z.string().min(10, "A valid phone number is required."),
@@ -96,8 +97,7 @@ export type ActiveDeposit = {
     id: string;
     userId: string;
     userName: string;
-    productName?: string;
-    accountNumber: string;
+    productName: string;
     principalAmount: number;
     maturityAmount: number;
     interestRate: number;
@@ -153,8 +153,7 @@ export type ActiveLoan = {
     id: string;
     userId: string;
     userName?: string;
-    productName?: string;
-    accountNumber: string;
+    productName: string;
     principal: number;
     interestRate: number;
     termMonths: number;
@@ -167,7 +166,7 @@ export type ActiveLoan = {
 export type RepaymentWithLoanDetails = {
     id: string;
     userName: string;
-    accountNumber: string;
+    productName: string;
     emiAmount: number;
     dueDate: string;
     status: Repayment['status'];
@@ -191,7 +190,6 @@ export type SavingsAccount = {
     userName?: string;
     schemeId: string;
     schemeName?: string;
-    accountNumber: string;
     balance: number;
     status: 'Active' | 'Dormant' | 'Closed';
     createdAt: string; // ISO String
@@ -210,8 +208,7 @@ export type SavingsApplication = {
 
 export type Transaction = {
     id: string;
-    accountId: string; // Savings account ID
-    accountNumber?: string;
+    savingsAccountId: string; // Savings account ID
     userId: string;
     userName?: string;
     type: 'credit' | 'debit';
@@ -272,13 +269,9 @@ export type SocietyConfig = {
     address: string;
     kycRetentionYears: number;
     upiId?: string;
-    // Account Number Series
-    savingsPrefix?: string;
-    savingsNextNumber?: number;
-    loanPrefix?: string;
-    loanNextNumber?: number;
-    depositPrefix?: string;
-    depositNextNumber?: number;
+    // Member ID Series
+    memberIdPrefix?: string;
+    memberIdNextNumber?: number;
 }
 
 export type ComplianceSettings = {

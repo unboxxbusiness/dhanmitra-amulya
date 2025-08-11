@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { updateSocietyConfig } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
+import { Separator } from '@/components/ui/separator';
 
 function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
@@ -58,6 +59,21 @@ export function GeneralSettingsTab({ config }: { config: SocietyConfig }) {
             <Label htmlFor="address">Address</Label>
             <Input id="address" name="address" defaultValue={config.address} />
           </div>
+          <Separator />
+           <div>
+                <h3 className="text-md font-medium">Member ID Series</h3>
+                 <p className="text-sm text-muted-foreground mb-2">Configure the prefix and next number for auto-generated Member IDs.</p>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="memberIdPrefix">Prefix</Label>
+                        <Input id="memberIdPrefix" name="memberIdPrefix" defaultValue={config.memberIdPrefix} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="memberIdNextNumber">Next Number</Label>
+                        <Input id="memberIdNextNumber" name="memberIdNextNumber" type="number" defaultValue={config.memberIdNextNumber} />
+                    </div>
+                </div>
+            </div>
         </CardContent>
         <CardFooter className="border-t px-6 py-4">
           <SubmitButton isPending={isPending} />

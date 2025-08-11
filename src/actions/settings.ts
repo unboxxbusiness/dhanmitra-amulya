@@ -32,12 +32,8 @@ export async function getSocietyConfig(): Promise<SocietyConfig> {
             address: 'Not Set',
             kycRetentionYears: 7,
             upiId: '',
-            savingsPrefix: 'SAV',
-            savingsNextNumber: 1001,
-            loanPrefix: 'LOAN',
-            loanNextNumber: 1001,
-            depositPrefix: 'DEP',
-            depositNextNumber: 1001,
+            memberIdPrefix: 'MEM',
+            memberIdNextNumber: 1001,
         };
     }
     return doc.data() as SocietyConfig;
@@ -49,6 +45,8 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
         name: formData.get('societyName') as string,
         registrationNumber: formData.get('registrationNumber') as string,
         address: formData.get('address') as string,
+        memberIdPrefix: formData.get('memberIdPrefix') as string,
+        memberIdNextNumber: parseInt(formData.get('memberIdNextNumber') as string, 10),
     };
 
     try {
@@ -59,31 +57,6 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
         return { success: false, error: 'Could not update society settings. Please try again.' };
     }
 }
-
-export async function updateAccountNumberSeries(prevState: any, formData: FormData) {
-    await verifyAdmin();
-    const seriesData: Partial<SocietyConfig> = {
-        savingsPrefix: formData.get('savingsPrefix') as string,
-        savingsNextNumber: parseInt(formData.get('savingsNextNumber') as string, 10),
-        loanPrefix: formData.get('loanPrefix') as string,
-        loanNextNumber: parseInt(formData.get('loanNextNumber') as string, 10),
-        depositPrefix: formData.get('depositPrefix') as string,
-        depositNextNumber: parseInt(formData.get('depositNextNumber') as string, 10),
-    };
-
-    if (isNaN(seriesData.savingsNextNumber!) || isNaN(seriesData.loanNextNumber!) || isNaN(seriesData.depositNextNumber!)) {
-        return { success: false, error: 'Next number must be a valid integer.' };
-    }
-
-    try {
-        await adminDb.collection('settings').doc(SETTINGS_DOC_ID).set(seriesData, { merge: true });
-        revalidatePath('/admin/settings');
-        return { success: true, message: 'Account number series updated successfully.' };
-    } catch (error: any) {
-        return { success: false, error: 'Could not update account series. Please try again.' };
-    }
-}
-
 
 export async function updateUpiId(prevState: any, formData: FormData) {
     await verifyAdmin();
@@ -208,21 +181,28 @@ export async function deleteHoliday(holidayId: string) {
 }
 
 // This is an internal function to be used by other server actions within a Firestore transaction
-export async function getNextAccountNumber(
-    t: FirebaseFirestore.Transaction,
-    type: 'savings' | 'loan' | 'deposit'
+export async function getNextMemberId(
+    t: FirebaseFirestore.Transaction
 ): Promise<string> {
     const settingsRef = adminDb.collection('settings').doc(SETTINGS_DOC_ID);
     const settingsDoc = await t.get(settingsRef);
+    if (!settingsDoc.exists) {
+        // Create settings if they don't exist
+        const defaultConfig = {
+            memberIdPrefix: 'MEM',
+            memberIdNextNumber: 1001,
+        };
+        t.set(settingsRef, defaultConfig, { merge: true });
+        t.update(settingsRef, { memberIdNextNumber: FieldValue.increment(1) });
+        return `${defaultConfig.memberIdPrefix}-${defaultConfig.memberIdNextNumber}`;
+    }
+    
     const settings = settingsDoc.data() as SocietyConfig;
 
-    const prefix = settings[`${type}Prefix`] || type.toUpperCase().slice(0,3);
-    const nextNumber = settings[`${type}NextNumber`] || 1001;
-    const fieldToUpdate = `${type}NextNumber`;
-
-    // Increment the number for the next time
-    t.update(settingsRef, { [fieldToUpdate]: FieldValue.increment(1) });
+    const prefix = settings.memberIdPrefix || 'MEM';
+    const nextNumber = settings.memberIdNextNumber || 1001;
     
-    // Return the formatted number (e.g., SAV-1001)
+    t.update(settingsRef, { memberIdNextNumber: FieldValue.increment(1) });
+    
     return `${prefix}-${nextNumber}`;
 }

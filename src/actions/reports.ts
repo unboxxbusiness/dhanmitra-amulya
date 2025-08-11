@@ -1,10 +1,11 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
 import { getSession } from '@/lib/auth';
 import type { SavingsAccount } from './savings';
-import type { ActiveLoan, ChartOfAccount } from '@/lib/definitions';
+import type { ActiveLoan, ChartOfAccount, UserProfile } from '@/lib/definitions';
 import { differenceInDays } from 'date-fns';
 import Papa from 'papaparse';
 import { ADMIN_ROLES } from '@/lib/definitions';
@@ -20,7 +21,7 @@ async function verifyAdmin() {
 
 // --- Savings Account Report ---
 export type SavingsAccountReportData = {
-    accountNumber: string;
+    memberId: string;
     userName: string;
     schemeName: string;
     balance: number;
@@ -36,7 +37,7 @@ export async function getSavingsAccountReport(): Promise<SavingsAccountReportDat
         const userDoc = await adminDb.collection('users').doc(data.userId).get();
         const schemeDoc = await adminDb.collection('savingsSchemes').doc(data.schemeId).get();
         return {
-            accountNumber: data.accountNumber,
+            memberId: userDoc.data()?.memberId || 'N/A',
             userName: userDoc.data()?.name || 'N/A',
             schemeName: schemeDoc.data()?.name || 'N/A',
             balance: data.balance,
@@ -55,7 +56,7 @@ export async function exportSavingsAccountReport(): Promise<string> {
 // --- Loan Aging / NPA Report ---
 
 export type LoanAgingReportData = {
-    accountNumber: string;
+    memberId: string;
     userName: string;
     principal: number;
     outstandingBalance: number;
@@ -92,10 +93,11 @@ export async function getLoanAgingReport(): Promise<LoanAgingReportData[]> {
 
         // In a real app, userName would likely be stored on the loan doc to avoid this extra read.
         const userDoc = await adminDb.collection('users').doc(loan.userId).get();
+        const userData = userDoc.data() as UserProfile | undefined;
 
         reportData.push({
-            accountNumber: loan.accountNumber,
-            userName: userDoc.data()?.name || 'N/A',
+            memberId: userData?.memberId || 'N/A',
+            userName: userData?.name || 'N/A',
             principal: loan.principal,
             outstandingBalance: loan.outstandingBalance,
             daysOverdue,

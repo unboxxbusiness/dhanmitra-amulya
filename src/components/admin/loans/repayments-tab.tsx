@@ -58,7 +58,7 @@ export function RepaymentsTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Member</TableHead>
-              <TableHead>Loan Account</TableHead>
+              <TableHead>Loan Product</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
@@ -81,7 +81,7 @@ export function RepaymentsTab() {
               repayments.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.userName}</TableCell>
-                  <TableCell className="font-mono">{r.accountNumber}</TableCell>
+                  <TableCell>{r.productName}</TableCell>
                   <TableCell>{r.dueDate}</TableCell>
                   <TableCell>₹{r.emiAmount.toFixed(2)}</TableCell>
                   <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>

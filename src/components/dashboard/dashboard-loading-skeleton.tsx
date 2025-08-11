@@ -44,10 +44,11 @@ export function DashboardLoadingSkeleton() {
         </Card>
       </div>
 
-       {/* Action Buttons */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
+       {/* Quick Links */}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -58,8 +59,15 @@ export function DashboardLoadingSkeleton() {
                 <Skeleton className="h-4 w-2/3" />
               </CardHeader>
               <CardContent className="space-y-4">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center">
+                        <div className="flex-grow space-y-2">
+                            <Skeleton className="h-4 w-2/3" />
+                            <Skeleton className="h-3 w-1/3" />
+                        </div>
+                        <Skeleton className="h-6 w-1/4" />
+                    </div>
+                ))}
               </CardContent>
             </Card>
         </div>
@@ -71,15 +79,9 @@ export function DashboardLoadingSkeleton() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                             <div key={i} className="flex items-center">
-                                <div className="flex-grow space-y-2">
-                                    <Skeleton className="h-4 w-2/3" />
-                                    <Skeleton className="h-3 w-1/3" />
-                                </div>
-                                <Skeleton className="h-6 w-1/4" />
-                            </div>
-                        ))}
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
                      </div>
                 </CardContent>
                  <CardFooter>
