@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useEffect, useTransition, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,11 +24,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { getSavingsSchemes, addSavingsScheme, type SavingsScheme } from '@/actions/savings';
 import { useToast } from '@/hooks/use-toast';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Scheme
         </Button>
     )
@@ -118,7 +116,7 @@ export function SavingsSchemesTab() {
                         </div>
                         <DialogFooter>
                             <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                            <SubmitButton />
+                            <SubmitButton isPending={isPending} />
                         </DialogFooter>
                     </form>
                 </DialogContent>

@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useEffect, useTransition, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
@@ -36,11 +35,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add Branch
         </Button>
     )
@@ -179,7 +177,7 @@ export function BranchesTab() {
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                                <SubmitButton />
+                                <SubmitButton isPending={isPending} />
                             </DialogFooter>
                         </form>
                     </DialogContent>

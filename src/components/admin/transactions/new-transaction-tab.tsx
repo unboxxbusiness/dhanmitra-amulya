@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useEffect, useTransition, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
 import { Loader2, Receipt } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -16,11 +15,10 @@ import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { ReceiptDialog } from './receipt-dialog';
 import { Combobox } from '@/components/ui/combobox';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending} className="w-full">
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending} className="w-full">
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Submit Transaction
         </Button>
     )
@@ -144,7 +142,7 @@ export function NewTransactionTab() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <SubmitButton />
+                    <SubmitButton isPending={isPending} />
                 </CardFooter>
             </form>
         </Card>

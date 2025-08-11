@@ -3,7 +3,6 @@
 'use client';
 
 import { useEffect, useState, useTransition, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,11 +18,10 @@ interface CreateAccountDialogProps {
     onClose: (refresh?: boolean) => void;
 }
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Account
         </Button>
     )
@@ -134,7 +132,7 @@ export function CreateAccountDialog({ isOpen, onClose }: CreateAccountDialogProp
                         <DialogClose asChild>
                              <Button type="button" variant="secondary" onClick={() => onClose()}>Cancel</Button>
                         </DialogClose>
-                        <SubmitButton />
+                        <SubmitButton isPending={isPending} />
                     </DialogFooter>
                 </form>
             </DialogContent>

@@ -2,8 +2,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useRef, useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,11 +13,10 @@ import { updateAccountNumberSeries } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
 import { Separator } from '@/components/ui/separator';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Series
         </Button>
     )
@@ -105,7 +103,7 @@ export function AccountSeriesTab({ config }: { config: SocietyConfig }) {
 
         </CardContent>
         <CardFooter className="border-t px-6 py-4">
-          <SubmitButton />
+          <SubmitButton isPending={isPending} />
         </CardFooter>
       </form>
     </Card>

@@ -2,8 +2,7 @@
 
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,11 +13,10 @@ import { exportMembersToCsv } from '@/actions/users';
 import { updateComplianceSettings } from '@/actions/settings';
 import type { SocietyConfig } from '@/lib/definitions';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ isPending }: { isPending: boolean }) {
     return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Policy
         </Button>
     )
@@ -79,7 +77,7 @@ export function ComplianceTab({ config }: { config: SocietyConfig }) {
               </p>
           </CardContent>
           <CardFooter>
-            <SubmitButton />
+            <SubmitButton isPending={isPending} />
           </CardFooter>
         </form>
       </Card>
