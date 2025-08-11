@@ -114,20 +114,45 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
 export async function getTransactionHistory(filters: { accountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
     const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
-
     let query: admin.firestore.Query = adminDb.collection('transactions');
 
-    // If a non-admin is making the request, scope it to their user ID for security.
     if (session.role === 'member') {
-        query = query.where('userId', '==', session.uid);
+        const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', session.uid).get();
+        const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
+
+        if (userAccountIds.length === 0) {
+            return []; // Member has no accounts, so no transactions
+        }
+        
+        // If a specific account is requested, ensure it belongs to the member
+        if (filters.accountId && !userAccountIds.includes(filters.accountId)) {
+            return []; // Security: Don't return transactions for an account the user doesn't own
+        }
+
+        // If filtering for a specific account, use that. Otherwise, use all of the member's accounts.
+        const accountsToQuery = filters.accountId ? [filters.accountId] : userAccountIds;
+        query = query.where('accountId', 'in', accountsToQuery);
+
     } else if (filters.userId) {
-        query = query.where('userId', '==', filters.userId);
-    }
-    
-    if (filters.accountId) {
+        // Admin/teller filtering by a specific user
+        const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
+        const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
+        
+        if (userAccountIds.length === 0) return [];
+        
+        const accountsToQuery = filters.accountId && userAccountIds.includes(filters.accountId)
+            ? [filters.accountId]
+            : userAccountIds;
+            
+        if (accountsToQuery.length > 0) {
+             query = query.where('accountId', 'in', accountsToQuery);
+        }
+
+    } else if (filters.accountId) {
+        // Admin filtering by a single account
         query = query.where('accountId', '==', filters.accountId);
     }
-
+    
     if (filters.type) {
         query = query.where('type', '==', filters.type);
     }
