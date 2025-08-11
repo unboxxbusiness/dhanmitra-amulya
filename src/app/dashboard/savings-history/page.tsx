@@ -5,10 +5,11 @@ import { useState, useEffect } from "react";
 import { getTransactionHistory } from "@/actions/transactions";
 import { SavingsHistoryClient } from "@/components/dashboard/savings-history-client";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Transaction } from "@/lib/definitions";
+import type { Transaction, SavingsAccount, UserSession } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
 import { getMemberFinancials } from "@/actions/users";
-import type { SavingsAccount } from "@/lib/definitions";
+import { getSession } from "@/lib/auth";
+
 
 export default function SavingsHistoryPage() {
     const [history, setHistory] = useState<Transaction[]>([]);
@@ -19,11 +20,16 @@ export default function SavingsHistoryPage() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const financials = await getMemberFinancials();
+                const [financials, session] = await Promise.all([
+                  getMemberFinancials(),
+                  getSession()
+                ]);
+
                 setAccounts(financials.savingsAccounts);
-                if (financials.savingsAccounts.length > 0) {
-                    // Fetch history for all accounts initially
-                    const data = await getTransactionHistory({});
+
+                if (financials.savingsAccounts.length > 0 && session) {
+                    // Fetch history for the logged-in user initially
+                    const data = await getTransactionHistory({ userId: session.uid });
                     setHistory(data);
                 }
             } catch (error: any) {
