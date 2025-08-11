@@ -1,7 +1,5 @@
-
-import type {NextConfig} from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
@@ -28,15 +26,15 @@ const nextConfig: NextConfig = {
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(
                 /public\/firebase-messaging-sw\.js/,
-                (resource: any) => {
+                (resource) => {
                     const swPath = resource.request;
                     resource.request = `${swPath}?${new URLSearchParams({
-                        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-                        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-                        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-                        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-                        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+                        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+                        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+                        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
                     })}`;
                 }
             )
@@ -62,4 +60,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['firebase-admin'],
 };
 
-export default nextConfig;
+module.exports = nextConfig;
