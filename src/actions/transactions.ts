@@ -116,23 +116,24 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
     const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
     let query: admin.firestore.Query = adminDb.collection('transactions');
 
+    // Security check and query modification
     if (session.role === 'member') {
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', session.uid).get();
         const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
 
-        if (userAccountIds.length === 0) {
-            return []; // Member has no accounts, so no transactions
-        }
-        
+        if (userAccountIds.length === 0) return []; // Member has no accounts
+
         // If a specific account is requested, ensure it belongs to the member
         if (filters.accountId && !userAccountIds.includes(filters.accountId)) {
             return []; // Security: Don't return transactions for an account the user doesn't own
         }
-
-        // If filtering for a specific account, use that. Otherwise, use all of the member's accounts.
+        
         const accountsToQuery = filters.accountId ? [filters.accountId] : userAccountIds;
-        query = query.where('accountId', 'in', accountsToQuery);
-
+        if(accountsToQuery.length > 0) {
+            query = query.where('accountId', 'in', accountsToQuery);
+        } else {
+            return []; // No valid accounts to query
+        }
     } else if (filters.userId) {
         // Admin/teller filtering by a specific user
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
@@ -145,7 +146,9 @@ export async function getTransactionHistory(filters: { accountId?: string; type?
             : userAccountIds;
             
         if (accountsToQuery.length > 0) {
-             query = query.where('accountId', 'in', accountsToQuery);
+            query = query.where('accountId', 'in', accountsToQuery);
+        } else {
+             return [];
         }
 
     } else if (filters.accountId) {
