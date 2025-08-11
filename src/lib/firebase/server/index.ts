@@ -1,5 +1,6 @@
 
 import admin from 'firebase-admin';
+import './init'; // Ensures GOOGLE_APPLICATION_CREDENTIALS is set on environments like Vercel
 
 // This initializes the Firebase Admin SDK.
 // It checks if the app is already initialized to prevent errors.
@@ -7,9 +8,11 @@ if (!admin.apps.length) {
   try {
     console.log('Initializing Firebase Admin SDK...');
     
-    // The init.ts script handles setting GOOGLE_APPLICATION_CREDENTIALS.
-    // The SDK will automatically find the credentials from the environment.
-    admin.initializeApp();
+    // Explicitly passing the projectId is a robust way to initialize in Next.js build environments.
+    // The SDK will use the GOOGLE_APPLICATION_CREDENTIALS environment variable for the credential.
+    admin.initializeApp({
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
     
     console.log('Firebase Admin SDK initialized successfully.');
   } catch (error: any) {
