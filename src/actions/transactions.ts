@@ -107,7 +107,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
         return { success: true, transaction: newTransactionData };
 
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not process transaction. Please try again.' };
     }
 }
 

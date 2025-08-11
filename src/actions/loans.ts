@@ -50,7 +50,7 @@ export async function addLoanProduct(product: LoanProduct) {
         revalidatePath('/admin/loans');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
 }
 
@@ -91,7 +91,7 @@ export async function applyForLoan(data: z.infer<typeof MemberLoanApplicationSch
         return { success: true };
         
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while submitting your application. Please try again.' };
     }
 }
 
@@ -140,7 +140,7 @@ export async function verifyLoanApplication(applicationId: string) {
         revalidatePath('/admin/loans');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred during verification.' };
     }
 }
 
@@ -165,7 +165,7 @@ export async function approveLoanApplication(applicationId: string) {
         revalidatePath('/admin/loans');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred during approval.' };
     }
 }
 
@@ -176,7 +176,7 @@ export async function rejectLoanApplication(applicationId: string) {
         revalidatePath('/admin/loans');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while rejecting the application.' };
     }
 }
 
@@ -246,7 +246,7 @@ export async function disburseLoan(applicationId: string) {
         return { success: true };
     } catch (error: any) {
         console.error("Disbursal Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred during loan disbursal.' };
     }
 }
 
@@ -341,7 +341,7 @@ export async function recordRepayment(loanId: string, repaymentIndex: number) {
         revalidatePath('/admin/loans');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while recording the payment.' };
     }
 }
 

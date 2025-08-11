@@ -36,7 +36,7 @@ export function PaymentHistoryClient({ history }: PaymentHistoryClientProps) {
             toast({
                 variant: 'destructive',
                 title: 'Export Failed',
-                description: error.message || 'Could not export data.',
+                description: 'Could not export your loan history. Please try again.',
             });
         } finally {
             setIsExporting(false);

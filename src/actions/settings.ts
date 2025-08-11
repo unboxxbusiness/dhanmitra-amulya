@@ -56,7 +56,7 @@ export async function updateSocietyConfig(prevState: any, formData: FormData) {
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update society settings. Please try again.' };
     }
 }
 
@@ -80,7 +80,7 @@ export async function updateAccountNumberSeries(prevState: any, formData: FormDa
         revalidatePath('/admin/settings');
         return { success: true, message: 'Account number series updated successfully.' };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update account series. Please try again.' };
     }
 }
 
@@ -100,7 +100,7 @@ export async function updateUpiId(prevState: any, formData: FormData) {
         revalidatePath('/dashboard');
         return { success: true, message: 'UPI ID updated successfully.' };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update UPI ID. Please try again.' };
     }
 }
 
@@ -120,7 +120,7 @@ export async function updateComplianceSettings(prevState: any, formData: FormDat
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update compliance settings. Please try again.' };
     }
 }
 
@@ -147,7 +147,7 @@ export async function addBranch(prevState: any, formData: FormData) {
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not add branch. Please try again.' };
     }
 }
 
@@ -158,7 +158,7 @@ export async function deleteBranch(branchId: string) {
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not delete branch. Please try again.' };
     }
 }
 
@@ -192,7 +192,7 @@ export async function addHoliday(prevState: any, formData: FormData) {
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not add holiday. Please try again.' };
     }
 }
 
@@ -203,7 +203,7 @@ export async function deleteHoliday(holidayId: string) {
         revalidatePath('/admin/settings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not delete holiday. Please try again.' };
     }
 }
 

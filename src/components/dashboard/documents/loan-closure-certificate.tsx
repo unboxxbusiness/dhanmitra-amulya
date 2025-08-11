@@ -32,7 +32,7 @@ export function LoanClosureCertificate({ loans }: { loans: ActiveLoan[] }) {
             const data = await generateLoanClosureCertificate(selectedLoanId);
             setCertificate(data);
         } catch (error: any) {
-             toast({ variant: 'destructive', title: 'Error', description: error.message });
+             toast({ variant: 'destructive', title: 'Error Generating Certificate', description: 'Could not generate the certificate. Please try again.' });
         } finally {
             setLoading(false);
         }

@@ -39,7 +39,7 @@ export function InterestCertificate() {
             const data = await generateInterestCertificate(selectedYear);
             setCertificate(data);
         } catch (error: any) {
-             toast({ variant: 'destructive', title: 'Error', description: error.message });
+             toast({ variant: 'destructive', title: 'Error Generating Certificate', description: 'Could not generate the certificate. Please ensure you have active deposits.' });
         } finally {
             setLoading(false);
         }

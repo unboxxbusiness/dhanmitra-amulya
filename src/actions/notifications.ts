@@ -104,7 +104,7 @@ export async function sendNotification(payload: SendNotificationPayload) {
 
   } catch (error: any) {
     console.error("Error sending notification:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: 'An unexpected error occurred while sending notifications.' };
   }
 }
 

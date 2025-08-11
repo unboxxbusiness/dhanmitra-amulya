@@ -55,10 +55,8 @@ export async function createSession(idToken: string) {
 
     return { success: true, role };
   } catch (error: any) {
-    console.error('Failed to create session:', error.message);
-    // Log the full error for better debugging
-    console.error(error);
-    return { error: `Failed to create session: ${error.message}`, role: 'member' };
+    console.error('Failed to create session:', error);
+    return { error: 'An unexpected error occurred during login. Please try again.', role: 'member' };
   }
 }
 

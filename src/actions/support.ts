@@ -58,7 +58,7 @@ export async function createSupportTicket(prevState: any, formData: FormData) {
         revalidatePath('/dashboard/support');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: { _form: [error.message] } };
+        return { success: false, error: { _form: ['Could not submit your ticket. Please try again.'] } };
     }
 }
 
@@ -158,7 +158,7 @@ export async function addTicketReply(ticketId: string, formData: FormData) {
         revalidatePath(`/admin/support/${ticketId}`);
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not send your reply. Please try again.' };
     }
 }
 
@@ -176,6 +176,6 @@ export async function updateTicketStatus(ticketId: string, status: TicketStatus)
         revalidatePath(`/admin/support/${ticketId}`);
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update ticket status. Please try again.' };
     }
 }

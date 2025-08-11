@@ -76,7 +76,7 @@ export async function addMember(formData: FormData) {
         return { success: true };
     } catch (error: any) {
         console.error("Error adding member:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not add member. The email might already be in use.' };
     }
 }
 
@@ -101,7 +101,7 @@ export async function updateUserStatus(userId: string, status: UserProfile['stat
         return { success: true };
     } catch (error: any) {
         console.error(`Error updating status for user ${userId}:`, error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update member status. Please try again.' };
     }
 }
 
@@ -116,7 +116,7 @@ export async function deleteMember(userId: string) {
         return { success: true };
     } catch (error: any) {
         console.error(`Error deleting user ${userId}:`, error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not delete member. Please try again.' };
     }
 }
 
@@ -224,7 +224,7 @@ export async function rejectApplication(applicationId: string) {
         revalidatePath('/admin/members');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not reject application. Please try again.' };
     }
 }
 
@@ -275,7 +275,7 @@ export async function bulkImportMembers(csvContent: string) {
             results.successful++;
         } catch (error: any) {
             results.failed++;
-            results.errors.push({ email: member.email, reason: error.message });
+            results.errors.push({ email: member.email, reason: 'A user with this email might already exist.' });
         }
     }
 
@@ -304,7 +304,7 @@ export async function saveFcmToken(token: string) {
         return { success: true };
     } catch (error: any) {
         console.error("Error saving FCM token:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not save notification token.' };
     }
 }
 
@@ -363,7 +363,7 @@ export async function getMemberFinancials(): Promise<MemberFinancials> {
         }
     } catch (error: any) {
         console.error("Error fetching member financials:", error);
-        throw new Error("Could not load financial data.");
+        throw new Error("Could not load your financial data. Please try again later.");
     }
 }
 
@@ -427,7 +427,7 @@ export async function updateMemberProfile(data: z.infer<typeof UpdateProfileSche
         revalidatePath('/dashboard/profile');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update your profile. Please try again.' };
     }
 }
 
@@ -454,7 +454,7 @@ export async function updateUserProfile(userId: string, formData: FormData) {
         return { success: true };
     } catch (error: any) {
         console.error(`Error updating profile for user ${userId}:`, error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update user profile. Please try again.' };
     }
 }
 
@@ -552,7 +552,7 @@ export async function sendPasswordReset() {
         return { success: true };
     } catch (error: any) {
         console.error("Error sending password reset email:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not send password reset email. Please try again later.' };
     }
 }
 
@@ -567,7 +567,7 @@ export async function sendPasswordResetEmailForUser(userId: string) {
         return { success: true };
     } catch (error: any) {
         console.error("Error sending password reset email:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not send password reset email.' };
     }
 }
 
@@ -582,6 +582,6 @@ export async function revokeAllSessions() {
         return { success: true };
     } catch (error: any) {
         console.error("Error revoking sessions:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not revoke sessions. Please try again.' };
     }
 }

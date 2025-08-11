@@ -99,7 +99,7 @@ export async function addSavingsScheme(prevState: any, formData: FormData) {
         revalidatePath('/admin/savings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not create the scheme. Please try again.' };
     }
 }
 
@@ -176,7 +176,7 @@ export async function createSavingsAccount(prevState: any, formData: FormData) {
         revalidatePath('/admin/savings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while creating the account.' };
     }
 }
 
@@ -219,7 +219,7 @@ export async function updateSavingsSettings(prevState: any, formData: FormData) 
         revalidatePath('/admin/savings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not update settings. Please try again.' };
     }
 }
 
@@ -258,7 +258,7 @@ export async function applyForSavingsAccount(data: z.infer<typeof ApplySavingsSc
         return { success: true };
 
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'Could not submit your application. Please try again.' };
     }
 }
 
@@ -319,7 +319,7 @@ export async function approveSavingsApplication(applicationId: string) {
         revalidatePath('/admin/savings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while approving the application.' };
     }
 }
 
@@ -332,6 +332,6 @@ export async function rejectSavingsApplication(applicationId: string) {
         revalidatePath('/admin/savings');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while rejecting the application.' };
     }
 }

@@ -48,7 +48,7 @@ export async function addDepositProduct(product: Omit<DepositProduct, 'id'>) {
         revalidatePath('/admin/deposits');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred. Please try again.' };
     }
 }
 
@@ -99,7 +99,7 @@ export async function applyForDeposit(data: z.infer<typeof MemberDepositApplicat
         return { success: true };
 
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while submitting your application. Please try again.' };
     }
 }
 
@@ -180,7 +180,7 @@ export async function approveDepositApplication(applicationId: string) {
         revalidatePath('/admin/deposits');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while approving the application.' };
     }
 }
 
@@ -193,7 +193,7 @@ export async function rejectDepositApplication(applicationId: string) {
         revalidatePath('/admin/deposits');
         return { success: true };
     } catch (error: any) {
-        return { success: false, error: error.message };
+        return { success: false, error: 'An unexpected error occurred while rejecting the application.' };
     }
 }
 
