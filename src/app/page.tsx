@@ -18,7 +18,7 @@ interface Hero7Props {
 
 const Hero7 = ({
   heading = "Welcome to Amulya",
-  description = "जब परिवार साथ हो, तो हर मुश्किल आसान हो जाती है!",
+  description = "मूल्य के साथ, आपके और आपके परिवार के हर सपने होंगे सच!",
   button = {
     text: "Get Started",
     url: "/signup",
