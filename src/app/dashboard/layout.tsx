@@ -59,7 +59,12 @@ export default function DashboardLayout({
                         </SidebarMenuSubItem>
                          <SidebarMenuSubItem>
                              <SidebarMenuSubButton asChild>
-                                <Link href="/dashboard/payment-history">Payment History</Link>
+                                <Link href="/dashboard/savings-history">Savings History</Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                         <SidebarMenuSubItem>
+                             <SidebarMenuSubButton asChild>
+                                <Link href="/dashboard/payment-history">Loan History</Link>
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                     </SidebarMenuSub>

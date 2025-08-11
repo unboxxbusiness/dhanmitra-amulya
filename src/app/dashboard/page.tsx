@@ -252,7 +252,7 @@ export default function DashboardPage() {
                 </CardContent>
                 <CardFooter>
                     <Button asChild variant="secondary" className="w-full">
-                        <Link href="/dashboard/payment-history">View All History</Link>
+                        <Link href="/dashboard/savings-history">View All History</Link>
                     </Button>
                 </CardFooter>
             </Card>
