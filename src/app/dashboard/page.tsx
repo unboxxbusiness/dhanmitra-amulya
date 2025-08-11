@@ -57,9 +57,19 @@ export default function DashboardPage() {
 
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
 
-  const upiPaymentLink = (amount: number) => societyConfig.upiId 
-    ? `upi://pay?pa=${societyConfig.upiId}&pn=${encodeURIComponent(societyConfig.name)}&am=${amount.toFixed(2)}&cu=INR` 
-    : '#';
+  const upiPaymentLink = (amount?: number) => {
+    if (!societyConfig.upiId) return '#';
+    const params = new URLSearchParams({
+      pa: societyConfig.upiId,
+      pn: encodeURIComponent(societyConfig.name),
+      cu: 'INR',
+    });
+    if (amount) {
+      params.set('am', amount.toFixed(2));
+    }
+    return `upi://pay?${params.toString()}`;
+  }
+
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalOutstandingLoan = activeLoans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
@@ -147,6 +157,15 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">Current Balance</p>
                         <p className="text-3xl font-bold">₹{account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                       </CardContent>
+                      <CardFooter className="flex-col items-start gap-2">
+                        <Button asChild size="sm" disabled={!societyConfig.upiId} title={!societyConfig.upiId ? "UPI payment is not configured by the admin" : "Deposit via UPI"}>
+                            <a href={upiPaymentLink()} target="_blank" rel="noopener noreferrer">
+                                <LinkIcon className="mr-2 h-4 w-4" />
+                                Deposit via UPI
+                            </a>
+                        </Button>
+                        <p className="text-xs text-muted-foreground">Note: After paying via UPI, please contact support with the transaction details to have the amount credited to your account.</p>
+                      </CardFooter>
                     </Card>
                   )) : <p className="text-muted-foreground p-4 text-center">No savings accounts found.</p>}
               </CardContent>
