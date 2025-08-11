@@ -3,99 +3,85 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+  
+    function isMember() {
+      return request.auth.token.role == 'member';
+    }
     
-    // Helper function to check for admin roles
     function isAdmin() {
       return request.auth.token.role in ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
     }
 
-    // Users can only read their own profile, admins can read/write all.
+    // Users can read/update their own profile. Admins can manage all users.
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      allow write: if isAdmin();
-      allow update: if request.auth.uid == userId || isAdmin();
+      allow read, update: if request.auth.uid == userId || isAdmin();
+      allow create: if isAdmin();
     }
     
-    // Public read for products, schemes, and settings. Write is admin-only.
-    match /loanProducts/{docId} {
+    // New members can apply, admins manage applications.
+    match /applications/{appId} {
+      allow create; // Public can apply for membership
+      allow read, update: if isAdmin();
+    }
+
+    // Financial Products are public to read for any authenticated user.
+    // Only admins can modify them.
+    match /{productCollection}/{productId} 
+      where productCollection in ['savingsSchemes', 'depositProducts', 'loanProducts'] {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    match /depositProducts/{docId} {
-      allow read: if request.auth != null;
+    
+    // Members can apply for financial products. Admins manage the applications.
+    match /{applicationCollection}/{appId}
+      where applicationCollection in ['savingsApplications', 'depositApplications', 'loanApplications'] {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isAdmin();
+    }
+
+    // Financial accounts can only be read by the owner or an admin.
+    // Writes are admin-only to ensure server logic is enforced.
+    match /{accountCollection}/{accountId}
+      where accountCollection in ['savingsAccounts', 'activeDeposits', 'activeLoans'] {
+      allow read: if resource.data.userId == request.auth.uid || isAdmin();
       allow write: if isAdmin();
     }
-    match /savingsSchemes/{docId} {
+    
+    // Transactions can only be read by the owner or an admin.
+    // Writes are admin-only.
+    match /transactions/{transactionId} {
+       allow read: if resource.data.userId == request.auth.uid || isAdmin();
+       allow write: if isAdmin();
+    }
+    
+    // Settings, Branches, and Holidays can be read by any authenticated user.
+    // Only admins can change them.
+    match /{settingsCollection}/{docId}
+      where settingsCollection in ['settings', 'branches', 'holidays'] {
         allow read: if request.auth != null;
         allow write: if isAdmin();
     }
-    match /settings/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
-    }
-     match /branches/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
-    }
-    match /holidays/{docId} {
-       allow read: if request.auth != null;
-       allow write: if isAdmin();
-    }
-
-    // Applications can be created by anyone, but only read/updated by admins.
-    match /applications/{appId} {
-        allow create: if true; // Public self-registration
-        allow read, update: if isAdmin();
-    }
-    match /loanApplications/{appId} {
-        allow create: if request.auth.uid == request.resource.data.userId;
-        allow read, update: if isAdmin();
-    }
-    match /depositApplications/{appId} {
-        allow create: if request.auth.uid == request.resource.data.userId;
-        allow read, update: if isAdmin();
-    }
-    match /savingsApplications/{appId} {
-        allow create: if request.auth.uid == request.resource.data.userId;
-        allow read, update: if isAdmin();
+    
+    // Accounting ledger is admin-only.
+    match /{accountingCollection}/{docId}
+      where accountingCollection in ['chartOfAccounts', 'journalEntries'] {
+        allow read, write: if isAdmin();
     }
     
-    // Accounts and transactions are firewalled. Members can only access their own data.
-    match /activeLoans/{loanId} {
-      allow read: if request.auth.uid == resource.data.userId || isAdmin();
-      allow write: if isAdmin(); // Only server actions can write
-    }
-    match /activeDeposits/{depositId} {
-        allow read: if request.auth.uid == resource.data.userId || isAdmin();
-        allow write: if isAdmin();
-    }
-    match /savingsAccounts/{accountId} {
-        allow read: if request.auth.uid == resource.data.userId || isAdmin();
-        allow write: if isAdmin();
-    }
-    match /transactions/{txId} {
-      allow read: if request.auth.uid == resource.data.userId || isAdmin();
-      allow write: if isAdmin(); // Only server actions can write
-    }
-
-    // Support tickets can be created and read by the owner, or by admins.
+    // Support tickets can be created by members.
+    // Members can only access their own tickets. Admins can access all.
     match /supportTickets/{ticketId} {
-        allow create: if request.auth.uid == request.resource.data.userId;
-        allow read, update: if request.auth.uid == resource.data.userId || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, update: if request.auth.uid == resource.data.userId || isAdmin();
     }
-
-    // Notifications: Admins can create. Users can read their own or global notices.
+    
+    // Notifications: Global ones are readable by all authenticated users.
+    // User-specific ones are only readable by the target user or an admin.
     match /notifications/{notificationId} {
-      allow create: if isAdmin();
-      allow read: if request.auth.uid == resource.data.userId || resource.data.target == 'all';
-    }
-
-    // Accounting collections are admin-only.
-    match /chartOfAccounts/{docId} {
-        allow read, write: if isAdmin();
-    }
-    match /journalEntries/{docId} {
-        allow read, write: if isAdmin();
+      allow read: if (resource.data.target == 'all' && request.auth != null) ||
+                   (resource.data.userId == request.auth.uid) ||
+                   isAdmin();
+      allow write: if isAdmin();
     }
   }
 }
