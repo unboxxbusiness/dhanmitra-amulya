@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { getAllMembers } from './users';
 import { ADMIN_ROLES } from '@/lib/definitions';
 import { z } from 'zod';
-import type { SavingsApplication } from '@/lib/definitions';
+import type { SavingsApplication, SavingsScheme } from '@/lib/definitions';
 import { FieldValue } from 'firebase-admin/firestore';
 
 const MEMBER_ROLES = [...ADMIN_ROLES, 'member'];
@@ -22,13 +22,6 @@ async function verifyUser(roles: string[]) {
   return session;
 }
 
-
-export type SavingsScheme = {
-    id: string;
-    name: string;
-    interestRate: number; // Annual rate in percentage, e.g., 5.5 for 5.5%
-    description: string;
-}
 
 export type SavingsAccount = {
     id: string;
@@ -81,9 +74,11 @@ export async function addSavingsScheme(prevState: any, formData: FormData) {
     await verifyUser(ADMIN_ROLES);
     const name = formData.get('name') as string;
     const interestRate = parseFloat(formData.get('interestRate') as string);
-    const description = formData.get('description') as string;
+    const content = formData.get('content') as string;
+    const externalLink = formData.get('externalLink') as string;
 
-    if (!name || isNaN(interestRate) || !description) {
+
+    if (!name || isNaN(interestRate) || !content) {
         return { success: false, error: 'Missing or invalid fields.' };
     }
 
@@ -91,7 +86,8 @@ export async function addSavingsScheme(prevState: any, formData: FormData) {
         await adminDb.collection('savingsSchemes').add({
             name,
             interestRate,
-            description,
+            content,
+            externalLink: externalLink || null,
             createdAt: new Date().toISOString(),
         });
         revalidatePath('/admin/savings');
@@ -110,8 +106,8 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
         const accounts = await Promise.all(accountsSnapshot.docs.map(async (doc) => {
             const data = doc.data();
             
-            const userDoc = await adminDb.collection('users').doc(data.userId).get();
-            const schemeDoc = await adminDb.collection('savingsSchemes').doc(data.schemeId).get();
+            const userDoc = await t.get(adminDb.collection('users').doc(data.userId));
+            const schemeDoc = await t.get(adminDb.collection('savingsSchemes').doc(data.schemeId));
             
             const userName = userDoc.exists ? userDoc.data()?.name : 'User Not Found';
             const schemeName = schemeDoc.exists ? schemeDoc.data()?.name : 'Scheme Not Found';

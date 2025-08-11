@@ -92,26 +92,30 @@ export function SavingsSchemesTab() {
                       Add Scheme
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-lg">
                     <form ref={formRef} action={handleFormAction}>
                         <DialogHeader>
                             <DialogTitle>Add New Savings Scheme</DialogTitle>
                             <DialogDescription>
-                                Create a new savings product with its own interest rate.
+                                Create a new savings product with its own interest rate and detailed content.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="name" className="text-right">Scheme Name</Label>
-                                <Input id="name" name="name" className="col-span-3" required />
+                        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Scheme Name</Label>
+                                <Input id="name" name="name" required />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="interestRate" className="text-right">Interest Rate (%)</Label>
-                                <Input id="interestRate" name="interestRate" type="number" step="0.01" placeholder="e.g. 5.5" className="col-span-3" required />
+                            <div className="space-y-2">
+                                <Label htmlFor="interestRate">Interest Rate (%)</Label>
+                                <Input id="interestRate" name="interestRate" type="number" step="0.01" placeholder="e.g. 5.5" required />
                             </div>
-                             <div className="grid grid-cols-4 items-start gap-4">
-                                <Label htmlFor="description" className="text-right pt-2">Description</Label>
-                                <Textarea id="description" name="description" className="col-span-3" required />
+                             <div className="space-y-2">
+                                <Label htmlFor="content">Scheme Details / Content</Label>
+                                <Textarea id="content" name="content" required className="min-h-[150px]" placeholder="Enter all scheme details, terms, and conditions here." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="externalLink">External Link (Optional)</Label>
+                                <Input id="externalLink" name="externalLink" placeholder="https://example.com/more-info" />
                             </div>
                         </div>
                         <DialogFooter>
@@ -128,7 +132,6 @@ export function SavingsSchemesTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Scheme Name</TableHead>
-                <TableHead>Description</TableHead>
                 <TableHead className="text-right">Interest Rate</TableHead>
               </TableRow>
             </TableHeader>
@@ -136,7 +139,6 @@ export function SavingsSchemesTab() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
                   </TableRow>
@@ -145,14 +147,13 @@ export function SavingsSchemesTab() {
                 schemes.map((scheme) => (
                   <TableRow key={scheme.id}>
                     <TableCell className="font-medium">{scheme.name}</TableCell>
-                    <TableCell>{scheme.description}</TableCell>
                     <TableCell className="text-right font-semibold">{scheme.interestRate.toFixed(2)}%</TableCell>
                   </TableRow>
                 ))
               )}
                {!loading && schemes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">
+                  <TableCell colSpan={2} className="text-center">
                     No savings schemes found. Create one to get started.
                   </TableCell>
                 </TableRow>

@@ -27,7 +27,15 @@ import { type SavingsScheme } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
 import { applyForSavingsAccount } from '@/actions/savings';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, ExternalLink } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 const FormSchema = z.object({
   schemeId: z.string().min(1, 'Please select a savings scheme.'),
@@ -35,6 +43,33 @@ const FormSchema = z.object({
 });
 
 type FormValues = z.infer<typeof FormSchema>;
+
+function SchemeDetailsDialog({ scheme }: { scheme: SavingsScheme }) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />View Details</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>{scheme.name}</DialogTitle>
+                    <DialogDescription>Interest Rate: {scheme.interestRate.toFixed(2)}% p.a.</DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto pr-4 my-4">
+                    <p className="whitespace-pre-wrap">{scheme.content}</p>
+                </div>
+                 {scheme.externalLink && (
+                    <Button asChild>
+                        <a href={scheme.externalLink} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Learn More
+                        </a>
+                    </Button>
+                )}
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export function ApplyForSavingsForm({ schemes }: { schemes: SavingsScheme[] }) {
   const { toast } = useToast();
@@ -85,22 +120,24 @@ export function ApplyForSavingsForm({ schemes }: { schemes: SavingsScheme[] }) {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label>Select Savings Scheme</Label>
-            <Select onValueChange={handleSchemeChange} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a scheme..." />
-              </SelectTrigger>
-              <SelectContent>
-                {schemes.map(s => (
-                  <SelectItem key={s.id!} value={s.id!}>{s.name} ({s.interestRate}% p.a.)</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+             <div className="flex items-center gap-4">
+                <Select onValueChange={handleSchemeChange} required>
+                <SelectTrigger>
+                    <SelectValue placeholder="Choose a scheme..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {schemes.map(s => (
+                    <SelectItem key={s.id!} value={s.id!}>{s.name} ({s.interestRate}% p.a.)</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+                {selectedScheme && <SchemeDetailsDialog scheme={selectedScheme} />}
+            </div>
              {form.formState.errors.schemeId && <p className="text-red-500 text-sm">{form.formState.errors.schemeId.message}</p>}
           </div>
 
           {selectedScheme && (
             <>
-              <p className="text-sm text-muted-foreground">{selectedScheme.description}</p>
               <div className="space-y-2">
                 <Label htmlFor="initialDeposit">Initial Deposit Amount (₹)</Label>
                 <Input
@@ -108,7 +145,7 @@ export function ApplyForSavingsForm({ schemes }: { schemes: SavingsScheme[] }) {
                   type="number"
                   {...form.register('initialDeposit')}
                 />
-                {form.formState.errors.initialDeposit && <p className="text-red-500 text-sm">{form.formState.errors.initialDeposit.message}</p>}
+                {form.formState.errors.initialDeposit && <p className="text-sm text-destructive">{form.formState.errors.initialDeposit.message}</p>}
               </div>
             </>
           )}

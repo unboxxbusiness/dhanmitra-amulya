@@ -181,7 +181,8 @@ export type SavingsScheme = {
     id: string;
     name: string;
     interestRate: number;
-    description: string;
+    content: string;
+    externalLink?: string;
 }
 
 export type SavingsAccount = {
