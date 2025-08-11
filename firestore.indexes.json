@@ -57,16 +57,6 @@
       ]
     },
     {
-      "collectionGroup": "supportTickets",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "updatedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "transactions",
       "queryScope": "COLLECTION",
       "fields": [
