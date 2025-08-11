@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useState, useEffect, useTransition } from 'react';
+import { useRef, useState, useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import {
@@ -31,8 +31,8 @@ const initialState = {
     success: false,
     error: {
         _form: [] as string[],
-        subject?: string[],
-        message?: string[],
+        subject: undefined as string[] | undefined,
+        message: undefined as string[] | undefined,
     },
 };
 
@@ -49,15 +49,7 @@ function SubmitButton() {
 export function CreateTicketForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, setState] = useState(initialState);
-  const [isPending, startTransition] = useTransition();
-
-  const handleFormAction = (formData: FormData) => {
-    startTransition(async () => {
-        const result = await createSupportTicket(initialState, formData);
-        setState(result as any);
-    });
-  }
+  const [state, formAction, isPending] = useActionState(createSupportTicket, initialState);
 
   useEffect(() => {
     if (state.success) {
@@ -66,7 +58,6 @@ export function CreateTicketForm() {
         description: "Our team will get back to you shortly.",
       });
       formRef.current?.reset();
-      setState(initialState); // Reset state
     } else if (state.error?._form?.length) {
        toast({
         variant: "destructive",
@@ -77,7 +68,7 @@ export function CreateTicketForm() {
   }, [state, toast]);
 
   return (
-    <form ref={formRef} action={handleFormAction}>
+    <form ref={formRef} action={formAction}>
       <Card>
         <CardHeader>
           <CardTitle>Create a New Support Ticket</CardTitle>
@@ -109,10 +100,7 @@ export function CreateTicketForm() {
             </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Submit Ticket
-          </Button>
+          <SubmitButton />
         </CardFooter>
       </Card>
     </form>
