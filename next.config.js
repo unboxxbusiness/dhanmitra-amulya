@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* config options here */
@@ -55,6 +56,7 @@ const nextConfig = {
             }
         });
     }
+    // Force cache invalidation by adding a comment
     return config;
   },
   serverExternalPackages: ['firebase-admin'],

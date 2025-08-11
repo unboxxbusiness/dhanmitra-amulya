@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon, Wallet, PiggyBank } from 'lucide-react';
+import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon, Wallet, PiggyBank, History, FileText, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { getSocietyConfig, type SocietyConfig } from '@/actions/settings';
@@ -17,11 +17,29 @@ import React from 'react';
 import type { UserSession } from '@/lib/definitions';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
 
+const QuickLink = ({ href, icon, title, description }: { href: string; icon: React.ElementType; title: string; description: string; }) => {
+    const Icon = icon;
+    return (
+        <Link href={href} className="block p-4 rounded-lg hover:bg-muted transition-colors group">
+            <div className="flex items-center gap-4">
+                <div className="bg-primary/10 text-primary p-3 rounded-lg">
+                    <Icon className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                    <p className="font-semibold">{title}</p>
+                    <p className="text-sm text-muted-foreground">{description}</p>
+                </div>
+                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </div>
+        </Link>
+    )
+}
+
+
 export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<UserSession | null>(null);
   const [financialData, setFinancialData] = useState<MemberFinancials | null>(null);
-  const [societyConfig, setSocietyConfig] = useState<SocietyConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,15 +52,10 @@ export default function DashboardPage() {
         }
         setSession(userSession);
 
-        const [finData, configData] = await Promise.all([
-          getMemberFinancials(),
-          getSocietyConfig(),
-        ]);
+        const finData = await getMemberFinancials();
         setFinancialData(finData);
-        setSocietyConfig(configData);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
-        // Optionally, show a toast notification
       } finally {
         setLoading(false);
       }
@@ -51,25 +64,11 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-  if (loading || !session || !financialData || !societyConfig) {
+  if (loading || !session || !financialData) {
     return <DashboardLoadingSkeleton />;
   }
 
   const { savingsAccounts, activeLoans, activeDeposits, recentTransactions } = financialData;
-
-  const upiPaymentLink = (amount?: number) => {
-    if (!societyConfig.upiId) return '#';
-    const params = new URLSearchParams({
-      pa: societyConfig.upiId,
-      pn: encodeURIComponent(societyConfig.name),
-      cu: 'INR',
-    });
-    if (amount) {
-      params.set('am', amount.toFixed(2));
-    }
-    return `upi://pay?${params.toString()}`;
-  }
-
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalOutstandingLoan = activeLoans.reduce((sum, loan) => sum + loan.outstandingBalance, 0);
@@ -116,140 +115,19 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-       {/* Action Buttons */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button asChild className="w-full py-6 text-base">
-            <Link href="/dashboard/apply-loan">
-              <PlusCircle className="mr-2 h-5 w-5"/>
-              Apply for a New Loan
-            </Link>
-          </Button>
-           <Button asChild variant="secondary" className="w-full py-6 text-base">
-            <Link href="/dashboard/apply-deposit">
-               <PlusCircle className="mr-2 h-5 w-5"/>
-               Open a New Deposit
-            </Link>
-          </Button>
+       {/* Quick Links */}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <QuickLink href="/dashboard/apply-loan" icon={PlusCircle} title="Apply for a Loan" description="Get quick access to funds." />
+            <QuickLink href="/dashboard/apply-deposit" icon={PiggyBank} title="Open a Deposit" description="Grow your savings with fixed returns." />
+            <QuickLink href="/dashboard/savings-history" icon={History} title="View History" description="Check your transaction records." />
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main column for accounts */}
         <div className="lg:col-span-2 space-y-8">
-          
-          {/* Savings Accounts */}
-          <section id="accounts">
-             <Card>
-              <CardHeader>
-                <CardTitle>Savings Accounts</CardTitle>
-                <CardDescription>Your primary savings and transaction accounts.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                  {savingsAccounts.length > 0 ? savingsAccounts.map(account => (
-                    <Card key={account.id} className="bg-background">
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{account.schemeName}</CardTitle>
-                          <CardDescription>{account.accountNumber}</CardDescription>
-                        </div>
-                        <Badge variant="outline">{account.status}</Badge>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">Current Balance</p>
-                        <p className="text-3xl font-bold">₹{account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                      </CardContent>
-                      <CardFooter className="flex-col items-start gap-2">
-                        <Button asChild size="sm" disabled={!societyConfig.upiId} title={!societyConfig.upiId ? "UPI payment is not configured by the admin" : "Deposit via UPI"}>
-                            <a href={upiPaymentLink()} target="_blank" rel="noopener noreferrer">
-                                <LinkIcon className="mr-2 h-4 w-4" />
-                                Deposit via UPI
-                            </a>
-                        </Button>
-                        <p className="text-xs text-muted-foreground">Note: After paying via UPI, please contact support with the transaction details to have the amount credited to your account.</p>
-                      </CardFooter>
-                    </Card>
-                  )) : <p className="text-muted-foreground p-4 text-center">No savings accounts found.</p>}
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Loan Accounts */}
-           <section id="loans">
-            <Card>
-              <CardHeader>
-                <CardTitle>Loan Accounts</CardTitle>
-                <CardDescription>Manage your loan accounts and repayments.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Account No.</TableHead>
-                      <TableHead>Outstanding</TableHead>
-                      <TableHead>Next EMI</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {activeLoans.length > 0 ? activeLoans.map(loan => (
-                      <TableRow key={loan.id}>
-                        <TableCell className="font-mono">{loan.accountNumber}</TableCell>
-                        <TableCell>₹{loan.outstandingBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                        <TableCell>₹{loan.emiAmount.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Button asChild size="sm" disabled={!societyConfig.upiId} title={!societyConfig.upiId ? "UPI payment is not configured by the admin" : "Pay via UPI"}>
-                              <a href={upiPaymentLink(loan.emiAmount)} target="_blank" rel="noopener noreferrer">
-                                  <LinkIcon className="mr-2 h-4 w-4" />
-                                  Repay EMI
-                              </a>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )) : <TableRow><TableCell colSpan={4} className="text-center h-24">No active loans found.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </section>
-
-           {/* Deposit Accounts */}
-            <section id="deposits">
-             <Card>
-              <CardHeader>
-                <CardTitle>Deposit Accounts</CardTitle>
-                <CardDescription>Your term deposit (FD/RD) investments.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Account No.</TableHead>
-                      <TableHead>Principal</TableHead>
-                      <TableHead>Maturity Date</TableHead>
-                      <TableHead>Rate</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {activeDeposits.length > 0 ? activeDeposits.map(deposit => (
-                      <TableRow key={deposit.id}>
-                        <TableCell className="font-mono">{deposit.accountNumber}</TableCell>
-                        <TableCell>₹{deposit.principalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                         <TableCell>{deposit.maturityDate}</TableCell>
-                        <TableCell>{deposit.interestRate.toFixed(2)}%</TableCell>
-                      </TableRow>
-                    )) : <TableRow><TableCell colSpan={4} className="text-center h-24">No active deposits found.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
-
-        {/* Side column for recent transactions */}
-        <div className="space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Transactions</CardTitle>
-                    <CardDescription>Your last 10 transactions.</CardDescription>
+                    <CardDescription>Your last 10 transactions across all savings accounts.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="space-y-4">
@@ -271,7 +149,51 @@ export default function DashboardPage() {
                 </CardContent>
                 <CardFooter>
                     <Button asChild variant="secondary" className="w-full">
-                        <Link href="/dashboard/savings-history">View All History</Link>
+                        <Link href="/dashboard/savings-history">View All Savings History</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Your Accounts</CardTitle>
+                     <CardDescription>A summary of your active accounts.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                       {savingsAccounts.length > 0 && (
+                           <div>
+                                <h4 className="font-medium mb-2">Savings</h4>
+                                {savingsAccounts.map(acc => (
+                                    <p key={acc.id} className="text-sm text-muted-foreground">{acc.accountNumber}: ₹{acc.balance.toLocaleString('en-IN')}</p>
+                                ))}
+                           </div>
+                       )}
+                       {activeLoans.length > 0 && (
+                           <div>
+                                <h4 className="font-medium mb-2 mt-4">Loans</h4>
+                                {activeLoans.map(loan => (
+                                    <p key={loan.id} className="text-sm text-muted-foreground">{loan.accountNumber}: ₹{loan.outstandingBalance.toLocaleString('en-IN')}</p>
+                                ))}
+                           </div>
+                       )}
+                        {activeDeposits.length > 0 && (
+                           <div>
+                                <h4 className="font-medium mb-2 mt-4">Deposits</h4>
+                                {activeDeposits.map(dep => (
+                                    <p key={dep.id} className="text-sm text-muted-foreground">{dep.accountNumber}: ₹{dep.principalAmount.toLocaleString('en-IN')}</p>
+                                ))}
+                           </div>
+                       )}
+                       {savingsAccounts.length === 0 && activeLoans.length === 0 && activeDeposits.length === 0 && (
+                           <p className="text-sm text-muted-foreground text-center py-4">You have no active accounts.</p>
+                       )}
+                    </div>
+                </CardContent>
+                <CardFooter>
+                     <Button asChild variant="secondary" className="w-full">
+                        <Link href="/dashboard/accounts">Manage All Accounts</Link>
                     </Button>
                 </CardFooter>
             </Card>
