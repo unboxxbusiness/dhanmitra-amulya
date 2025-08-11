@@ -17,8 +17,8 @@ interface Hero7Props {
 }
 
 const Hero7 = ({
-  heading = "Welcome to Amulya",
-  description = "मूल्य के साथ, आपके और आपके परिवार के हर सपने होंगे सच!",
+  heading = "अमूल्य: जहाँ आपके पैसे बढ़ें, सपने पूरे हों और परिवार खुशहाल बने!",
+  description = "अमूल्य से जुड़िए और पाएं आसान बचत, भरोसेमंद लोन और हर कदम पर साथ — ताकि आपका और आपके परिवार का भविष्य हो मजबूत और सुरक्षित।",
   button = {
     text: "Get Started",
     url: "/signup",
