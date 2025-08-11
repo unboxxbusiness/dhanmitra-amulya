@@ -182,11 +182,13 @@ export async function approveApplication(applicationId: string) {
 
         // 1. Create user in Firebase Auth
         const tempPassword = Math.random().toString(36).slice(-8); // Generate temporary password
+        const formattedPhoneNumber = `+91${appData.phone}`;
+
         const userRecord = await adminAuth.createUser({
             email: appData.email,
             password: tempPassword,
             displayName: appData.name,
-            phoneNumber: appData.phone,
+            phoneNumber: formattedPhoneNumber,
         });
 
         // 2. Set custom claims (default to 'member' role)
