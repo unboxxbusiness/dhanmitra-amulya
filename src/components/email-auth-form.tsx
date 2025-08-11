@@ -69,7 +69,7 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: "The email or password you entered is incorrect. Please try again.",
       });
     } finally {
       setLoading(false);
