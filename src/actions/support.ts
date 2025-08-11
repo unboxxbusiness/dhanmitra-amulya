@@ -86,6 +86,7 @@ export async function getAllTickets(): Promise<SupportTicket[]> {
     await verifyUser(ADMIN_ROLES);
     const snapshot = await adminDb.collection('supportTickets')
         .orderBy('updatedAt', 'desc')
+        .limit(50)
         .get();
 
     return snapshot.docs.map(doc => ({
