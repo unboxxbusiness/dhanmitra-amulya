@@ -53,20 +53,23 @@ export async function sendNotification(payload: SendNotificationPayload) {
       const userData = userDoc.data() as UserProfile;
       tokens = userData.fcmTokens || [];
       if (tokens.length === 0) {
+        // Save notice but inform admin that no push will be sent
+        await notificationRef.set({ ...notificationData, userId });
         return { success: true, message: `Notice saved, but the selected user has no registered devices for push notifications.` };
       }
       // Save notification specifically for this user
       await notificationRef.set({ ...notificationData, userId });
 
     } else if (target === 'all') {
-      const usersSnapshot = await adminDb.collection('users').where('fcmTokens', 'array-contains-any', ['']).get();
+      // Correct, efficient query to get all users with at least one FCM token.
+      const usersSnapshot = await adminDb.collection('users').where('fcmTokens', '!=', []).get();
       usersSnapshot.forEach(doc => {
         const userData = doc.data() as UserProfile;
-        if (userData.fcmTokens) {
+        if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
           tokens.push(...userData.fcmTokens);
         }
       });
-      tokens = [...new Set(tokens)];
+      tokens = [...new Set(tokens)]; // Remove duplicate tokens
       // Save a global notification
       await notificationRef.set({ ...notificationData, target: 'all' });
     }
@@ -98,6 +101,7 @@ export async function sendNotification(payload: SendNotificationPayload) {
          const response = await admin.messaging().sendToDevice(batch, message);
          successfulSends += response.successCount;
          failedSends += response.failureCount;
+         // In a real app, you might want to handle failed tokens by removing them from the user's fcmTokens array
     }
 
     return { 
@@ -107,6 +111,9 @@ export async function sendNotification(payload: SendNotificationPayload) {
 
   } catch (error: any) {
     console.error("Error sending notification:", error);
+    if (error.code === 'failed-precondition') {
+        return { success: false, error: 'Query requires an index. Please deploy the new firestore.indexes.json file.' };
+    }
     return { success: false, error: 'An unexpected error occurred while sending notifications.' };
   }
 }
