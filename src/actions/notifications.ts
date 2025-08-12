@@ -23,6 +23,29 @@ type SendNotificationPayload = {
   body: string;
 };
 
+// This function finds all invalid tokens and removes them from the corresponding user documents.
+async function cleanupInvalidTokens(failedTokens: string[]) {
+    if (failedTokens.length === 0) return;
+
+    for (const token of failedTokens) {
+        // Find users who have this invalid token
+        const snapshot = await adminDb.collection('users').where('fcmTokens', 'array-contains', token).get();
+        
+        if (!snapshot.empty) {
+            const batch = adminDb.batch();
+            snapshot.forEach(doc => {
+                console.log(`Removing invalid token for user: ${doc.id}`);
+                const userRef = adminDb.collection('users').doc(doc.id);
+                batch.update(userRef, {
+                    fcmTokens: FieldValue.arrayRemove(token)
+                });
+            });
+            await batch.commit();
+        }
+    }
+}
+
+
 export async function sendNotification(payload: SendNotificationPayload) {
   const session = await verifyAdmin();
 
@@ -78,34 +101,39 @@ export async function sendNotification(payload: SendNotificationPayload) {
       return { success: true, message: `Notice saved. No registered devices found to send push notifications.` };
     }
 
-    // The message payload for FCM. The `webpush.notification` object is crucial for web clients.
     const message = {
         notification: { title, body },
         webpush: {
             notification: {
                 icon: '/icon-192x192.png',
-                title, // It's good practice to repeat title and body here for web push
+                title, 
                 body,
             },
         },
-        tokens: tokens, // Note: tokens are part of the message in sendEachForMulticast
+        tokens: tokens,
     };
 
     const response = await admin.messaging().sendEachForMulticast(message);
     const successfulSends = response.successCount;
     const failedSends = response.failureCount;
 
-    // Optional: Advanced error handling to clean up invalid tokens
     if (failedSends > 0) {
         const failedTokens: string[] = [];
         response.responses.forEach((resp, idx) => {
             if (!resp.success) {
-                failedTokens.push(tokens[idx]);
+                const errorCode = resp.error?.code;
+                // Check for errors that indicate an invalid or unregistered token
+                if (errorCode === 'messaging/registration-token-not-registered' || errorCode === 'messaging/invalid-registration-token') {
+                    failedTokens.push(tokens[idx]);
+                }
                 console.error(`Failed to send to token: ${tokens[idx]}`, resp.error);
             }
         });
-        // In a real app, you could now implement logic to remove these `failedTokens`
-        // from your Firestore user documents to keep your token list clean.
+        
+        // Asynchronously clean up the invalid tokens from Firestore
+        if (failedTokens.length > 0) {
+            await cleanupInvalidTokens(failedTokens);
+        }
     }
 
 
@@ -116,7 +144,6 @@ export async function sendNotification(payload: SendNotificationPayload) {
 
   } catch (error: any) {
     console.error("Error sending notification:", error);
-    // Check for specific error codes if needed, e.g., from Firestore index issues
     if (error.code === 'failed-precondition') {
         return { success: false, error: 'Query requires an index. Please ensure `firestore.indexes.json` is deployed correctly.' };
     }
