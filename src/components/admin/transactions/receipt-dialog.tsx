@@ -99,3 +99,5 @@ export function ReceiptDialog({ isOpen, onClose, transaction }: ReceiptDialogPro
     </Dialog>
   );
 }
+
+    

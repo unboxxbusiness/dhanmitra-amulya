@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
-import { createTransaction, type Transaction } from '@/actions/transactions';
+import { createTransaction } from '@/actions/transactions';
+import type { Transaction } from '@/lib/definitions';
 import { getSavingsAccounts, type SavingsAccount } from '@/actions/savings';
 import { ReceiptDialog } from './receipt-dialog';
 import { Combobox } from '@/components/ui/combobox';
@@ -44,6 +45,7 @@ export function NewTransactionTab() {
         async function fetchData() {
             setLoading(true);
             try {
+                // In a real app, this might be optimized to fetch only active accounts
                 const [fetchedMembers, fetchedAccounts] = await Promise.all([
                     getAllMembers(),
                     getSavingsAccounts()
@@ -87,7 +89,7 @@ export function NewTransactionTab() {
     const memberAccounts = accounts.filter(acc => acc.userId === selectedMemberId);
     const accountOptions = memberAccounts.map(account => ({
         value: account.id,
-        label: `${account.schemeName}`
+        label: `${account.schemeName} (...${account.id.slice(-4)})`
     }));
 
     const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
@@ -131,7 +133,7 @@ export function NewTransactionTab() {
                             value={selectedAccountId}
                             onChange={setSelectedAccountId}
                             placeholder="Select a savings account..."
-                            emptyPlaceholder="No savings account found."
+                            emptyPlaceholder="No savings account found for this member."
                             className={!selectedMemberId ? "disabled:cursor-not-allowed disabled:opacity-50" : ""}
                         />
                     </div>
@@ -182,3 +184,5 @@ export function NewTransactionTab() {
       </>
     );
 }
+
+    

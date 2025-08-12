@@ -336,3 +336,5 @@ export type SupportTicket = {
     updatedAt: string; // ISO string
     replies: TicketReply[];
 };
+
+    
