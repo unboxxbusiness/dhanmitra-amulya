@@ -104,7 +104,7 @@ export function ChartOfAccountsTab() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                     <p className="mb-2">Your Chart of Accounts is empty.</p>
                     <Button onClick={handleSeed} disabled={seeding}>
                         {seeding && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
