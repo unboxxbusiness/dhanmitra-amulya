@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
 import type { UserSession } from '@/lib/definitions';
-import { Wallet, PiggyBank, History, FileText, ArrowRight, CreditCard, PlusCircle } from 'lucide-react';
+import { Wallet, PiggyBank, History, ArrowRight, CreditCard, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
