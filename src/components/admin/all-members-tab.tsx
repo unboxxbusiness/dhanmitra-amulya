@@ -1,21 +1,25 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAllMembers, type UserProfile } from '@/actions/users';
+import { getPaginatedMembers, type UserProfile } from '@/actions/users';
 import { AddMemberDialog } from './add-member-dialog';
 import { EditMemberDialog } from './edit-member-dialog';
 import { UpdateStatusDialog } from './update-status-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteMemberAlert } from './delete-member-alert';
+import { useDebounce } from '@/hooks/use-debounce';
+import { DataTablePagination } from '../data-table-pagination';
+
 
 type DialogState = {
   type: 'add' | 'edit' | 'status' | 'delete' | null;
@@ -25,15 +29,29 @@ type DialogState = {
 export function AllMembersTab() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogState, setDialogState] = useState<DialogState>({ type: null });
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     try {
-      const fetchedMembers = await getAllMembers();
+      const { members: fetchedMembers, totalCount: newTotalCount, hasMore: newHasMore } = await getPaginatedMembers({
+        page,
+        pageSize,
+        searchTerm: debouncedSearchTerm,
+      });
       setMembers(fetchedMembers);
+      setTotalCount(newTotalCount);
+      setHasMore(newHasMore);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -43,11 +61,16 @@ export function AllMembersTab() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, page, pageSize, debouncedSearchTerm]);
 
   useEffect(() => {
     fetchMembers();
   }, [fetchMembers]);
+
+  // Reset page to 1 when search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm]);
 
   const closeDialog = (refresh?: boolean) => {
     setDialogState({ type: null });
@@ -55,12 +78,6 @@ export function AllMembersTab() {
       fetchMembers();
     }
   };
-
-  const filteredMembers = members.filter(member =>
-    (member.name && member.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (member.memberId && member.memberId.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   const getBadgeVariant = (status: UserProfile['status']) => {
     switch (status) {
@@ -120,7 +137,7 @@ export function AllMembersTab() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
+                  Array.from({ length: pageSize }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
@@ -132,9 +149,9 @@ export function AllMembersTab() {
                     </TableRow>
                   ))
                 ) : (
-                  filteredMembers.map((member) => (
+                  members.map((member) => (
                     <TableRow key={member.id}>
-                       <TableCell className="font-mono">{member.memberId}</TableCell>
+                       <TableCell className="font-mono">{member.memberId || 'N/A'}</TableCell>
                       <TableCell className="font-medium">{member.name}</TableCell>
                       <TableCell>{member.email}</TableCell>
                       <TableCell>
@@ -177,10 +194,27 @@ export function AllMembersTab() {
                     </TableRow>
                   ))
                 )}
+                 {!loading && members.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                            No members found.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
+         <CardFooter>
+            <DataTablePagination 
+                page={page}
+                setPage={setPage}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                totalCount={totalCount}
+                hasMore={hasMore}
+            />
+        </CardFooter>
       </Card>
 
       <AddMemberDialog

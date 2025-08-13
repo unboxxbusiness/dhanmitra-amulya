@@ -21,6 +21,47 @@ async function verifyAdmin() {
   return session;
 }
 
+export async function getPaginatedMembers(options: { page: number, pageSize: number, searchTerm?: string }): Promise<{ members: UserProfile[], totalCount: number, hasMore: boolean }> {
+  await verifyAdmin();
+  const { page, pageSize, searchTerm } = options;
+
+  // For Firestore, pagination requires keeping track of the last document of the previous page.
+  // A simpler approach for moderate datasets is to use offset, but it can have performance implications.
+  // For this app, offset is acceptable. For very large datasets, cursor-based pagination is better.
+  
+  let query: admin.firestore.Query = adminDb.collection('users');
+
+  // Firestore doesn't support full-text search natively on multiple fields like this.
+  // In a real production app, a search service like Algolia or Elasticsearch would be used.
+  // Here, we fetch all and filter in memory, which is NOT scalable but works for this demo.
+  // The pagination logic below will work on the filtered results.
+
+  const allMembersSnapshot = await query.orderBy('name').get();
+  let allMembers = allMembersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+  } as UserProfile));
+
+  if (searchTerm) {
+    const lowercasedTerm = searchTerm.toLowerCase();
+    allMembers = allMembers.filter(member => 
+        (member.name && member.name.toLowerCase().includes(lowercasedTerm)) ||
+        (member.email && member.email.toLowerCase().includes(lowercasedTerm)) ||
+        (member.memberId && member.memberId.toLowerCase().includes(lowercasedTerm))
+    );
+  }
+
+  const totalCount = allMembers.length;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  
+  const members = allMembers.slice(startIndex, endIndex);
+  const hasMore = endIndex < totalCount;
+  
+  return { members, totalCount, hasMore };
+}
+
+
 export async function getAllMembers(): Promise<UserProfile[]> {
   await verifyAdmin();
   try {
