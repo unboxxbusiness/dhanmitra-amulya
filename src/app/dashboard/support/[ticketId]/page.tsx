@@ -1,12 +1,63 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import { getTicketById } from "@/actions/support";
 import { MemberTicketDetails } from "@/components/dashboard/support/member-ticket-details";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Loader2 } from "lucide-react";
+import type { SupportTicket } from '@/lib/definitions';
+import { useToast } from '@/hooks/use-toast';
 
-export default async function MemberTicketDetailsPage({ params }: { params: { ticketId: string } }) {
-    const ticket = await getTicketById(params.ticketId);
+export default function MemberTicketDetailsPage({ params }: { params: { ticketId: string } }) {
+    const [ticket, setTicket] = useState<SupportTicket | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const { toast } = useToast();
 
+    const fetchTicket = async () => {
+        setLoading(true);
+        try {
+            const ticketData = await getTicketById(params.ticketId);
+            if (!ticketData) {
+                setError(`The ticket with ID ${params.ticketId} could not be found.`);
+            } else {
+                setTicket(ticketData);
+            }
+        } catch (e: any) {
+            setError(e.message);
+            toast({ variant: 'destructive', title: 'Error', description: e.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTicket();
+    }, [params.ticketId]);
+
+    const onUpdate = () => {
+        fetchTicket();
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+             <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Error Loading Ticket</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        );
+    }
+    
     if (!ticket) {
         return (
              <Alert variant="destructive">
@@ -19,5 +70,5 @@ export default async function MemberTicketDetailsPage({ params }: { params: { ti
         )
     }
 
-    return <MemberTicketDetails ticket={ticket} />;
+    return <MemberTicketDetails ticket={ticket} onUpdate={onUpdate} />;
 }

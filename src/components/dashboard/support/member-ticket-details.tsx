@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
-import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +18,10 @@ import { ArrowLeft } from 'lucide-react';
 
 interface MemberTicketDetailsProps {
     ticket: SupportTicket;
+    onUpdate: () => void;
 }
 
-const ReplyForm = ({ ticketId }: { ticketId: string }) => {
+const ReplyForm = ({ ticketId, onReplySent }: { ticketId: string; onReplySent: () => void; }) => {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const [isPending, startTransition] = useTransition();
@@ -32,6 +32,7 @@ const ReplyForm = ({ ticketId }: { ticketId: string }) => {
             if (result.success) {
                 toast({ title: "Reply Sent" });
                 formRef.current?.reset();
+                onReplySent();
             } else if (result.error) {
                 toast({ variant: 'destructive', title: "Error", description: result.error });
             }
@@ -55,7 +56,7 @@ const ReplyForm = ({ ticketId }: { ticketId: string }) => {
 };
 
 
-export function MemberTicketDetails({ ticket }: MemberTicketDetailsProps) {
+export function MemberTicketDetails({ ticket, onUpdate }: MemberTicketDetailsProps) {
     const [session, setSession] = useState<UserSession | null>(null);
 
     useEffect(() => {
@@ -113,7 +114,7 @@ export function MemberTicketDetails({ ticket }: MemberTicketDetailsProps) {
                                 </div>
                             ))}
                              {ticket.status !== 'Closed' && ticket.status !== 'Resolved' && (
-                                <ReplyForm ticketId={ticket.id} />
+                                <ReplyForm ticketId={ticket.id} onReplySent={onUpdate} />
                             )}
                         </CardContent>
                     </Card>

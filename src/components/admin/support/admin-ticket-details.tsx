@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -21,9 +20,10 @@ import { ArrowLeft } from 'lucide-react';
 
 interface AdminTicketDetailsProps {
     ticket: SupportTicket;
+    onUpdate: () => void;
 }
 
-const ReplyForm = ({ ticketId }: { ticketId: string }) => {
+const ReplyForm = ({ ticketId, onReplySent }: { ticketId: string, onReplySent: () => void }) => {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const [isPending, startTransition] = useTransition();
@@ -34,6 +34,7 @@ const ReplyForm = ({ ticketId }: { ticketId: string }) => {
             if (result.success) {
                 toast({ title: "Reply Sent" });
                 formRef.current?.reset();
+                onReplySent(); // Trigger refresh
             } else if (result.error) {
                 toast({ variant: 'destructive', title: "Error", description: result.error });
             }
@@ -56,7 +57,7 @@ const ReplyForm = ({ ticketId }: { ticketId: string }) => {
     );
 };
 
-export function AdminTicketDetails({ ticket }: AdminTicketDetailsProps) {
+export function AdminTicketDetails({ ticket, onUpdate }: AdminTicketDetailsProps) {
     const { toast } = useToast();
     const [session, setSession] = useState<UserSession | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -70,6 +71,7 @@ export function AdminTicketDetails({ ticket }: AdminTicketDetailsProps) {
         const result = await updateTicketStatus(ticket.id, newStatus);
         if (result.success) {
             toast({ title: `Status updated to ${newStatus}` });
+            onUpdate(); // Trigger refresh
         } else {
             toast({ variant: 'destructive', title: "Error", description: result.error });
         }
@@ -126,7 +128,7 @@ export function AdminTicketDetails({ ticket }: AdminTicketDetailsProps) {
                                     <p>{reply.message}</p>
                                 </div>
                             ))}
-                             <ReplyForm ticketId={ticket.id} />
+                             <ReplyForm ticketId={ticket.id} onReplySent={onUpdate} />
                         </CardContent>
                     </Card>
                 </div>
