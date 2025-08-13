@@ -27,7 +27,7 @@ async function getDashboardStats() {
             loans, 
             loanAging,
             chartOfAccounts,
-            transactions
+            transactionData
         ] = await Promise.all([
             getAllMembers(),
             getSavingsAccounts(),
@@ -35,7 +35,7 @@ async function getDashboardStats() {
             getActiveLoans(),
             getLoanAgingReport(),
             getChartOfAccounts(),
-            getTransactionHistory({ limit: 5 }) // Fetch recent transactions for the list
+            getTransactionHistory({ page: 1, pageSize: 100 }) // Fetch recent transactions
         ]);
 
         const totalMembers = allUsers.filter(u => u.role === 'member').length;
@@ -49,7 +49,8 @@ async function getDashboardStats() {
         const cashAccount = chartOfAccounts.find(acc => acc.id === '1010'); // 'Cash on Hand'
         const cashInHand = cashAccount?.balance || 0;
 
-        const dailyTransactions = (await getTransactionHistory({ limit: 100 })).length;
+        const dailyTransactions = transactionData.totalCount;
+        const recentTransactions = transactionData.transactions.slice(0, 5);
 
 
         return {
@@ -60,7 +61,7 @@ async function getDashboardStats() {
             delinquencyRate,
             cashInHand,
             dailyTransactions,
-            recentTransactions: transactions,
+            recentTransactions,
         };
     } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -172,12 +173,12 @@ export default async function AdminPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Daily Transactions</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
             <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{stats.dailyTransactions}</div>
-            <p className="text-xs text-muted-foreground">Transactions recorded in the last 24 hours</p>
+            <div className="text-2xl font-bold">{stats.dailyTransactions}</div>
+            <p className="text-xs text-muted-foreground">Total transactions recorded</p>
           </CardContent>
         </Card>
       </div>
