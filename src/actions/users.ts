@@ -63,17 +63,22 @@ export async function addMember(formData: FormData) {
                 password,
                 displayName: name,
             });
-
-            await adminAuth.setCustomUserClaims(userRecord.uid, { role });
             
-            const newMemberId = await getNextMemberId(t);
+            let newMemberId: string | null = null;
+            if (role === 'member') {
+                newMemberId = await getNextMemberId(t);
+            }
+            
+            // Set custom claims including a null memberId for admins
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role, memberId: newMemberId });
+
             const userRef = adminDb.collection('users').doc(userRecord.uid);
 
             t.set(userRef, {
                 name,
                 email,
                 role,
-                memberId: newMemberId,
+                memberId: newMemberId, // This will be null for non-members
                 status: 'Active',
                 createdAt: new Date().toISOString(),
             });
@@ -197,11 +202,12 @@ export async function approveApplication(applicationId: string) {
                 password: tempPassword,
                 displayName: appData.name,
             });
-
-            // 2. Set custom claims (default to 'member' role)
-            await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member' });
             
             const newMemberId = await getNextMemberId(t);
+
+            // 2. Set custom claims (default to 'member' role and add memberId)
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'member', memberId: newMemberId });
+            
 
             // 3. Create user profile in Firestore 'users' collection
             const userRef = adminDb.collection('users').doc(userRecord.uid);
@@ -276,9 +282,10 @@ export async function bulkImportMembers(csvContent: string) {
                 });
 
                 const role: Role = 'member';
-                await adminAuth.setCustomUserClaims(userRecord.uid, { role });
-                
                 const newMemberId = await getNextMemberId(t);
+                
+                await adminAuth.setCustomUserClaims(userRecord.uid, { role, memberId: newMemberId });
+                
                 const userRef = adminDb.collection('users').doc(userRecord.uid);
 
                 t.set(userRef, {

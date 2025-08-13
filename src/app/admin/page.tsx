@@ -21,7 +21,7 @@ import { getSavingsAccounts } from '@/actions/savings';
 async function getDashboardStats() {
     try {
         const [
-            members,
+            allUsers,
             savings,
             deposits, 
             loans, 
@@ -38,7 +38,7 @@ async function getDashboardStats() {
             getTransactionHistory({ limit: 5 }) // Fetch recent transactions for the list
         ]);
 
-        const totalMembers = members.length;
+        const totalMembers = allUsers.filter(u => u.role === 'member').length;
         const totalSavings = savings.reduce((sum, s) => sum + s.balance, 0);
         const totalDeposits = deposits.reduce((sum, d) => sum + d.principalAmount, 0);
         const outstandingLoans = loans.reduce((sum, l) => sum + l.outstandingBalance, 0);
