@@ -40,12 +40,13 @@ export async function createTransaction(prevState: any, formData: FormData) {
 
     try {
         const newTransactionData = await adminDb.runTransaction(async (t) => {
+            // --- 1. ALL READS FIRST ---
             const accountDoc = await t.get(accountRef);
             if (!accountDoc.exists) {
                 throw new Error('Savings account not found.');
             }
-
             const accountData = accountDoc.data() as SavingsAccount;
+
             const userRef = adminDb.collection('users').doc(accountData.userId);
             const userDoc = await t.get(userRef);
             if (!userDoc.exists) {
@@ -53,15 +54,25 @@ export async function createTransaction(prevState: any, formData: FormData) {
             }
             const userData = userDoc.data() as UserProfile;
 
+            // Pre-read account documents needed for the journal entry
+            const cashAccountRef = adminDb.collection('chartOfAccounts').doc('1010');
+            const savingsAccountRef = adminDb.collection('chartOfAccounts').doc('2010');
+            const [cashAccountDoc, savingsCoADoc] = await t.getAll(cashAccountRef, savingsAccountRef);
+            if (!cashAccountDoc.exists || !savingsCoADoc.exists) {
+                throw new Error('Critical Error: A required general ledger account (Cash or Member Savings) is missing.');
+            }
 
+            // --- 2. VALIDATION ---
             if (type === 'debit' && accountData.balance < amount) {
                 throw new Error('Insufficient balance for this withdrawal.');
             }
             
+            // --- 3. ALL WRITES LAST ---
             const newBalance = type === 'credit' 
                 ? accountData.balance + amount
                 : accountData.balance - amount;
 
+            // Write 1: Update member's savings balance
             t.update(accountRef, { balance: newBalance });
 
             const transactionData: Omit<Transaction, 'id'|'userName'|'tellerName'> = {
@@ -77,10 +88,11 @@ export async function createTransaction(prevState: any, formData: FormData) {
                 balanceAfter: newBalance
             };
             
+            // Write 2: Create the transaction record
             const transactionRef = adminDb.collection('transactions').doc(transactionId);
             t.set(transactionRef, transactionData);
 
-            // --- Auto-post to General Ledger ---
+            // Write 3 & 4: Post to General Ledger
             const ledgerEntries = type === 'credit' 
                 ? [ // Member deposits cash
                     { accountId: '1010', debit: amount, credit: 0 }, // Debit Cash
@@ -90,14 +102,14 @@ export async function createTransaction(prevState: any, formData: FormData) {
                     { accountId: '2010', debit: amount, credit: 0 }, // Debit Member Savings
                     { accountId: '1010', debit: 0, credit: amount }, // Credit Cash
                 ];
-
-            await postJournalEntry(t, {
+            
+            // The postJournalEntry function now only performs writes, which is safe.
+            postJournalEntry(t, {
                 date: new Date(),
                 description: `Teller transaction: ${description} for Member ID ${userData.memberId}`,
                 entries: ledgerEntries,
                 relatedTransactionId: transactionId
             });
-            // --- End GL Posting ---
             
             return {
                 id: transactionId,
@@ -255,5 +267,3 @@ export async function exportTransactionsToCsv(filters: { savingsAccountId?: stri
 
     return Papa.unparse(csvData);
 }
-
-    

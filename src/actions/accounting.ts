@@ -92,6 +92,7 @@ export async function getTrialBalance() {
 
 
 // This is an internal function to be used by other server actions within a Firestore transaction
+// It should ONLY contain write operations. All reads must happen before this function is called.
 export async function postJournalEntry(
     t: FirestoreTransaction,
     entry: { date: Date; description: string; entries: JournalEntryDetail[], relatedTransactionId?: string }
@@ -118,10 +119,8 @@ export async function postJournalEntry(
         const accountRef = adminDb.collection('chartOfAccounts').doc(line.accountId);
         const amountChange = line.debit - line.credit;
         
-        const accountDoc = await t.get(accountRef);
-        if (!accountDoc.exists) {
-            throw new Error(`Accounting Error: Account with ID ${line.accountId} not found in the Chart of Accounts.`);
-        }
+        // This function now assumes the accounts exist because they were read prior to the transaction.
+        // It's critical not to add any t.get() calls here.
         
         // In accounting, assets and expenses have a "debit" normal balance.
         // Liabilities, equity, and revenue have a "credit" normal balance.
