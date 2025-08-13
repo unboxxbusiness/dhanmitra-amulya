@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useEffect, useTransition, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ export function BranchesTab() {
     const formRef = useRef<HTMLFormElement>(null);
     const [isPending, startTransition] = useTransition();
 
-    const fetchBranches = async () => {
+    const fetchBranches = useCallback(async () => {
         setLoading(true);
         try {
             const data = await getBranches();
@@ -62,11 +61,11 @@ export function BranchesTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
     
     useEffect(() => {
         fetchBranches();
-    }, []);
+    }, [fetchBranches]);
     
     const handleFormAction = (formData: FormData) => {
         startTransition(async () => {

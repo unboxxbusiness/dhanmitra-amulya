@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,7 +18,7 @@ export function RepaymentsTab() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const fetchRepayments = async () => {
+  const fetchRepayments = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getPendingRepayments();
@@ -28,11 +28,11 @@ export function RepaymentsTab() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [toast]);
 
   useEffect(() => {
     fetchRepayments();
-  }, []);
+  }, [fetchRepayments]);
 
   const handleRecordPayment = async (loanId: string, repaymentIndex: number) => {
     const id = `${loanId}_${repaymentIndex}`;

@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useEffect, useTransition, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -46,7 +45,7 @@ export function HolidaysTab() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [isPending, startTransition] = useTransition();
 
-    const fetchHolidays = async () => {
+    const fetchHolidays = useCallback(async () => {
         setLoading(true);
         try {
             const data = await getHolidays();
@@ -56,11 +55,11 @@ export function HolidaysTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
     
     useEffect(() => {
         fetchHolidays();
-    }, []);
+    }, [fetchHolidays]);
 
     const handleFormAction = (formData: FormData) => {
         startTransition(async () => {

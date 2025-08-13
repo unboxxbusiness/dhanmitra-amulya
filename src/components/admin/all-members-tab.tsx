@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function AllMembersTab() {
   const [loading, setLoading] = useState(true);
   const [dialogState, setDialogState] = useState<DialogState>({ type: null });
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     setLoading(true);
     try {
       const fetchedMembers = await getAllMembers();
@@ -43,19 +43,14 @@ export function AllMembersTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers]);
 
   const closeDialog = (refresh?: boolean) => {
-    // If a delete operation was successful, immediately remove the member from local state for a responsive UI
-    if (refresh && dialogState.type === 'delete' && dialogState.data) {
-        setMembers(prevMembers => prevMembers.filter(member => member.id !== dialogState.data!.id));
-    }
     setDialogState({ type: null });
-    // Fetch fresh data from the server to ensure consistency
     if (refresh) {
       fetchMembers();
     }
