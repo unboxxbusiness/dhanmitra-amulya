@@ -1,159 +1,134 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // --- Helper Functions ---
-    function isAuth() {
+    function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuth() && request.auth.uid == userId;
-    }
-    
-    function isAdmin() {
-      return isAuth() && request.auth.token.role in ['admin', 'branch_manager', 'auditor', 'treasurer', 'accountant'];
-    }
-
-    function isTeller() {
-        return isAuth() && request.auth.token.role in ['admin', 'teller'];
-    }
-    
     function isMember() {
-      return isAuth() && request.auth.token.role == 'member';
+      return isSignedIn() && request.auth.token.role == 'member';
     }
 
-    // --- User & Application Data ---
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role in ['admin', 'branch_manager', 'treasurer', 'accountant', 'teller', 'auditor'];
+    }
+    
+    function isTeller() {
+       return isSignedIn() && request.auth.token.role in ['admin', 'branch_manager', 'teller'];
+    }
 
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // --- User & Application Rules ---
     match /users/{userId} {
-      // Admins can read/write any profile. Members can read/update their own.
-      allow read, update: isAdmin() || isOwner(userId);
-      // Let the backend `addMember` and `approveApplication` functions handle creation logic.
-      allow create: isAuth();
-      // Only admins can delete users.
-      allow delete: isAdmin();
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create, delete: if false; // Should only be done by admin backend
     }
-    
+
     match /applications/{appId} {
-        // Anyone can create a membership application.
-        allow create: true;
-        // Only admins can read or update (approve/reject) applications.
-        allow read, update, delete: isAdmin();
-    }
-
-
-    // --- Products (Read-only for Members) ---
-
-    match /loanProducts/{productId} {
-      // Any authenticated user can see the available products.
-      allow get, list: isAuth();
-      // Only admins can create, update, or delete products.
-      allow write: isAdmin();
+      allow create: if true; // Public signup
+      allow read, update, delete: if isAdmin();
     }
     
-    match /depositProducts/{productId} {
-      allow get, list: isAuth();
-      allow write: isAdmin();
+    // --- Settings Rules ---
+    match /settings/{docId} {
+        allow read: if isSignedIn(); // All logged in users can read settings
+        allow write: if isAdmin();
     }
 
+    match /branches/{branchId} {
+        allow read: if isSignedIn();
+        allow write, delete: if isAdmin();
+    }
+
+    match /holidays/{holidayId} {
+        allow read: if isSignedIn();
+        allow write, delete: if isAdmin();
+    }
+
+    // --- Savings Rules ---
     match /savingsSchemes/{schemeId} {
-      allow get, list: isAuth();
-      allow write: isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-
-    // --- Member-Owned Documents ---
-
-    match /loanApplications/{appId} {
-        // A member can create and read their own applications.
-        allow create, get, list: isOwner(resource.data.userId);
-        // Admins can manage all applications.
-        allow read, update, delete: isAdmin();
-    }
-
-    match /depositApplications/{appId} {
-        allow create, get, list: isOwner(resource.data.userId);
-        allow read, update, delete: isAdmin();
-    }
-    
     match /savingsApplications/{appId} {
-        allow create, get, list: isOwner(resource.data.userId);
-        allow read, update, delete: isAdmin();
-    }
-    
-    match /activeLoans/{loanId} {
-        // A member can only read their own active loan data.
-        allow get, list: isOwner(resource.data.userId);
-        // Admins can manage all active loans.
-        allow read, update, delete: isAdmin();
-    }
-    
-     match /activeDeposits/{depositId} {
-        allow get, list: isOwner(resource.data.userId);
-        allow read, update, delete: isAdmin();
+      allow create: if isMember();
+      allow read, update: if isAdmin();
     }
 
     match /savingsAccounts/{accountId} {
-        // A user can only see their own savings accounts.
-        allow get, list: isOwner(resource.data.userId);
-        // Admins can manage all savings accounts.
-        allow read, write: isAdmin();
-    }
-    
-    match /transactions/{txId} {
-        // A user can read their own transactions. Tellers can create transactions for anyone.
-        allow get, list: isOwner(resource.data.userId);
-        allow create: isTeller();
-        // Only full admins can update/delete historical transactions.
-        allow update, delete: isAdmin();
-    }
-    
-    match /supportTickets/{ticketId} {
-      // A user can create/read/update their own tickets.
-      allow create: isAuth();
-      allow get, list, update: isOwner(resource.data.userId) || isAdmin();
-      // Only admins can delete tickets.
-      allow delete: isAdmin();
-    }
-    
-    match /notifications/{notificationId} {
-      // Users can read their own notifications and global ones.
-      allow get: isAuth();
-      allow list: isAuth() && (
-        (request.query.where.size() == 2 && request.query.where[0].field == 'userId' && request.query.where[0].value == request.auth.uid) ||
-        (request.query.where.size() == 2 && request.query.where[0].field == 'target' && request.query.where[0].value == 'all')
-      );
-      // Only admins can create/delete notifications.
-      allow write: isAdmin();
+      allow read: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
+      allow create, update: if isAdmin(); // Only admins/tellers create/update accounts via backend
     }
 
+    // --- Deposit Rules ---
+    match /depositProducts/{productId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
 
-    // --- Admin-Only Collections ---
+    match /depositApplications/{appId} {
+      allow create: if isMember();
+      allow read, update: if isAdmin();
+    }
     
+    match /activeDeposits/{depositId} {
+      allow read: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
+      allow create, update: if isAdmin();
+    }
+    
+    // --- Loan Rules ---
+    match /loanProducts/{productId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+    }
+    
+    match /loanApplications/{appId} {
+        allow create: if isMember();
+        allow read, update: if isAdmin();
+    }
+    
+    match /activeLoans/{loanId} {
+        allow read: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
+        allow create, update: if isAdmin();
+    }
+
+    // --- Transaction Rules ---
+    match /transactions/{transactionId} {
+      allow read: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
+      allow create: if isTeller(); // Only tellers/admins can create transactions
+      allow update, delete: if false; // Transactions should be immutable
+    }
+    
+    // --- Accounting Rules (Strictly Admin) ---
     match /chartOfAccounts/{accountId} {
-      allow read, write: isAdmin();
+        allow read, write: if isAdmin();
     }
     
     match /journalEntries/{entryId} {
-      allow read, write: isAdmin();
+        allow read, write: if isAdmin();
+    }
+
+    // --- Notification Rules ---
+    match /notifications/{notificationId} {
+      // Anyone can read global notifications
+      // Users can read notifications targeted to them
+      allow read: if isSignedIn() && (resource.data.target == 'all' || resource.data.userId == request.auth.uid);
+      allow write: if isAdmin();
     }
     
-    match /settings/{docId} {
-        // Any authenticated user can read settings (e.g., for UPI ID)
-        allow get, list: isAuth();
-        allow write: isAdmin();
+    // --- Support Ticket Rules ---
+    match /supportTickets/{ticketId} {
+        allow create: if isMember();
+        allow read, update: if (isSignedIn() && isOwner(request.resource.data.userId)) || isAdmin();
     }
-    
-    match /branches/{branchId} {
-        allow read, write: isAdmin();
-    }
-    
-    match /holidays/{holidayId} {
-        // Any authenticated user can read the holiday list.
-        allow get, list: isAuth();
-        allow write: isAdmin();
-    }
-    
   }
 }
