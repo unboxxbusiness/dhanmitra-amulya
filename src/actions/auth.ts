@@ -32,15 +32,18 @@ export async function createSession(idToken: string) {
       // Create user document if it doesn't exist
       await userRef.set({
         email: decodedClaims.email,
-        role: 'member',
+        name: decodedClaims.name,
+        role: 'member', // Safe default
+        status: 'Active',
         createdAt: new Date().toISOString(),
       });
     }
     
     // Set custom claims for role-based access
     // Only update if needed to avoid unnecessary writes
-    if (decodedClaims.role !== role || decodedClaims.name !== name) {
-        const customClaims = { role, name };
+    const currentCustomClaims = (await adminAuth.getUser(decodedClaims.uid)).customClaims;
+    if (currentCustomClaims?.role !== role || decodedClaims.name !== name) {
+        const customClaims = { ...currentCustomClaims, role, name };
         await adminAuth.setCustomUserClaims(decodedClaims.uid, customClaims);
     }
 

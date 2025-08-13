@@ -45,7 +45,7 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
     try {
       const authFn = mode === 'signup' ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
       const userCredential = await authFn(auth, data.email, data.password);
-      const idToken = await userCredential.user.getIdToken();
+      const idToken = await userCredential.user.getIdToken(true); // Force refresh
       
       const sessionResult = await createSession(idToken);
       
@@ -58,9 +58,9 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
         // Explicitly redirect based on the role returned from the server.
         const isAdmin = ADMIN_ROLES.includes(sessionResult.role);
         const redirectUrl = isAdmin ? '/admin' : '/dashboard';
+        
+        // Use router.push which is sufficient for client-side navigation after login
         router.push(redirectUrl);
-        // We still call refresh to ensure server components re-render with new session.
-        router.refresh();
 
       } else {
         throw new Error(sessionResult.error || 'Session creation failed');
@@ -69,7 +69,7 @@ export function EmailAuthForm({ mode }: EmailAuthFormProps) {
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: "The email or password you entered is incorrect. Please try again.",
+        description: error.message || "The email or password you entered is incorrect. Please try again.",
       });
     } finally {
       setLoading(false);
