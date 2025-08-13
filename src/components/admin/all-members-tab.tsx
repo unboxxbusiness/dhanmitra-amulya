@@ -148,7 +148,7 @@ export function AllMembersTab() {
                       <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                     </TableRow>
                   ))
-                ) : (
+                ) : members.length > 0 ? (
                   members.map((member) => (
                     <TableRow key={member.id}>
                        <TableCell className="font-mono">{member.memberId || 'N/A'}</TableCell>
@@ -193,8 +193,7 @@ export function AllMembersTab() {
                       </TableCell>
                     </TableRow>
                   ))
-                )}
-                 {!loading && members.length === 0 && (
+                ) : (
                     <TableRow>
                         <TableCell colSpan={7} className="h-24 text-center">
                             No members found.
