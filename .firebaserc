@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "amulya-b4543"
-  }
+    "default": "amulya-b4543",
+    "production": "amulya-b4543"
+  },
+  "targets": {},
+  "etags": {}
 }

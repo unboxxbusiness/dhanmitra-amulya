@@ -1,14 +1,15 @@
+# Amulya - Cooperative Society Management Platform
 
-// This file is auto-generated. Do not modify it manually.
-// Re-generate this file by running `pnpm next-video-stats`.
-import type { LucideIcon } from "lucide-react";
-export const icons: Record<string, LucideIcon>;
-declare const Home: LucideIcon;
-declare const Users: LucideIcon;
-declare const Settings: LucideIcon;
-declare const Banknote: LucideIcon;
-declare const PiggyBank: LucideIcon;
-declare const Landmark: LucideIcon;
-declare const ArrowLeftRight: LucideIcon;
-declare const BookCopy: LucideIcon;
-declare const FileSpreadsheet: LucideIcon;
+This is a modern, secure, and scalable platform for managing a cooperative society, built with Next.js, Firebase, and ShadCN UI.
+
+## Overview
+
+Amulya provides a comprehensive solution for both members and administrators of a cooperative society. It includes features for member management, loan and deposit processing, transaction handling, accounting, and member support.
+
+## Core Technologies
+
+- **Framework**: Next.js (App Router)
+- **Backend & Database**: Firebase (Authentication, Firestore, Cloud Messaging)
+- **UI**: React, TypeScript, ShadCN UI, Tailwind CSS
+- **Generative AI**: Google's Gemini via Genkit
+- **Testing**: Jest & React Testing Library
