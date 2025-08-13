@@ -103,23 +103,27 @@ export async function getSavingsAccounts(): Promise<SavingsAccount[]> {
     try {
         const accountsSnapshot = await adminDb.collection('savingsAccounts').orderBy('createdAt', 'desc').get();
         
-        const accounts = await Promise.all(accountsSnapshot.docs.map(async (doc) => {
+        // Pre-fetch all users and schemes to avoid multiple lookups in a loop
+        const usersSnapshot = await adminDb.collection('users').get();
+        const schemesSnapshot = await adminDb.collection('savingsSchemes').get();
+        
+        const usersMap = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data().name]));
+        const schemesMap = new Map(schemesSnapshot.docs.map(doc => [doc.id, doc.data().name]));
+
+        const accounts = accountsSnapshot.docs.map(doc => {
             const data = doc.data();
             
-            const userDoc = await t.get(adminDb.collection('users').doc(data.userId));
-            const schemeDoc = await t.get(adminDb.collection('savingsSchemes').doc(data.schemeId));
-            
-            const userName = userDoc.exists ? userDoc.data()?.name : 'User Not Found';
-            const schemeName = schemeDoc.exists ? schemeDoc.data()?.name : 'Scheme Not Found';
-
             return {
                 id: doc.id,
-                ...data,
-                userName,
-                schemeName,
+                userId: data.userId,
+                userName: usersMap.get(data.userId) || 'Unknown User',
+                schemeId: data.schemeId,
+                schemeName: schemesMap.get(data.schemeId) || 'Unknown Scheme',
+                balance: data.balance,
+                status: data.status,
                 createdAt: new Date(data.createdAt).toLocaleDateString(),
             } as SavingsAccount;
-        }));
+        });
 
         return accounts;
     } catch (error) {

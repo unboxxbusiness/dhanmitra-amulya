@@ -45,7 +45,6 @@ export function NewTransactionTab() {
         async function fetchData() {
             setLoading(true);
             try {
-                // In a real app, this might be optimized to fetch only active accounts
                 const [fetchedMembers, fetchedAccounts] = await Promise.all([
                     getAllMembers(),
                     getSavingsAccounts()
@@ -89,7 +88,7 @@ export function NewTransactionTab() {
     const memberAccounts = accounts.filter(acc => acc.userId === selectedMemberId);
     const accountOptions = memberAccounts.map(account => ({
         value: account.id,
-        label: `${account.schemeName} (...${account.id.slice(-4)})`
+        label: `${account.schemeName} (...${account.id.slice(-4)}) - Bal: ₹${account.balance}`
     }));
 
     const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
