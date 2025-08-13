@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { updateUserProfile, sendPasswordResetEmailForUser, type UserProfile } from '@/actions/users';
+import { updateUserProfile, type UserProfile } from '@/actions/users';
+import { sendPasswordResetEmail } from '@/actions/auth';
 import { ROLES } from '@/lib/definitions';
 import { Loader2, KeyRound } from 'lucide-react';
 import { Separator } from '../ui/separator';
@@ -55,9 +56,9 @@ export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogPr
     }
 
     const handleSendResetEmail = async () => {
-        if (!member) return;
+        if (!member?.email) return;
         setIsSendingReset(true);
-        const result = await sendPasswordResetEmailForUser(member.id);
+        const result = await sendPasswordResetEmail(member.email);
         if (result.success) {
             toast({ title: "Email Sent", description: `A password reset link has been sent to ${member.email}.` });
         } else {

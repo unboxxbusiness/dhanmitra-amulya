@@ -5,6 +5,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminAuth, adminDb } from '@/lib/firebase/server';
 import { ROLES, type Role } from '@/lib/definitions';
+import { auth } from '@/lib/firebase/client';
+import { sendPasswordResetEmail as clientSendPasswordResetEmail } from 'firebase/auth';
 
 const SESSION_COOKIE_NAME = 'session';
 const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
@@ -68,4 +70,15 @@ export async function createSession(idToken: string) {
 export async function signOut() {
   cookies().delete(SESSION_COOKIE_NAME);
   redirect('/login');
+}
+
+
+export async function sendPasswordResetEmail(email: string) {
+    try {
+        await clientSendPasswordResetEmail(auth, email);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: 'Could not send password reset email. Please ensure the email address is correct.' };
+    }
 }

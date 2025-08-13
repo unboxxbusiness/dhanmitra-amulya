@@ -1,21 +1,34 @@
 
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { KeyRound, Loader2, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { sendPasswordReset } from '@/actions/users';
+import { sendPasswordResetEmail } from '@/actions/auth';
+import { getSession } from '@/lib/auth';
+import type { UserSession } from '@/lib/definitions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function ChangePasswordCard() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [session, setSession] = useState<UserSession | null>(null);
+
+    useEffect(() => {
+        getSession().then(setSession);
+    }, []);
 
     const handleChangePassword = async () => {
+        if (!session?.email) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not find your email address.' });
+            return;
+        }
+
         setLoading(true);
-        const result = await sendPasswordReset();
+        const result = await sendPasswordResetEmail(session.email);
         if (result.success) {
             toast({
                 title: 'Password Reset Email Sent',
@@ -49,7 +62,7 @@ export function ChangePasswordCard() {
                 </Alert>
             </CardContent>
             <CardFooter>
-                <Button onClick={handleChangePassword} disabled={loading}>
+                <Button onClick={handleChangePassword} disabled={loading || !session?.email}>
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
                     Send Password Reset Link
                 </Button>

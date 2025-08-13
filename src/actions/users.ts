@@ -614,7 +614,7 @@ export async function generateLoanClosureCertificate(loanId: string): Promise<Lo
 
 // --- Security Actions ---
 
-export async function sendPasswordReset() {
+export async function sendPasswordResetForCurrentUser() {
     const session = await getSession();
     if (!session || !session.email) {
         return { success: false, error: "Not authenticated or user has no email." };
@@ -629,20 +629,6 @@ export async function sendPasswordReset() {
     }
 }
 
-export async function sendPasswordResetEmailForUser(userId: string) {
-    await verifyAdmin();
-    try {
-        const user = await adminAuth.getUser(userId);
-        if (!user.email) {
-            return { success: false, error: "User does not have an email address." };
-        }
-        await adminAuth.generatePasswordResetLink(user.email);
-        return { success: true };
-    } catch (error: any) {
-        console.error("Error sending password reset email:", error);
-        return { success: false, error: 'Could not send password reset email.' };
-    }
-}
 
 export async function revokeAllSessions() {
     const session = await getSession();
