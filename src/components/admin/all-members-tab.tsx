@@ -50,7 +50,12 @@ export function AllMembersTab() {
   }, []);
 
   const closeDialog = (refresh?: boolean) => {
+    // If a delete operation was successful, immediately remove the member from local state for a responsive UI
+    if (refresh && dialogState.type === 'delete' && dialogState.data) {
+        setMembers(prevMembers => prevMembers.filter(member => member.id !== dialogState.data!.id));
+    }
     setDialogState({ type: null });
+    // Fetch fresh data from the server to ensure consistency
     if (refresh) {
       fetchMembers();
     }
