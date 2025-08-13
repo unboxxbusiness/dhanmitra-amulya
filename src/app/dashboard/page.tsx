@@ -6,15 +6,12 @@ import { getSession } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon, Wallet, PiggyBank, History, FileText, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
-import { getSocietyConfig, type SocietyConfig } from '@/actions/settings';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
 import type { UserSession } from '@/lib/definitions';
+import { Wallet, PiggyBank, History, FileText, ArrowRight, CreditCard, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
+import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
 
 const QuickLink = ({ href, icon, title, description }: { href: string; icon: React.ElementType; title: string; description: string; }) => {
@@ -78,7 +75,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {session.name || 'member'}!</h1>
-        <p className="text-muted-foreground">Here’s a summary of your accounts and recent activity.</p>
+        <p className="text-muted-foreground">Your Member ID: <span className="font-mono">{session.memberId || 'N/A'}</span></p>
       </header>
       
       {/* Summary Cards */}
@@ -166,7 +163,7 @@ export default function DashboardPage() {
                            <div>
                                 <h4 className="font-medium mb-2">Savings</h4>
                                 {savingsAccounts.map(acc => (
-                                    <p key={acc.id} className="text-sm text-muted-foreground">{acc.accountNumber}: ₹{acc.balance.toLocaleString('en-IN')}</p>
+                                    <p key={acc.id} className="text-sm text-muted-foreground">{acc.schemeName}: ₹{acc.balance.toLocaleString('en-IN')}</p>
                                 ))}
                            </div>
                        )}
@@ -174,7 +171,7 @@ export default function DashboardPage() {
                            <div>
                                 <h4 className="font-medium mb-2 mt-4">Loans</h4>
                                 {activeLoans.map(loan => (
-                                    <p key={loan.id} className="text-sm text-muted-foreground">{loan.accountNumber}: ₹{loan.outstandingBalance.toLocaleString('en-IN')}</p>
+                                    <p key={loan.id} className="text-sm text-muted-foreground">{loan.productName}: ₹{loan.outstandingBalance.toLocaleString('en-IN')}</p>
                                 ))}
                            </div>
                        )}
@@ -182,7 +179,7 @@ export default function DashboardPage() {
                            <div>
                                 <h4 className="font-medium mb-2 mt-4">Deposits</h4>
                                 {activeDeposits.map(dep => (
-                                    <p key={dep.id} className="text-sm text-muted-foreground">{dep.accountNumber}: ₹{dep.principalAmount.toLocaleString('en-IN')}</p>
+                                    <p key={dep.id} className="text-sm text-muted-foreground">{dep.productName}: ₹{dep.principalAmount.toLocaleString('en-IN')}</p>
                                 ))}
                            </div>
                        )}

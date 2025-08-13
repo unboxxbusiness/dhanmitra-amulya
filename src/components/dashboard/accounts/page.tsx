@@ -11,9 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { IndianRupee } from 'lucide-react';
 import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { getSocietyConfig, type SocietyConfig } from '@/actions/settings';
-import type { UserSession, UserProfile } from '@/lib/definitions';
+import type { UserSession } from '@/lib/definitions';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
-import { getMemberProfile } from '@/actions/users';
 import { UpiQrCodeDialog } from '@/components/dashboard/upi-qr-code-dialog';
 
 type UpiPaymentDetails = {
@@ -26,7 +25,6 @@ export default function AccountsPage() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [financialData, setFinancialData] = useState<MemberFinancials | null>(null);
   const [societyConfig, setSocietyConfig] = useState<SocietyConfig | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
   const [upiDetails, setUpiDetails] = useState<UpiPaymentDetails | null>(null);
@@ -42,14 +40,12 @@ export default function AccountsPage() {
         }
         setSession(userSession);
 
-        const [finData, configData, profileData] = await Promise.all([
+        const [finData, configData] = await Promise.all([
           getMemberFinancials(),
           getSocietyConfig(),
-          getMemberProfile(),
         ]);
         setFinancialData(finData);
         setSocietyConfig(configData);
-        setProfile(profileData);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
@@ -65,7 +61,7 @@ export default function AccountsPage() {
     setQrDialogOpen(true);
   }
 
-  if (loading || !session || !financialData || !societyConfig || !profile) {
+  if (loading || !session || !financialData || !societyConfig) {
     return <DashboardLoadingSkeleton />;
   }
 
@@ -76,7 +72,7 @@ export default function AccountsPage() {
       <div className="space-y-8">
         <header>
             <h1 className="text-3xl font-bold tracking-tight">My Accounts</h1>
-            <p className="text-muted-foreground">Your Member ID: <span className="font-mono">{profile.memberId}</span></p>
+            <p className="text-muted-foreground">Your Member ID: <span className="font-mono">{session.memberId || 'N/A'}</span></p>
         </header>
         
         <section id="savings-accounts">
@@ -101,7 +97,7 @@ export default function AccountsPage() {
                     <CardFooter className="flex-col items-start gap-2">
                        <Button 
                           size="sm" 
-                          onClick={() => handlePaymentClick(0, `SAVINGS-DEPOSIT-${profile.memberId}`)} 
+                          onClick={() => handlePaymentClick(0, `SAVINGS-DEPOSIT-${session.memberId}`)} 
                           disabled={!societyConfig.upiId} 
                           title={!societyConfig.upiId ? "UPI payment is not configured by the admin" : "Deposit via UPI"}
                         >
@@ -141,7 +137,7 @@ export default function AccountsPage() {
                       <TableCell>
                         <Button 
                           size="sm" 
-                          onClick={() => handlePaymentClick(loan.emiAmount, `LOAN-REPAY-${profile.memberId}-${loan.id.slice(0,4)}`)}
+                          onClick={() => handlePaymentClick(loan.emiAmount, `LOAN-REPAY-${session.memberId}-${loan.id.slice(0,4)}`)}
                           disabled={!societyConfig.upiId} 
                           title={!societyConfig.upiId ? "UPI payment is not configured by the admin" : "Pay via UPI"}
                         >

@@ -17,6 +17,7 @@ export async function createSession(idToken: string) {
 
     let role: Role = 'member'; // Default role
     let name = decodedClaims.name;
+    let memberId: string | null = null;
 
     if (userDoc.exists) {
       const userData = userDoc.data();
@@ -28,6 +29,7 @@ export async function createSession(idToken: string) {
       if (!name && userData?.name) {
         name = userData.name;
       }
+      memberId = userData?.memberId || null;
     } else {
       // Create user document if it doesn't exist
       await userRef.set({
@@ -42,8 +44,8 @@ export async function createSession(idToken: string) {
     // Set custom claims for role-based access
     // Only update if needed to avoid unnecessary writes
     const currentCustomClaims = (await adminAuth.getUser(decodedClaims.uid)).customClaims;
-    if (currentCustomClaims?.role !== role || decodedClaims.name !== name) {
-        const customClaims = { ...currentCustomClaims, role, name };
+    if (currentCustomClaims?.role !== role || decodedClaims.name !== name || currentCustomClaims?.memberId !== memberId) {
+        const customClaims = { ...currentCustomClaims, role, name, memberId };
         await adminAuth.setCustomUserClaims(decodedClaims.uid, customClaims);
     }
 

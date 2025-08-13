@@ -13,6 +13,7 @@ export type UserSession = {
   name: string | null;
   picture: string | null;
   role: Role;
+  memberId: string | null;
 };
 
 // --- User Profile & Applications ---

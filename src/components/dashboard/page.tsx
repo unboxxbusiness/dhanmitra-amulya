@@ -6,17 +6,13 @@ import { getSession } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Landmark, DollarSign, CreditCard, Receipt, PlusCircle, Link as LinkIcon, Wallet, PiggyBank, History, FileText, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
-import { getSocietyConfig, type SocietyConfig } from '@/actions/settings';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
-import type { UserSession, UserProfile } from '@/lib/definitions';
+import type { UserSession } from '@/lib/definitions';
+import { Wallet, PiggyBank, History, ArrowRight, CreditCard, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
+import { getMemberFinancials, type MemberFinancials } from '@/actions/users';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
-import { getMemberProfile } from '@/actions/users';
 
 const QuickLink = ({ href, icon, title, description }: { href: string; icon: React.ElementType; title: string; description: string; }) => {
     const Icon = icon;
@@ -41,7 +37,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<UserSession | null>(null);
   const [financialData, setFinancialData] = useState<MemberFinancials | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,12 +49,8 @@ export default function DashboardPage() {
         }
         setSession(userSession);
 
-        const [finData, profileData] = await Promise.all([
-          getMemberFinancials(),
-          getMemberProfile()
-        ]);
+        const finData = await getMemberFinancials();
         setFinancialData(finData);
-        setProfile(profileData);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
@@ -70,7 +61,7 @@ export default function DashboardPage() {
     fetchData();
   }, [router]);
 
-  if (loading || !session || !financialData || !profile) {
+  if (loading || !session || !financialData) {
     return <DashboardLoadingSkeleton />;
   }
 
@@ -84,7 +75,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {session.name || 'member'}!</h1>
-        <p className="text-muted-foreground">Your Member ID: <span className="font-mono">{profile.memberId}</span></p>
+        <p className="text-muted-foreground">Your Member ID: <span className="font-mono">{session.memberId || 'N/A'}</span></p>
       </header>
       
       {/* Summary Cards */}

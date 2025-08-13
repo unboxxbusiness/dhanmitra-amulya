@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { cookies } from 'next/headers';
@@ -27,6 +28,7 @@ export const getSession = async (): Promise<UserSession | null> => {
       name: decodedClaims.name || decodedClaims.email,
       picture: decodedClaims.picture || null,
       role: role,
+      memberId: decodedClaims.memberId || null,
     };
   } catch (error: any) {
     // Session cookie is invalid or expired, or cookies() is not available in the context.
