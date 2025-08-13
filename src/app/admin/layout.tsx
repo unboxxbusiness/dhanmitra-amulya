@@ -1,7 +1,7 @@
 
 
 import Link from 'next/link';
-import { Home, Users, Settings, Banknote, PiggyBank, Landmark, ArrowLeftRight, BookCopy, FileSpreadsheet, MessageSquare, LifeBuoy } from 'lucide-react';
+import { Home, Users, Settings, Banknote, PiggyBank, Landmark, ArrowLeftRight, BookCopy, FileSpreadsheet, MessageSquare, LifeBuoy, Webhook } from 'lucide-react';
 import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Button } from '@/components/ui/button';
@@ -111,7 +111,7 @@ export default async function AdminLayout({
              <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Integrations">
                 <Link href="/admin/integrations">
-                  <Landmark />
+                  <Webhook />
                   <span>Integrations</span>
                 </Link>
               </SidebarMenuButton>

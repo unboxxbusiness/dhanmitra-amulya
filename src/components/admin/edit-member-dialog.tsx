@@ -105,7 +105,7 @@ export function EditMemberDialog({ isOpen, onClose, member }: EditMemberDialogPr
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                             <Button type="button" variant="secondary" onClick={() => onClose()}>Cancel</Button>
+                             <Button type="button" variant="secondary">Cancel</Button>
                         </DialogClose>
                         <SubmitButton />
                     </DialogFooter>

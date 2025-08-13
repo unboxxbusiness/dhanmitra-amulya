@@ -104,7 +104,7 @@ export async function createTransaction(prevState: any, formData: FormData) {
                 ];
             
             // The postJournalEntry function now only performs writes, which is safe.
-            postJournalEntry(t, {
+            await postJournalEntry(t, {
                 date: new Date(),
                 description: `Teller transaction: ${description} for Member ID ${userData.memberId}`,
                 entries: ledgerEntries,
@@ -133,46 +133,36 @@ export async function createTransaction(prevState: any, formData: FormData) {
 export async function getTransactionHistory(filters: { savingsAccountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
     const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
     let query: admin.firestore.Query = adminDb.collection('transactions');
+    let userAccountIds: string[] = [];
 
     // Security check and query modification
     if (session.role === 'member') {
+        // A member can only see their own transactions.
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', session.uid).get();
         if (userAccountsSnapshot.empty) return [];
         
-        const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
-
-        // If a specific account is requested, ensure it belongs to the member
-        if (filters.savingsAccountId && !userAccountIds.includes(filters.savingsAccountId)) {
-            return []; // Security: Don't return transactions for an account the user doesn't own
-        }
-        
-        const accountsToQuery = filters.savingsAccountId ? [filters.savingsAccountId] : userAccountIds;
-        if (accountsToQuery.length === 0) return [];
-
-        query = query.where('savingsAccountId', 'in', accountsToQuery);
-
+        userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
     } else if (filters.userId) {
-        // Admin/teller filtering by a specific user
+        // An admin is filtering by a specific user.
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
         if (userAccountsSnapshot.empty) return [];
 
-        const userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
-        
-        const accountsToQuery = filters.savingsAccountId && userAccountIds.includes(filters.savingsAccountId)
-            ? [filters.savingsAccountId]
-            : userAccountIds;
-            
-        if (accountsToQuery.length > 0) {
-            query = query.where('savingsAccountId', 'in', accountsToQuery);
-        } else {
-             return [];
-        }
+        userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
+    }
 
-    } else if (filters.savingsAccountId) {
-        // Admin filtering by a single account
+    // Apply account-based filters
+    if (filters.savingsAccountId) {
+        // If a specific account is requested, ensure it belongs to the user being queried (if applicable)
+        if (userAccountIds.length > 0 && !userAccountIds.includes(filters.savingsAccountId)) {
+            return []; // Security: Don't return transactions for an account the user doesn't own
+        }
         query = query.where('savingsAccountId', '==', filters.savingsAccountId);
+    } else if (userAccountIds.length > 0) {
+        // If no specific account is requested, but we have a user context, filter by all their accounts
+        query = query.where('savingsAccountId', 'in', userAccountIds);
     }
     
+    // Apply other filters
     if (filters.type) {
         query = query.where('type', '==', filters.type);
     }

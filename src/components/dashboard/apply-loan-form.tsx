@@ -134,7 +134,7 @@ export function ApplyForLoanForm({ products }: { products: LoanProduct[] }) {
                     <FormItem>
                       <FormLabel>Loan Amount (₹)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                        <Input type="number" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber || 0)} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
