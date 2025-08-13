@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -75,12 +76,15 @@ export async function createTransaction(prevState: any, formData: FormData) {
             // Write 1: Update member's savings balance
             t.update(accountRef, { balance: newBalance });
 
+            // Ensure Member ID is included in the description for audit purposes.
+            const finalDescription = `${description} for ${userData.name} (${userData.memberId})`;
+
             const transactionData: Omit<Transaction, 'id'|'userName'|'tellerName'> = {
                 savingsAccountId,
                 userId: accountData.userId,
                 type,
                 amount,
-                description,
+                description: finalDescription,
                 date: new Date().toISOString(),
                 tellerId: session.uid,
                 status: 'completed',
@@ -142,25 +146,21 @@ export async function getTransactionHistory(filters: { savingsAccountId?: string
         if (userAccountsSnapshot.empty) return [];
         
         userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
+        query = query.where('savingsAccountId', 'in', userAccountIds);
+
     } else if (filters.userId) {
         // An admin is filtering by a specific user.
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
         if (userAccountsSnapshot.empty) return [];
 
         userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
-    }
-
-    // Apply account-based filters
-    if (filters.savingsAccountId) {
-        // If a specific account is requested, ensure it belongs to the user being queried (if applicable)
-        if (userAccountIds.length > 0 && !userAccountIds.includes(filters.savingsAccountId)) {
-            return []; // Security: Don't return transactions for an account the user doesn't own
-        }
-        query = query.where('savingsAccountId', '==', filters.savingsAccountId);
-    } else if (userAccountIds.length > 0) {
-        // If no specific account is requested, but we have a user context, filter by all their accounts
         query = query.where('savingsAccountId', 'in', userAccountIds);
     }
+    
+    // Apply account-based filters
+    if (filters.savingsAccountId) {
+        query = query.where('savingsAccountId', '==', filters.savingsAccountId);
+    } 
     
     // Apply other filters
     if (filters.type) {
