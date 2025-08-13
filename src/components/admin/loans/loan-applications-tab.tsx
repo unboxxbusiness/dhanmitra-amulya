@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from '../../ui/skeleton';
 import { getLoanApplications, verifyLoanApplication, approveLoanApplication, rejectLoanApplication, disburseLoan } from '@/actions/loans';
@@ -11,6 +12,7 @@ import type { LoanApplicationDetails } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, Loader2, XCircle, ShieldCheck, ThumbsUp, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DataTablePagination } from '@/components/data-table-pagination';
 
 export function LoanApplicationsTab() {
   const { toast } = useToast();
@@ -18,17 +20,24 @@ export function LoanApplicationsTab() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
   const fetchApplications = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getLoanApplications();
-      setApplications(data);
+      const data = await getLoanApplications({ page, pageSize });
+      setApplications(data.applications);
+      setTotalCount(data.totalCount);
+      setHasMore(data.hasMore);
     } catch(err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, page, pageSize]);
 
   useEffect(() => {
     fetchApplications();
@@ -93,7 +102,7 @@ export function LoanApplicationsTab() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: pageSize }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
@@ -139,6 +148,16 @@ export function LoanApplicationsTab() {
           </TableBody>
         </Table>
       </CardContent>
+        <CardFooter>
+            <DataTablePagination
+                page={page}
+                setPage={setPage}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                totalCount={totalCount}
+                hasMore={hasMore}
+            />
+        </CardFooter>
     </Card>
   );
 }

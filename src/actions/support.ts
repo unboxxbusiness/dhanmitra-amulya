@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { adminDb } from '@/lib/firebase/server';
@@ -82,19 +83,34 @@ export async function getMemberTickets(): Promise<SupportTicket[]> {
 
 // --- Admin Actions ---
 
-export async function getAllTickets(): Promise<SupportTicket[]> {
+export async function getAllTickets(options: { page: number, pageSize: number }): Promise<{ tickets: SupportTicket[], totalCount: number, hasMore: boolean }> {
     await verifyUser(ADMIN_ROLES);
-    const snapshot = await adminDb.collection('supportTickets')
-        .orderBy('updatedAt', 'desc')
-        .limit(50)
-        .get();
+    const { page, pageSize } = options;
 
-    return snapshot.docs.map(doc => ({
+    const query = adminDb.collection('supportTickets').orderBy('updatedAt', 'desc');
+
+    const totalSnapshot = await query.count().get();
+    const totalCount = totalSnapshot.data().count;
+
+    let paginatedQuery = query;
+    if (page > 1) {
+        const startAfterDoc = await query.limit((page - 1) * pageSize).get();
+        const lastVisible = startAfterDoc.docs[startAfterDoc.docs.length - 1];
+        paginatedQuery = query.startAfter(lastVisible);
+    }
+
+    const snapshot = await paginatedQuery.limit(pageSize).get();
+
+    const tickets = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: new Date(doc.data().createdAt).toLocaleString(),
         updatedAt: new Date(doc.data().updatedAt).toLocaleString(),
     } as SupportTicket));
+
+    const hasMore = (page * pageSize) < totalCount;
+
+    return { tickets, totalCount, hasMore };
 }
 
 // --- Shared Actions (Admin & Member) ---

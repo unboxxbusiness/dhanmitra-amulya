@@ -134,44 +134,40 @@ export async function createTransaction(prevState: any, formData: FormData) {
 }
 
 
-export async function getTransactionHistory(filters: { savingsAccountId?: string; type?: string; limit?: number; startDate?: string; endDate?: string, userId?: string }): Promise<Transaction[]> {
+export async function getTransactionHistory(filters: { page: number; pageSize: number; savingsAccountId?: string; type?: string; startDate?: string; endDate?: string; userId?: string }): Promise<{ transactions: Transaction[], totalCount: number, hasMore: boolean }> {
     const session = await verifyUser(MEMBER_AND_TELLER_ROLES);
+    const { page, pageSize } = filters;
+
     let query: admin.firestore.Query = adminDb.collection('transactions');
     let userAccountIds: string[] = [];
 
     // Security check and query modification
     if (session.role === 'member') {
-        // A member can only see their own transactions.
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', session.uid).get();
-        if (userAccountsSnapshot.empty) return [];
+        if (userAccountsSnapshot.empty) return { transactions: [], totalCount: 0, hasMore: false };
         
         userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
         query = query.where('savingsAccountId', 'in', userAccountIds);
 
     } else if (filters.userId) {
-        // An admin is filtering by a specific user.
         const userAccountsSnapshot = await adminDb.collection('savingsAccounts').where('userId', '==', filters.userId).get();
-        if (userAccountsSnapshot.empty) return [];
+        if (userAccountsSnapshot.empty) return { transactions: [], totalCount: 0, hasMore: false };
 
         userAccountIds = userAccountsSnapshot.docs.map(doc => doc.id);
         query = query.where('savingsAccountId', 'in', userAccountIds);
     }
     
-    // Apply account-based filters
+    // Apply other filters
     if (filters.savingsAccountId) {
         query = query.where('savingsAccountId', '==', filters.savingsAccountId);
     } 
-    
-    // Apply other filters
     if (filters.type) {
         query = query.where('type', '==', filters.type);
     }
-
     if (filters.startDate) {
         query = query.where('date', '>=', new Date(filters.startDate).toISOString());
     }
     if (filters.endDate) {
-        // Add 1 day to the end date to include the whole day
         const endDate = new Date(filters.endDate);
         endDate.setDate(endDate.getDate() + 1);
         query = query.where('date', '<', endDate.toISOString());
@@ -179,11 +175,17 @@ export async function getTransactionHistory(filters: { savingsAccountId?: string
 
     query = query.orderBy('date', 'desc');
 
-    if (filters.limit) {
-        query = query.limit(filters.limit);
+    const totalSnapshot = await query.count().get();
+    const totalCount = totalSnapshot.data().count;
+
+    let paginatedQuery = query;
+    if (page > 1) {
+        const startAfterDoc = await query.limit((page - 1) * pageSize).get();
+        const lastVisible = startAfterDoc.docs[startAfterDoc.docs.length - 1];
+        paginatedQuery = query.startAfter(lastVisible);
     }
     
-    const snapshot = await query.get();
+    const snapshot = await paginatedQuery.limit(pageSize).get();
     const transactions = await Promise.all(snapshot.docs.map(async doc => {
         const data = doc.data();
         const userDoc = await adminDb.collection('users').doc(data.userId).get();
@@ -198,7 +200,9 @@ export async function getTransactionHistory(filters: { savingsAccountId?: string
         } as Transaction;
     }));
 
-    return transactions;
+    const hasMore = (page * pageSize) < totalCount;
+
+    return { transactions, totalCount, hasMore };
 }
 
 
@@ -245,7 +249,7 @@ export async function exportTransactionsToCsv(filters: { savingsAccountId?: stri
     const session = await getSession();
     if (!session) throw new Error("Not authenticated");
 
-    const transactions = await getTransactionHistory({ ...filters, userId: session.uid });
+    const { transactions } = await getTransactionHistory({ ...filters, userId: session.uid, page: 1, pageSize: 1000 }); // Export up to 1000 for a single export
 
     const csvData = transactions.map(tx => ({
         "Date": tx.date,

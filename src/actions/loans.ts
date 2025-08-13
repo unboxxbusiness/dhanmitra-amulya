@@ -95,9 +95,25 @@ export async function applyForLoan(data: z.infer<typeof MemberLoanApplicationSch
 }
 
 
-export async function getLoanApplications(): Promise<LoanApplicationDetails[]> {
+export async function getLoanApplications(options: { page: number, pageSize: number }): Promise<{ applications: LoanApplicationDetails[], totalCount: number, hasMore: boolean }> {
     await verifyUser(ADMIN_ROLES);
-    const snapshot = await adminDb.collection('loanApplications').where('status', 'in', ['pending', 'verified']).get();
+    const { page, pageSize } = options;
+
+    const query = adminDb.collection('loanApplications')
+        .where('status', 'in', ['pending', 'verified', 'approved'])
+        .orderBy('applicationDate', 'desc');
+
+    const totalSnapshot = await query.count().get();
+    const totalCount = totalSnapshot.data().count;
+
+    let paginatedQuery = query;
+    if (page > 1) {
+        const startAfterDoc = await query.limit((page - 1) * pageSize).get();
+        const lastVisible = startAfterDoc.docs[startAfterDoc.docs.length - 1];
+        paginatedQuery = query.startAfter(lastVisible);
+    }
+    
+    const snapshot = await paginatedQuery.limit(pageSize).get();
     
     const applications = await Promise.all(snapshot.docs.map(async (doc) => {
         const data = doc.data();
@@ -124,8 +140,10 @@ export async function getLoanApplications(): Promise<LoanApplicationDetails[]> {
             approverName,
         } as LoanApplicationDetails;
     }));
+
+    const hasMore = (page * pageSize) < totalCount;
     
-    return applications;
+    return { applications, totalCount, hasMore };
 }
 
 export async function verifyLoanApplication(applicationId: string) {

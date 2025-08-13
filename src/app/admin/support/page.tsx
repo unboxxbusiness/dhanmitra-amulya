@@ -1,33 +1,43 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllTickets } from "@/actions/support";
 import { AdminSupportTicketsClient } from "@/components/admin/support/admin-support-tickets-client";
 import type { SupportTicket } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { DataTablePagination } from '@/components/data-table-pagination';
 
 export default function AdminSupportPage() {
     const { toast } = useToast();
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+
+    const fetchTickets = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await getAllTickets({ page, pageSize });
+            setTickets(data.tickets);
+            setTotalCount(data.totalCount);
+            setHasMore(data.hasMore);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
+        } finally {
+            setLoading(false);
+        }
+    }, [toast, page, pageSize]);
+
     useEffect(() => {
-        const fetchTickets = async () => {
-            setLoading(true);
-            try {
-                const data = await getAllTickets();
-                setTickets(data);
-            } catch (error: any) {
-                toast({ variant: 'destructive', title: 'Error', description: error.message });
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTickets();
-    }, [toast]);
+    }, [fetchTickets]);
 
     return (
         <div className="space-y-6">
@@ -37,21 +47,29 @@ export default function AdminSupportPage() {
                     View and respond to member support requests.
                 </p>
             </div>
-            {loading ? (
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-6 w-1/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </CardContent>
-                </Card>
-            ) : (
-                <AdminSupportTicketsClient tickets={tickets} />
-            )}
+            <Card>
+                <CardContent className="pt-6">
+                     {loading ? (
+                        <div className="space-y-2">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    ) : (
+                        <AdminSupportTicketsClient tickets={tickets} />
+                    )}
+                </CardContent>
+                <CardFooter>
+                    <DataTablePagination 
+                        page={page}
+                        setPage={setPage}
+                        pageSize={pageSize}
+                        setPageSize={setPageSize}
+                        totalCount={totalCount}
+                        hasMore={hasMore}
+                    />
+                </CardFooter>
+            </Card>
         </div>
     );
 }

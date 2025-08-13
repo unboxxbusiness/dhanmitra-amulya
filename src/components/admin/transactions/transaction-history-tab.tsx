@@ -2,38 +2,47 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from '@/components/ui/badge';
 import { getTransactionHistory } from '@/actions/transactions';
 import type { Transaction } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
+import { DataTablePagination } from '@/components/data-table-pagination';
 
 export function TransactionHistoryTab() {
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchHistory() {
-        setLoading(true);
-        try {
-            const history = await getTransactionHistory({ limit: 50 }); // Fetch last 50
-            setTransactions(history);
-        } catch (error: any) {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: error.message || 'Could not load transaction history.',
-            });
-        } finally {
-            setLoading(false);
-        }
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+        const result = await getTransactionHistory({ page, pageSize });
+        setTransactions(result.transactions);
+        setTotalCount(result.totalCount);
+        setHasMore(result.hasMore);
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not load transaction history.',
+        });
+    } finally {
+        setLoading(false);
     }
+  }, [toast, page, pageSize]);
+
+  useEffect(() => {
     fetchHistory();
-  }, [toast]);
+  }, [fetchHistory]);
 
   return (
     <Card>
@@ -56,7 +65,7 @@ export function TransactionHistoryTab() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
+              Array.from({ length: pageSize }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-full" /></TableCell>
@@ -91,6 +100,16 @@ export function TransactionHistoryTab() {
           </TableBody>
         </Table>
       </CardContent>
+      <CardFooter>
+        <DataTablePagination 
+            page={page}
+            setPage={setPage}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            totalCount={totalCount}
+            hasMore={hasMore}
+        />
+      </CardFooter>
     </Card>
   );
 }
