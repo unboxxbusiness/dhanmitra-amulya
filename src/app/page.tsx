@@ -1,39 +1,64 @@
 
 import { getSession } from "@/lib/auth";
 import { redirect } from 'next/navigation';
-import { Star } from "lucide-react";
 import React from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Banknote, Book, HeartHandshake, Percent, ShieldCheck } from "lucide-react";
 
-interface Hero7Props {
+const features = [
+    {
+      icon: <Percent className="h-8 w-8 text-primary" />,
+      text: "अपनी बचत खाते पर 9% तक का आकर्षक ब्याज पाएं।",
+    },
+    {
+      icon: <Banknote className="h-8 w-8 text-primary" />,
+      text: "आसान किस्तों और कम ब्याज दर पर तुरंत लोन की सुविधा।",
+    },
+    {
+      icon: <Book className="h-8 w-8 text-primary" />,
+      text: "आपके बच्चों की शिक्षा और विकास के लिए विशेष सहायता।",
+    },
+    {
+      icon: <HeartHandshake className="h-8 w-8 text-primary" />,
+      text: "एक खास कम्युनिटी जहाँ परिवार के स्वास्थ्य का ख्याल रखा जाता है।",
+    },
+     {
+      icon: <ShieldCheck className="h-8 w-8 text-primary" />,
+      text: "एक मेंबरशिप में बचत, लोन, शिक्षा और स्वास्थ्य सुरक्षा पाएं।",
+    },
+  ];
+
+interface HeroProps {
   heading?: string;
-  description?: string;
   button?: {
     text: string;
     url: string;
   };
 }
 
-const Hero7 = ({
+const Hero = ({
   heading = "अमूल्य: आपका साथी",
-  description = "अपनी बचत खाते पर पाइए 9% ब्याज, जो कहीं और नहीं मिलेगा। आसान किश्तों और कम ब्याज दर पर लोन की सुविधा। एक खास कम्युनिटी जहाँ आपके बच्चों की शिक्षा का पूरा ख्याल रखा जाता है। परिवार के स्वास्थ्य और विकास में भी मदद मिलेगी। सब कुछ एक मेंबरशिप के साथ – बचत, लोन, शिक्षा, स्वास्थ्य और परिवार। आज ही जुड़िए और बनाइए अपनी ज़िंदगी अमूल्य!",
   button = {
-    text: "Get Started",
+    text: "आज ही जुड़ें",
     url: "/signup",
   },
-}: Hero7Props) => {
+}: HeroProps) => {
   return (
-    <section className="py-32">
+    <section className="py-24 sm:py-32">
       <div className="container text-center">
-        <div className="mx-auto flex max-w-screen-lg flex-col gap-6">
-          <h1 className="text-3xl font-extrabold lg:text-6xl">{heading}</h1>
-          <p className="text-balance text-muted-foreground lg:text-lg">
-            {description}
-          </p>
+        <div className="mx-auto flex max-w-screen-lg flex-col items-center gap-8">
+          <h1 className="text-4xl font-extrabold lg:text-6xl">{heading}</h1>
+          <div className="mt-6 grid max-w-3xl grid-cols-1 gap-x-6 gap-y-8 text-left sm:grid-cols-2 lg:gap-x-8">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-start gap-4">
+                <div className="flex-shrink-0">{feature.icon}</div>
+                <p className="text-lg text-muted-foreground">{feature.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <Button asChild size="lg" className="mt-10">
+        <Button asChild size="lg" className="mt-12">
           <Link href={button.url}>{button.text}</Link>
         </Button>
       </div>
@@ -49,5 +74,5 @@ export default async function Home() {
     redirect('/dashboard');
   }
 
-  return <Hero7 />;
+  return <Hero />;
 }
